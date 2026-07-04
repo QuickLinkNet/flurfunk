@@ -5,6 +5,8 @@ namespace App\Controllers;
 use App\Core\Auth;
 use App\Core\Request;
 use App\Core\Response;
+use App\Models\Household;
+use App\Models\Street;
 use App\Models\User;
 
 final class AuthController
@@ -16,19 +18,29 @@ final class AuthController
         $password = (string) ($body['password'] ?? '');
         $displayName = trim($body['displayName'] ?? '');
         $inviteCode = trim($body['inviteCode'] ?? '');
+        $householdName = trim($body['householdName'] ?? '');
+        $addressLine = trim($body['addressLine'] ?? '');
 
-        if ($email === '' || strlen($password) < 8 || $displayName === '' || $inviteCode === '') {
+        if ($email === '' || strlen($password) < 8 || $displayName === '' || $inviteCode === ''
+            || $householdName === '' || $addressLine === ''
+        ) {
             Response::error('Bitte alle Felder ausfüllen (Passwort mind. 8 Zeichen).', 422);
         }
         if (User::findByEmail($email) !== null) {
             Response::error('Diese E-Mail ist bereits registriert.', 409);
         }
+        $street = Street::findByInviteCode($inviteCode);
+        if ($street === null) {
+            Response::error('Ungültiger Einladungscode.', 422);
+        }
 
-        // Einladungscode-Prüfung gegen streets.invite_code passiert hier
-        // (Model-Aufruf ausgelassen, Platzhalter fürs Grundgerüst).
-        $userId = User::create($email, password_hash($password, PASSWORD_DEFAULT), $displayName, 1);
+        $role = User::adminExists() ? 'member' : 'admin';
+        $userId = User::create($email, password_hash($password, PASSWORD_DEFAULT), $displayName, $role);
+        $householdId = Household::create((int) $street['id'], $householdName, $addressLine);
+        User::attachHousehold($userId, $householdId);
+
         Auth::login($userId);
-        Response::json(User::findById($userId));
+        Response::json($this->toPublicUser(User::findById($userId)));
     }
 
     public function login(): void

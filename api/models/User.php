@@ -20,13 +20,13 @@ final class User
         return $stmt->fetch() ?: null;
     }
 
-    public static function create(string $email, string $passwordHash, string $displayName, int $streetId): int
+    public static function create(string $email, string $passwordHash, string $displayName, string $role = 'member'): int
     {
         $stmt = Database::pdo()->prepare(
             'INSERT INTO users (email, password_hash, display_name, role, created_at)
-             VALUES (?, ?, ?, "member", NOW())'
+             VALUES (?, ?, ?, ?, NOW())'
         );
-        $stmt->execute([$email, $passwordHash, $displayName]);
+        $stmt->execute([$email, $passwordHash, $displayName, $role]);
         return (int) Database::pdo()->lastInsertId();
     }
 
@@ -34,5 +34,14 @@ final class User
     {
         $stmt = Database::pdo()->prepare('UPDATE users SET household_id = ? WHERE id = ?');
         $stmt->execute([$householdId, $userId]);
+    }
+
+    // Der erste registrierte Nutzer einer Straße wird automatisch Admin,
+    // da es sonst keinen Weg gäbe, überhaupt einen Admin zu bekommen
+    // (Admin-Bereich ist laut PRD erst v2.0, bis dahin reicht direkter DB-Zugriff).
+    public static function adminExists(): bool
+    {
+        $stmt = Database::pdo()->query("SELECT COUNT(*) FROM users WHERE role = 'admin'");
+        return ((int) $stmt->fetchColumn()) > 0;
     }
 }

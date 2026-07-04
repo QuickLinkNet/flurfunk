@@ -5,6 +5,11 @@ import { VitePWA } from 'vite-plugin-pwa';
 // Deployment-Basis: https://www.red-it.org/apps/neighborhood/
 export default defineConfig({
   base: '/apps/neighborhood/',
+  server: {
+    // Respektiert PORT, falls von außen vorgegeben (z.B. Preview-Tooling),
+    // sonst Vites üblicher Default 5173.
+    port: process.env.PORT ? Number(process.env.PORT) : 5173
+  },
   plugins: [
     react(),
     VitePWA({

@@ -41,4 +41,14 @@ final class Household
         );
         $stmt->execute([$emoji, $label, $note, $householdId]);
     }
+
+    public static function create(int $streetId, string $name, string $addressLine): int
+    {
+        $stmt = Database::pdo()->prepare(
+            'INSERT INTO households (street_id, name, address_line, status_emoji, status_label, created_at)
+             VALUES (?, ?, ?, "🏠", "Zuhause", NOW())'
+        );
+        $stmt->execute([$streetId, $name, $addressLine]);
+        return (int) Database::pdo()->lastInsertId();
+    }
 }

@@ -12,3 +12,16 @@ export function logout() {
 export function fetchCurrentUser() {
   return apiRequest<User>('/auth/me');
 }
+
+interface RegisterInput {
+  email: string;
+  password: string;
+  displayName: string;
+  inviteCode: string;
+  householdName: string;
+  addressLine: string;
+}
+
+export function register(input: RegisterInput) {
+  return apiRequest<User>('/auth/register', { method: 'POST', body: JSON.stringify(input) });
+}

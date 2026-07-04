@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Input } from '../components/atoms/Input';
 import { Button } from '../components/atoms/Button';
 import { useAuth } from '../hooks/useAuth';
@@ -37,6 +37,9 @@ export function LoginPage() {
         {error && <p style={{ color: 'crimson', fontSize: 13 }}>{error}</p>}
         <Button type="submit">Anmelden</Button>
       </form>
+      <p style={{ fontSize: 13, marginTop: 16 }}>
+        Noch kein Konto? <Link to="/registrieren">Haushalt registrieren</Link>
+      </p>
     </div>
   );
 }
