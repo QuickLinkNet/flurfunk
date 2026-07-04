@@ -27,6 +27,7 @@ use App\Controllers\ChildController;
 use App\Controllers\FeedController;
 use App\Controllers\CalendarController;
 use App\Controllers\VisibilityController;
+use App\Controllers\EventController;
 
 error_reporting(E_ALL);
 ini_set('display_errors', '0'); // Fehler nie roh an den Client durchreichen
@@ -53,6 +54,11 @@ $router->post('/feed', [new FeedController(), 'store']);
 
 $router->get('/calendar', [new CalendarController(), 'index']);
 $router->post('/calendar', [new CalendarController(), 'store']);
+
+$router->get('/events', [new EventController(), 'index']);
+$router->post('/events', [new EventController(), 'store']);
+$router->get('/events/{id}', [new EventController(), 'show']);
+$router->post('/events/{id}/rsvp', [new EventController(), 'rsvp']);
 
 $router->get('/households/me/visibility', [new VisibilityController(), 'me']);
 $router->put('/households/me/visibility', [new VisibilityController(), 'updateMe']);

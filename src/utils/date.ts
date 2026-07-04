@@ -22,3 +22,13 @@ export function formatDayLabel(iso: string): string {
 export function formatMonthLabel(d: Date): string {
   return d.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
 }
+
+export function formatDateTimeLabel(iso: string): string {
+  return new Date(iso).toLocaleDateString('de-DE', {
+    weekday: 'short',
+    day: '2-digit',
+    month: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+}

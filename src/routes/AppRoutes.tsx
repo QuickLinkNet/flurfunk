@@ -3,6 +3,8 @@ import { LoginPage } from '../pages/LoginPage';
 import { DashboardPage } from '../pages/DashboardPage';
 import { StreetFeedPage } from '../pages/StreetFeedPage';
 import { CalendarPage } from '../pages/CalendarPage';
+import { EventsPage } from '../pages/EventsPage';
+import { EventDetailPage } from '../pages/EventDetailPage';
 import { HouseholdPage } from '../pages/HouseholdPage';
 import { useAuth } from '../hooks/useAuth';
 
@@ -38,6 +40,22 @@ export function AppRoutes() {
         element={
           <RequireAuth>
             <CalendarPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/events"
+        element={
+          <RequireAuth>
+            <EventsPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/events/:id"
+        element={
+          <RequireAuth>
+            <EventDetailPage />
           </RequireAuth>
         }
       />
