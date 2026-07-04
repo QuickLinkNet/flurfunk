@@ -1,0 +1,12 @@
+CREATE TABLE households (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  street_id INT NOT NULL,
+  name VARCHAR(80) NOT NULL,
+  address_line VARCHAR(160) NOT NULL,
+  status_emoji VARCHAR(8) NOT NULL DEFAULT '🏠',
+  status_label VARCHAR(60) NOT NULL DEFAULT 'Zuhause',
+  status_note VARCHAR(160) DEFAULT NULL,
+  status_updated_at DATETIME DEFAULT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (street_id) REFERENCES streets(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

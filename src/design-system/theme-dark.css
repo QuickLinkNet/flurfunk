@@ -1,0 +1,11 @@
+[data-theme='dark'] {
+  --md-color-primary: #F0997B;
+  --md-color-primary-container: #712B13;
+  --md-color-secondary: #97C459;
+  --md-color-secondary-container: #27500A;
+  --md-color-surface: #1C1C1A;
+  --md-color-surface-variant: #2C2C2A;
+  --md-color-on-surface: #F1EFE8;
+  --md-color-on-surface-variant: #B4B2A9;
+  --md-color-border: #444441;
+}

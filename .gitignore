@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.env.local
+.env.deploy
+api/config.php
+*.log
+.DS_Store
+.claude/settings.local.json

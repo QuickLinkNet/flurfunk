@@ -1,0 +1,15 @@
+@import './theme-light.css';
+@import './theme-dark.css';
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  background: var(--md-color-surface-variant);
+  color: var(--md-color-on-surface);
+}
+
+button {
+  font-family: inherit;
+}
