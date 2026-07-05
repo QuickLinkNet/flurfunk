@@ -44,4 +44,28 @@ final class User
         $stmt = Database::pdo()->query("SELECT COUNT(*) FROM users WHERE role = 'admin'");
         return ((int) $stmt->fetchColumn()) > 0;
     }
+
+    public static function findByHousehold(int $householdId): array
+    {
+        $stmt = Database::pdo()->prepare('SELECT * FROM users WHERE household_id = ? ORDER BY display_name');
+        $stmt->execute([$householdId]);
+        return $stmt->fetchAll();
+    }
+
+    // Admin-Ansicht: alle Nutzer inkl. Haushaltsname (falls zugeordnet).
+    public static function findAll(): array
+    {
+        $stmt = Database::pdo()->query(
+            'SELECT u.*, h.name AS household_name FROM users u
+             LEFT JOIN households h ON h.id = u.household_id
+             ORDER BY u.display_name'
+        );
+        return $stmt->fetchAll();
+    }
+
+    public static function updateRole(int $id, string $role): void
+    {
+        $stmt = Database::pdo()->prepare('UPDATE users SET role = ? WHERE id = ?');
+        $stmt->execute([$role, $id]);
+    }
 }

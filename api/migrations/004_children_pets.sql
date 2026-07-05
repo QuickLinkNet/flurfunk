@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS children (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  household_id INTEGER NOT NULL REFERENCES households(id),
+  household_id INTEGER NOT NULL REFERENCES households(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   birthdate DATE,
   current_location TEXT NOT NULL DEFAULT 'both'
@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS children (
 
 CREATE TABLE IF NOT EXISTS pets (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  household_id INTEGER NOT NULL REFERENCES households(id),
+  household_id INTEGER NOT NULL REFERENCES households(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   type TEXT NOT NULL DEFAULT 'other' CHECK (type IN ('dog','cat','other'))
 );

@@ -65,4 +65,29 @@ final class Event
         ]);
         return (int) Database::pdo()->lastInsertId();
     }
+
+    // Admin-Ansicht: alle Events unabhängig von Sichtbarkeit, inkl. RSVP-Zählern.
+    public static function findAll(int $limit = 100): array
+    {
+        $stmt = Database::pdo()->prepare(
+            "SELECT e.*, h.name AS creator_household_name,
+                SUM(CASE WHEN er.response = 'yes' THEN 1 ELSE 0 END) AS yes_count,
+                SUM(CASE WHEN er.response = 'maybe' THEN 1 ELSE 0 END) AS maybe_count,
+                SUM(CASE WHEN er.response = 'no' THEN 1 ELSE 0 END) AS no_count
+             FROM events e
+             JOIN households h ON h.id = e.creator_household_id
+             LEFT JOIN event_responses er ON er.event_id = e.id
+             GROUP BY e.id
+             ORDER BY e.starts_at DESC
+             LIMIT ?"
+        );
+        $stmt->execute([$limit]);
+        return $stmt->fetchAll();
+    }
+
+    public static function delete(int $id): void
+    {
+        $stmt = Database::pdo()->prepare('DELETE FROM events WHERE id = ?');
+        $stmt->execute([$id]);
+    }
 }

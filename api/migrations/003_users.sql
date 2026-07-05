@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  household_id INTEGER REFERENCES households(id),
+  household_id INTEGER REFERENCES households(id) ON DELETE SET NULL,
   email TEXT NOT NULL UNIQUE,
   password_hash TEXT NOT NULL,
   display_name TEXT NOT NULL,

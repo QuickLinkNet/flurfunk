@@ -36,4 +36,18 @@ final class CalendarEntry
         $stmt->execute([$type, $householdId, $title, $startsAt, $endsAt, $allDay ? 1 : 0, $visibility]);
         return (int) Database::pdo()->lastInsertId();
     }
+
+    // Admin-Ansicht: alle Kalendereinträge unabhängig von Sichtbarkeit/Zeitraum.
+    public static function findAll(int $limit = 200): array
+    {
+        $stmt = Database::pdo()->prepare('SELECT * FROM calendar_entries ORDER BY starts_at DESC LIMIT ?');
+        $stmt->execute([$limit]);
+        return $stmt->fetchAll();
+    }
+
+    public static function delete(int $id): void
+    {
+        $stmt = Database::pdo()->prepare('DELETE FROM calendar_entries WHERE id = ?');
+        $stmt->execute([$id]);
+    }
 }

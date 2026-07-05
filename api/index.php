@@ -28,6 +28,7 @@ use App\Controllers\FeedController;
 use App\Controllers\CalendarController;
 use App\Controllers\VisibilityController;
 use App\Controllers\EventController;
+use App\Controllers\AdminController;
 
 error_reporting(E_ALL);
 ini_set('display_errors', '0'); // Fehler nie roh an den Client durchreichen
@@ -62,6 +63,17 @@ $router->post('/events/{id}/rsvp', [new EventController(), 'rsvp']);
 
 $router->get('/households/me/visibility', [new VisibilityController(), 'me']);
 $router->put('/households/me/visibility', [new VisibilityController(), 'updateMe']);
+
+$router->get('/admin/households', [new AdminController(), 'households']);
+$router->delete('/admin/households/{id}', [new AdminController(), 'deleteHousehold']);
+$router->get('/admin/users', [new AdminController(), 'users']);
+$router->put('/admin/users/{id}/role', [new AdminController(), 'updateUserRole']);
+$router->get('/admin/feed', [new AdminController(), 'feed']);
+$router->delete('/admin/feed/{id}', [new AdminController(), 'deleteFeedItem']);
+$router->get('/admin/events', [new AdminController(), 'events']);
+$router->delete('/admin/events/{id}', [new AdminController(), 'deleteEvent']);
+$router->get('/admin/calendar', [new AdminController(), 'calendar']);
+$router->delete('/admin/calendar/{id}', [new AdminController(), 'deleteCalendarEntry']);
 
 try {
     $router->dispatch(Request::method(), Request::path());

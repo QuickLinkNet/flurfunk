@@ -42,4 +42,23 @@ final class FeedItem
         $stmt->execute([$householdId, $type, $message, $visibility, $expiresAt]);
         return (int) Database::pdo()->lastInsertId();
     }
+
+    // Admin-Ansicht: alle Feed-Einträge unabhängig von Sichtbarkeit/Ablauf.
+    public static function findAll(int $limit = 100): array
+    {
+        $stmt = Database::pdo()->prepare(
+            'SELECT f.*, h.name AS household_name FROM feed_items f
+             JOIN households h ON h.id = f.household_id
+             ORDER BY f.created_at DESC
+             LIMIT ?'
+        );
+        $stmt->execute([$limit]);
+        return $stmt->fetchAll();
+    }
+
+    public static function delete(int $id): void
+    {
+        $stmt = Database::pdo()->prepare('DELETE FROM feed_items WHERE id = ?');
+        $stmt->execute([$id]);
+    }
 }

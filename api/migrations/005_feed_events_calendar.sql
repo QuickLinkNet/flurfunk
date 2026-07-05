@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS feed_items (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  household_id INTEGER NOT NULL REFERENCES households(id),
+  household_id INTEGER NOT NULL REFERENCES households(id) ON DELETE CASCADE,
   type TEXT NOT NULL CHECK (type IN (
     'vacation','home','visit_expected','garden_party','bbq','spontaneous_meetup',
     'street_closed','package_received','tool_available','help_needed','babysitter_needed',
@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS feed_items (
 
 CREATE TABLE IF NOT EXISTS events (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  creator_household_id INTEGER NOT NULL REFERENCES households(id),
+  creator_household_id INTEGER NOT NULL REFERENCES households(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
   type TEXT NOT NULL CHECK (type IN (
     'bbq','campfire','street_festival','kids_play','football','pool_party',
@@ -30,13 +30,13 @@ CREATE TABLE IF NOT EXISTS events (
 
 CREATE TABLE IF NOT EXISTS event_responses (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  event_id INTEGER NOT NULL REFERENCES events(id),
-  household_id INTEGER NOT NULL REFERENCES households(id),
+  event_id INTEGER NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+  household_id INTEGER NOT NULL REFERENCES households(id) ON DELETE CASCADE,
   response TEXT NOT NULL CHECK (response IN ('yes','maybe','no')),
   adults_count INTEGER,
   children_count INTEGER,
   note TEXT,
-  responded_by_user_id INTEGER NOT NULL REFERENCES users(id),
+  responded_by_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   UNIQUE (event_id, household_id)
 );
@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS calendar_entries (
   type TEXT NOT NULL CHECK (type IN ('vacation','birthday','event','visit','street_action','holiday','trash','appointment')),
   source_table TEXT,
   source_id INTEGER,
-  household_id INTEGER REFERENCES households(id),
+  household_id INTEGER REFERENCES households(id) ON DELETE SET NULL,
   title TEXT NOT NULL,
   starts_at DATETIME NOT NULL,
   ends_at DATETIME,
@@ -56,7 +56,7 @@ CREATE TABLE IF NOT EXISTS calendar_entries (
 
 CREATE TABLE IF NOT EXISTS household_visibility_settings (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  household_id INTEGER NOT NULL REFERENCES households(id),
+  household_id INTEGER NOT NULL REFERENCES households(id) ON DELETE CASCADE,
   field_key TEXT NOT NULL,
   visibility TEXT NOT NULL DEFAULT 'neighbors' CHECK (visibility IN ('public','neighbors','private')),
   UNIQUE (household_id, field_key)
@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS household_visibility_settings (
 
 CREATE TABLE IF NOT EXISTS notifications (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  user_id INTEGER NOT NULL REFERENCES users(id),
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   type TEXT NOT NULL,
   payload TEXT,
   read_at DATETIME,

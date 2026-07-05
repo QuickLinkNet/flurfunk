@@ -7,12 +7,21 @@ import { CalendarPage } from '../pages/CalendarPage';
 import { EventsPage } from '../pages/EventsPage';
 import { EventDetailPage } from '../pages/EventDetailPage';
 import { HouseholdPage } from '../pages/HouseholdPage';
+import { AdminPage } from '../pages/AdminPage';
 import { useAuth } from '../hooks/useAuth';
 
 function RequireAuth({ children }: { children: JSX.Element }) {
   const { user, isLoading } = useAuth();
   if (isLoading) return null;
   if (!user) return <Navigate to="/login" replace />;
+  return children;
+}
+
+function RequireAdmin({ children }: { children: JSX.Element }) {
+  const { user, isLoading } = useAuth();
+  if (isLoading) return null;
+  if (!user) return <Navigate to="/login" replace />;
+  if (user.role !== 'admin') return <Navigate to="/dashboard" replace />;
   return children;
 }
 
@@ -68,6 +77,14 @@ export function AppRoutes() {
           <RequireAuth>
             <HouseholdPage />
           </RequireAuth>
+        }
+      />
+      <Route
+        path="/admin"
+        element={
+          <RequireAdmin>
+            <AdminPage />
+          </RequireAdmin>
         }
       />
       <Route path="/" element={<Navigate to="/dashboard" replace />} />

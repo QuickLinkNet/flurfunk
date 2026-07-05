@@ -51,4 +51,21 @@ final class Household
         $stmt->execute([$streetId, $name, $addressLine]);
         return (int) Database::pdo()->lastInsertId();
     }
+
+    // Admin-Ansicht: alle Haushalte unabhängig von Sichtbarkeits-Einstellungen.
+    public static function findAll(): array
+    {
+        $stmt = Database::pdo()->query(
+            'SELECT h.*, s.name AS street_name FROM households h
+             JOIN streets s ON s.id = h.street_id
+             ORDER BY h.name'
+        );
+        return $stmt->fetchAll();
+    }
+
+    public static function delete(int $id): void
+    {
+        $stmt = Database::pdo()->prepare('DELETE FROM households WHERE id = ?');
+        $stmt->execute([$id]);
+    }
 }
