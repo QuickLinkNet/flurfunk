@@ -24,7 +24,7 @@ final class User
     {
         $stmt = Database::pdo()->prepare(
             'INSERT INTO users (email, password_hash, display_name, role, created_at)
-             VALUES (?, ?, ?, ?, NOW())'
+             VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)'
         );
         $stmt->execute([$email, $passwordHash, $displayName, $role]);
         return (int) Database::pdo()->lastInsertId();

@@ -1,0 +1,10 @@
+# Verhindert direkten Web-Zugriff auf die SQLite-Datei (enthält u.a.
+# Passwort-Hashes und Adressen). api/.htaccess leitet nur auf index.php
+# um, wenn keine physische Datei existiert - hier existiert eine, also
+# müsste sie sonst direkt ausgeliefert würden.
+<IfModule mod_authz_core.c>
+    Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+    Deny from all
+</IfModule>

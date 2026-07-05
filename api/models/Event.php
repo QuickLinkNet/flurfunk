@@ -58,7 +58,7 @@ final class Event
         $stmt = Database::pdo()->prepare(
             'INSERT INTO events
                 (creator_household_id, title, type, description, location, starts_at, ends_at, visibility, created_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())'
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)'
         );
         $stmt->execute([
             $creatorHouseholdId, $title, $type, $description, $location, $startsAt, $endsAt, $visibility,

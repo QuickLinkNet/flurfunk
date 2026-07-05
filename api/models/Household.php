@@ -36,7 +36,7 @@ final class Household
     {
         $stmt = Database::pdo()->prepare(
             'UPDATE households
-             SET status_emoji = ?, status_label = ?, status_note = ?, status_updated_at = NOW()
+             SET status_emoji = ?, status_label = ?, status_note = ?, status_updated_at = CURRENT_TIMESTAMP
              WHERE id = ?'
         );
         $stmt->execute([$emoji, $label, $note, $householdId]);
@@ -46,7 +46,7 @@ final class Household
     {
         $stmt = Database::pdo()->prepare(
             'INSERT INTO households (street_id, name, address_line, status_emoji, status_label, created_at)
-             VALUES (?, ?, ?, "🏠", "Zuhause", NOW())'
+             VALUES (?, ?, ?, "🏠", "Zuhause", CURRENT_TIMESTAMP)'
         );
         $stmt->execute([$streetId, $name, $addressLine]);
         return (int) Database::pdo()->lastInsertId();

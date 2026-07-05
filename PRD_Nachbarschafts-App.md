@@ -1,7 +1,7 @@
 
 # PRD: Nachbarschafts-PWA "Straßenplaner"
 
-**Stack:** React + Vite + TypeScript (Atomic Design) · PHP 8.x nativ + MySQL (Mini-MVC) · PWA
+**Stack:** React + Vite + TypeScript (Atomic Design) · PHP 8.x nativ + SQLite (Mini-MVC) · PWA
 **Deployment:** `www.red-it.org/apps/neighborhood` (FTP/FTPS via `npm run deploy`, Shared Hosting)
 **Leitprinzipien:** so wenig Dependencies wie möglich (Backend: praktisch keine), Dateien < 500 Zeilen, Mobile First.
 
@@ -69,7 +69,7 @@ Begründung: v1.0 muss beweisen, dass "Status + Feed + Kalender" bereits echten 
 
 ---
 
-## 4. Datenbankmodell (MySQL, nativ, PDO)
+## 4. Datenbankmodell (SQLite, nativ, PDO)
 
 Schema ist bereits mit `street_id` vorbereitet, damit v3.0 (mehrere Straßen) ohne Breaking Change möglich ist – in v1.0 gibt es genau eine Zeile in `streets`.
 
@@ -310,7 +310,7 @@ Ein visuelles Mockup dieses Dashboards folgt direkt im Chat nach diesem Dokument
 
 Frontend: React 18 + TypeScript + Vite, React Router (einzige Routing-Dependency), `vite-plugin-pwa` für Manifest/Service Worker (erspart handgeschriebenen SW-Code). Kein UI-Kit, kein State-Management-Framework (Context + Hooks reichen für diese Domänengröße).
 
-Backend: PHP 8.x, **keine Composer-Pakete**, PDO (in PHP core enthalten) für MySQL, native Sessions für Auth. Reines Mini-MVC ohne Framework.
+Backend: PHP 8.x, **keine Composer-Pakete**, PDO (in PHP core enthalten) für SQLite, native Sessions für Auth. Reines Mini-MVC ohne Framework. SQLite statt MySQL, da eine einzelne Straße (5–40 Haushalte) keinen separaten Datenbank-Server braucht – die Datei-Datenbank spart die Einrichtung beim Hoster und die Migrationen laufen automatisch beim ersten Request.
 
 ### 9.2 Frontend-Ordnerstruktur (Atomic Design, jede Datei < 500 Zeilen)
 
@@ -344,12 +344,15 @@ Faustregel: Wird eine Komponente/ein Hook zu groß, wird sie in kleinere Molekü
 ```
 api/
   index.php                  ← Front-Controller / Mini-Router
-  config.php                 ← DB-Zugangsdaten (nicht in Git, .gitignore)
+  config.php                 ← SQLite-Dateipfad, Session-Name (nicht in Git, .gitignore)
   config.example.php
   .htaccess                  ← alle Requests auf index.php
+  data/
+    .htaccess                ← blockt direkten Web-Zugriff auf die .sqlite-Datei
+    database.sqlite           ← entsteht automatisch beim ersten Request (nicht in Git)
   core/
     Router.php
-    Database.php             ← PDO-Singleton
+    Database.php             ← PDO-Singleton + automatischer Migrations-Runner
     Request.php
     Response.php              ← JSON-Helper, Statuscodes
     Auth.php                  ← Session, password_hash/verify, Visibility-Check
@@ -365,7 +368,7 @@ api/
   models/
     User.php, Household.php, Child.php, Pet.php, FeedItem.php, Event.php, EventResponse.php, CalendarEntry.php, ToolListing.php, Notification.php
   migrations/
-    001_streets.sql, 002_users.sql, 003_households.sql, … (nacheinander per phpMyAdmin/Adminer ausführbar)
+    001_streets.sql, 002_users.sql, 003_households.sql, … (werden automatisch beim ersten Request angewendet, siehe Database.php)
 ```
 
 Jeder Controller enthält nur schlanke Methoden (`index`, `show`, `store`, `update`, `destroy`), Geschäftslogik/Queries wandern ins jeweilige Model – hält auch hier Dateien klein und Verantwortlichkeiten klar.
@@ -416,17 +419,20 @@ Der Mini-Router in `index.php` mappt `$_SERVER['REQUEST_METHOD']` + Pfad-Segment
 
 **Deployment-Ablauf:** `npm run deploy` (baut das Frontend und lädt `dist/` + `api/`
 automatisch per FTP/FTPS ausschließlich nach `/apps/neighborhood/` hoch, siehe
-`scripts/deploy.mjs` und README). Einmalig manuell bleiben: `config.php` direkt
-auf dem Server mit echten DB-Zugangsdaten anlegen (nie ins Git-Repo, nur
-`config.example.php` wird versioniert) sowie das DB-Schema über
-phpMyAdmin/Adminer einspielen (`migrations/*.sql` der Reihe nach).
+`scripts/deploy.mjs` und README). Einmalig manuell bleibt nur: `config.php`
+direkt auf dem Server anlegen (nie ins Git-Repo, nur `config.example.php` wird
+versioniert; die Standardwerte funktionieren unverändert, da SQLite keine
+Zugangsdaten braucht). Das DB-Schema muss **nicht** manuell eingespielt werden –
+`Database.php` führt beim ersten Request automatisch alle noch nicht
+angewendeten Dateien aus `migrations/` aus.
 `.htaccess` im Root sorgt für SPA-Fallback (History-API-Routing), `api/.htaccess`
-für den Front-Controller.
+für den Front-Controller, `api/data/.htaccess` blockt direkten Web-Zugriff auf
+die SQLite-Datei.
 
 **Lokale Entwicklung (wie gewünscht: nur npm, gegen Live-Backend):**
 - `npm run dev` startet den Vite-Devserver.
 - `.env.local`: `VITE_API_BASE_URL=https://www.red-it.org/apps/nachbarn/api`
-- Kein lokales PHP/MySQL nötig, um am Frontend zu arbeiten.
+- Kein lokales PHP/SQLite-Setup nötig, um am Frontend zu arbeiten.
 - Für Backend-Änderungen: PHP-Dateien lokal editieren (`php -l datei.php` als Syntax-Check reicht, da kein lokaler Server läuft), dann per FTP hochladen und live testen.
 
 **Empfehlung (kein Zwang):** Da Backend-Änderungen direkt live getestet werden, lohnt sich mittelfristig ein einfacher Staging-Unterordner (`/apps/nachbarn-staging/` + eigene Staging-DB), um Nutzer nicht durch fehlerhafte Uploads zu stören. Reine FTP-Lösung, keine zusätzliche Tooling-Abhängigkeit.

@@ -20,7 +20,7 @@ final class FeedItem
             "SELECT f.*, h.name AS household_name FROM feed_items f
              JOIN households h ON h.id = f.household_id
              WHERE f.visibility IN ($placeholders)
-               AND (f.expires_at IS NULL OR f.expires_at > NOW())
+               AND (f.expires_at IS NULL OR f.expires_at > CURRENT_TIMESTAMP)
              ORDER BY f.created_at DESC
              LIMIT ?"
         );
@@ -37,7 +37,7 @@ final class FeedItem
     ): int {
         $stmt = Database::pdo()->prepare(
             'INSERT INTO feed_items (household_id, type, message, visibility, expires_at, created_at)
-             VALUES (?, ?, ?, ?, ?, NOW())'
+             VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)'
         );
         $stmt->execute([$householdId, $type, $message, $visibility, $expiresAt]);
         return (int) Database::pdo()->lastInsertId();

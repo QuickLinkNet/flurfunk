@@ -32,7 +32,7 @@ final class VisibilitySetting
         $stmt = Database::pdo()->prepare(
             'INSERT INTO household_visibility_settings (household_id, field_key, visibility)
              VALUES (?, ?, ?)
-             ON DUPLICATE KEY UPDATE visibility = VALUES(visibility)'
+             ON CONFLICT(household_id, field_key) DO UPDATE SET visibility = excluded.visibility'
         );
         $stmt->execute([$householdId, $field, $visibility]);
     }

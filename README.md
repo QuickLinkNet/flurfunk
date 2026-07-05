@@ -2,30 +2,28 @@
 
 PWA für eine Straße/Nachbarschaft. React + Vite + TypeScript (Atomic Design) im Root,
 PHP 8.x Mini-MVC (natives PDO, keine Composer-Pakete) in `api/`.
+Datenbank: SQLite (eine Datei, kein separater Server nötig – reicht für eine
+einzelne Straße mit 5–40 Haushalten locker aus).
 Ziel-URL: **https://www.red-it.org/apps/neighborhood/**
 Vollständiges Konzept: siehe `PRD_Nachbarschafts-App.md`.
 
 ## Einmalige Einrichtung (nur beim allerersten Mal)
 
-Diese drei Schritte macht `npm run deploy` **bewusst nicht** automatisch – sie
-betreffen Zugangsdaten bzw. Datenbank-Struktur und sollen nicht bei jedem
-Deploy erneut angefasst werden.
+Dieser Schritt macht `npm run deploy` **bewusst nicht** automatisch – er
+betrifft eine Datei, die nicht bei jedem Deploy erneut angefasst werden soll.
 
-**1. `api/config.php` direkt auf dem Server anlegen**
+**`api/config.php` direkt auf dem Server anlegen**
 Nicht lokal erstellen, nicht hochladen! Per FTP-Programm (z.B. FileZilla) oder
 dem Datei-Manager deines Hosting-Panels direkt in
-`/apps/neighborhood/api/config.php` folgende Datei anlegen (Inhalt aus
-`api/config.example.php` kopieren und mit echten Werten füllen):
+`/apps/neighborhood/api/config.php` den Inhalt aus `api/config.example.php`
+kopieren – die Standardwerte funktionieren unverändert, da SQLite keine
+Zugangsdaten braucht (nur ein Dateipfad, kein Nutzer/Passwort):
 
 ```php
 <?php
 return [
     'db' => [
-        'host' => '127.0.0.1',       // von deinem Hoster vorgegeben
-        'name' => 'dein_db_name',
-        'user' => 'dein_db_user',
-        'pass' => 'dein_db_passwort',
-        'charset' => 'utf8mb4',
+        'path' => __DIR__ . '/data/database.sqlite',
     ],
     'session_name' => 'nachbarn_session',
     'cors_origin' => null,
@@ -36,11 +34,13 @@ Das Deploy-Skript prüft sogar aktiv, dass diese Datei **nicht** lokal in
 deinem Projektordner liegt, und bricht sonst ab – so kann sie nie versehentlich
 überschrieben oder mit hochgeladen werden.
 
-**2. Datenbank-Tabellen einmalig anlegen**
-Über phpMyAdmin/Adminer im Hosting-Panel die Dateien aus `api/migrations/`
-der Reihe nach ausführen (`001_streets.sql`, `002_households.sql`, …).
+Die Datenbank-Tabellen müssen **nicht** manuell angelegt werden: Die App führt
+alle noch nicht angewendeten Dateien aus `api/migrations/` automatisch beim
+ersten echten Request aus (siehe `api/core/Database.php`). Die SQLite-Datei
+selbst liegt unter `api/data/` und ist dort per `.htaccess` vor direktem
+Web-Zugriff geschützt.
 
-**3. Deploy-Zugangsdaten lokal hinterlegen**
+**Deploy-Zugangsdaten lokal hinterlegen**
 Bei dir lokal (nicht auf dem Server):
 
 ```bash
@@ -71,7 +71,7 @@ angerührt, da die Datei lokal per Guard-Check ausgeschlossen ist.
 
 ## Lokale Entwicklung
 
-Kein lokales PHP/MySQL nötig – das Frontend spricht direkt mit dem Live-Backend.
+Kein lokales PHP/DB-Setup nötig – das Frontend spricht direkt mit dem Live-Backend.
 
 ```bash
 npm install
@@ -98,13 +98,14 @@ scripts/        Deploy-Skript (scripts/deploy.mjs) + .env-Loader
 |---|---|---|---|
 | `.env.local` | lokal bei dir | Frontend-Dev zeigt auf Live-API | Nein (gitignored) |
 | `.env.deploy` | lokal bei dir | FTP-Zugangsdaten für `npm run deploy` | Nein (gitignored) |
-| `api/config.php` | **nur auf dem Server** | echte DB-Zugangsdaten | Nein, wird aktiv blockiert |
+| `api/config.php` | **nur auf dem Server** | SQLite-Dateipfad, Session-Name | Nein, wird aktiv blockiert |
 | `api/config.example.php` | Repo | Vorlage/Dokumentation | Ja (enthält keine Geheimnisse) |
 
 ## Status
 
-Login, Dashboard, Straßen-Feed, Kalender (Listenansicht) und Kinderverwaltung
-sind als klickbare UI vorhanden und gegen die echten API-Endpunkte verdrahtet.
-Der volle v1.0-Funktionsumfang ist in `PRD_Nachbarschafts-App.md` Kapitel 3
-beschrieben; offen sind u.a. Events mit RSVP und eine eigene
+Registrierung (mit Einladungscode, erster Nutzer wird automatisch Admin),
+Login, Dashboard, Straßen-Feed, Kalender (Listenansicht), Kinderverwaltung
+und Events mit RSVP sind als klickbare UI vorhanden und gegen die echten
+API-Endpunkte verdrahtet. Der volle v1.0-Funktionsumfang ist in
+`PRD_Nachbarschafts-App.md` Kapitel 3 beschrieben; offen ist u.a. eine eigene
 Einstellungen/Sichtbarkeit-Seite.

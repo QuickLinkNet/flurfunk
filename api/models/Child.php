@@ -17,7 +17,7 @@ final class Child
     {
         $stmt = Database::pdo()->prepare(
             'INSERT INTO children (household_id, name, birthdate, current_location, updated_at)
-             VALUES (?, ?, ?, "both", NOW())'
+             VALUES (?, ?, ?, "both", CURRENT_TIMESTAMP)'
         );
         $stmt->execute([$householdId, $name, $birthdate]);
         return (int) Database::pdo()->lastInsertId();
@@ -34,7 +34,7 @@ final class Child
     public static function updateLocation(int $childId, string $location, ?string $note): void
     {
         $stmt = Database::pdo()->prepare(
-            'UPDATE children SET current_location = ?, location_note = ?, updated_at = NOW() WHERE id = ?'
+            'UPDATE children SET current_location = ?, location_note = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?'
         );
         $stmt->execute([$location, $note, $childId]);
     }

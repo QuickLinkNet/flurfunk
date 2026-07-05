@@ -31,14 +31,14 @@ final class EventResponse
         $stmt = Database::pdo()->prepare(
             'INSERT INTO event_responses
                 (event_id, household_id, response, adults_count, children_count, note, responded_by_user_id, updated_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
-             ON DUPLICATE KEY UPDATE
-                response = VALUES(response),
-                adults_count = VALUES(adults_count),
-                children_count = VALUES(children_count),
-                note = VALUES(note),
-                responded_by_user_id = VALUES(responded_by_user_id),
-                updated_at = NOW()'
+             VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+             ON CONFLICT(event_id, household_id) DO UPDATE SET
+                response = excluded.response,
+                adults_count = excluded.adults_count,
+                children_count = excluded.children_count,
+                note = excluded.note,
+                responded_by_user_id = excluded.responded_by_user_id,
+                updated_at = CURRENT_TIMESTAMP'
         );
         $stmt->execute([
             $eventId, $householdId, $response, $adultsCount, $childrenCount, $note, $respondedByUserId,
