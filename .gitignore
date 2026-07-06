@@ -3,7 +3,6 @@ dist/
 *.tsbuildinfo
 .env.local
 .env.deploy
-api/config.php
 api/data/*.sqlite
 *.log
 .DS_Store

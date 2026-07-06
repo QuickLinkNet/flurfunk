@@ -24,15 +24,8 @@ for (const key of ['FTP_HOST', 'FTP_USER', 'FTP_PASSWORD']) {
 if (!existsSync('dist')) {
   fail('dist/ fehlt. "npm run build" ist Teil von "npm run deploy" – bitte nicht einzeln aufrufen.');
 }
-if (existsSync('api/config.php')) {
-  fail(
-    'api/config.php existiert lokal! Diese Datei gehört NUR auf den Server (echte DB-Zugangsdaten) ' +
-      'und darf nie mitgebaut/hochgeladen werden. Bitte lokal löschen (siehe README, Abschnitt Konfiguration).'
-  );
-}
 
-// Lädt NUR Dateien hoch, löscht nie etwas Fremdes. So bleibt z.B.
-// api/config.php auf dem Server garantiert unangetastet.
+// Lädt NUR Dateien hoch, löscht nie etwas Fremdes.
 async function uploadContents(client, localDir) {
   for (const entry of readdirSync(localDir, { withFileTypes: true })) {
     const localPath = path.join(localDir, entry.name);
@@ -84,7 +77,6 @@ try {
 
   console.log('');
   console.log('Fertig. Erreichbar unter: https://www.red-it.org/apps/neighborhood/');
-  console.log('Hinweis: api/config.php wird NIE angefasst - einmalig manuell auf dem Server anlegen.');
 } catch (err) {
   fail(err.message ?? String(err));
 } finally {

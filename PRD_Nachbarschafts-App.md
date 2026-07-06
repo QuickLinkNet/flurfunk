@@ -344,8 +344,7 @@ Faustregel: Wird eine Komponente/ein Hook zu groß, wird sie in kleinere Molekü
 ```
 api/
   index.php                  ← Front-Controller / Mini-Router
-  config.php                 ← SQLite-Dateipfad, Session-Name (nicht in Git, .gitignore)
-  config.example.php
+  config.php                 ← SQLite-Dateipfad, Session-Name (versioniert, keine Geheimnisse)
   .htaccess                  ← alle Requests auf index.php
   data/
     .htaccess                ← blockt direkten Web-Zugriff auf die .sqlite-Datei
@@ -419,10 +418,10 @@ Der Mini-Router in `index.php` mappt `$_SERVER['REQUEST_METHOD']` + Pfad-Segment
 
 **Deployment-Ablauf:** `npm run deploy` (baut das Frontend und lädt `dist/` + `api/`
 automatisch per FTP/FTPS ausschließlich nach `/apps/neighborhood/` hoch, siehe
-`scripts/deploy.mjs` und README). Einmalig manuell bleibt nur: `config.php`
-direkt auf dem Server anlegen (nie ins Git-Repo, nur `config.example.php` wird
-versioniert; die Standardwerte funktionieren unverändert, da SQLite keine
-Zugangsdaten braucht). Das DB-Schema muss **nicht** manuell eingespielt werden –
+`scripts/deploy.mjs` und README). Einmalig manuell bleiben nur die FTP-Zugangsdaten
+in `.env.deploy` (lokal, gitignored). `config.php` ist ganz normal versioniert
+und wird mitdeployed (enthält seit SQLite keine Geheimnisse mehr, nur einen
+Dateipfad). Das DB-Schema muss **nicht** manuell eingespielt werden –
 `Database.php` führt beim ersten Request automatisch alle noch nicht
 angewendeten Dateien aus `migrations/` aus.
 `.htaccess` im Root sorgt für SPA-Fallback (History-API-Routing), `api/.htaccess`

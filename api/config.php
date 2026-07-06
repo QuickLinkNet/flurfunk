@@ -1,7 +1,7 @@
 <?php
-// Kopieren nach config.php. Die Standardwerte funktionieren ohne Änderung,
-// da SQLite keine separaten Zugangsdaten braucht (siehe README).
-// config.php wird NICHT versioniert (siehe .gitignore).
+// Wird ganz normal mit deployed (kein Geheimnis mehr enthalten, da SQLite
+// keine Zugangsdaten braucht). Nur ändern, falls du den DB-Dateipfad,
+// den Session-Namen oder eine andere Domain für CORS brauchst.
 return [
     'db' => [
         // Pfad zur SQLite-Datei. Liegt unter api/data/, das per .htaccess

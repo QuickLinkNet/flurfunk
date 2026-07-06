@@ -9,39 +9,8 @@ Vollständiges Konzept: siehe `PRD_Nachbarschafts-App.md`.
 
 ## Einmalige Einrichtung (nur beim allerersten Mal)
 
-Dieser Schritt macht `npm run deploy` **bewusst nicht** automatisch – er
-betrifft eine Datei, die nicht bei jedem Deploy erneut angefasst werden soll.
-
-**`api/config.php` direkt auf dem Server anlegen**
-Nicht lokal erstellen, nicht hochladen! Per FTP-Programm (z.B. FileZilla) oder
-dem Datei-Manager deines Hosting-Panels direkt in
-`/apps/neighborhood/api/config.php` den Inhalt aus `api/config.example.php`
-kopieren – die Standardwerte funktionieren unverändert, da SQLite keine
-Zugangsdaten braucht (nur ein Dateipfad, kein Nutzer/Passwort):
-
-```php
-<?php
-return [
-    'db' => [
-        'path' => __DIR__ . '/data/database.sqlite',
-    ],
-    'session_name' => 'nachbarn_session',
-    'cors_origin' => null,
-];
-```
-
-Das Deploy-Skript prüft sogar aktiv, dass diese Datei **nicht** lokal in
-deinem Projektordner liegt, und bricht sonst ab – so kann sie nie versehentlich
-überschrieben oder mit hochgeladen werden.
-
-Die Datenbank-Tabellen müssen **nicht** manuell angelegt werden: Die App führt
-alle noch nicht angewendeten Dateien aus `api/migrations/` automatisch beim
-ersten echten Request aus (siehe `api/core/Database.php`). Die SQLite-Datei
-selbst liegt unter `api/data/` und ist dort per `.htaccess` vor direktem
-Web-Zugriff geschützt.
-
-**Deploy-Zugangsdaten lokal hinterlegen**
-Bei dir lokal (nicht auf dem Server):
+Seit dem Umstieg auf SQLite gibt es genau einen manuellen Schritt: die
+FTP-Zugangsdaten lokal eintragen.
 
 ```bash
 cp .env.deploy.example .env.deploy
@@ -50,6 +19,13 @@ cp .env.deploy.example .env.deploy
 Dann in `.env.deploy` eintragen: `FTP_HOST`, `FTP_USER`, `FTP_PASSWORD`
 (aus deinem Hosting-Panel für www.red-it.org). `REMOTE_BASE_DIR` nur ändern,
 falls der Zielordner wirklich anders heißen soll.
+
+`api/config.php` und die Datenbank-Tabellen brauchen **keine** manuellen
+Schritte mehr: `config.php` wird ganz normal mitdeployed (enthält seit SQLite
+keine Zugangsdaten mehr, nur einen Dateipfad), und `api/core/Database.php`
+führt alle noch nicht angewendeten Dateien aus `api/migrations/` automatisch
+beim ersten echten Request aus. Die SQLite-Datei selbst entsteht dabei unter
+`api/data/` und ist dort per `.htaccess` vor direktem Web-Zugriff geschützt.
 
 ## Deployment
 
@@ -66,8 +42,9 @@ Das Skript (`scripts/deploy.mjs`) fasst **ausschließlich** diesen einen
 Ordner an: Es wandert von deinem FTP-Login-Verzeichnis gezielt in
 `/apps/neighborhood`, legt dort höchstens fehlende Unterordner an und
 löscht nur den generierten `assets/`-Ordner (alte Vite-Bundles) neu – nichts
-außerhalb, nichts in Geschwister-Verzeichnissen. `api/config.php` wird nie
-angerührt, da die Datei lokal per Guard-Check ausgeschlossen ist.
+außerhalb, nichts in Geschwister-Verzeichnissen. Die SQLite-Datenbankdatei
+selbst (`api/data/*.sqlite`) liegt nicht lokal vor und wird deshalb beim
+Hochladen nie berührt – deine Live-Daten bleiben unangetastet.
 
 ## Lokale Entwicklung
 
@@ -97,9 +74,10 @@ scripts/        Deploy-Skript (scripts/deploy.mjs) + .env-Loader
 | Datei | Wo | Wofür | Wird deployed? |
 |---|---|---|---|
 | `.env.local` | lokal bei dir | Frontend-Dev zeigt auf Live-API | Nein (gitignored) |
+| `.env.local.example` | Repo | Vorlage für `.env.local` | Ja (enthält keine Geheimnisse) |
 | `.env.deploy` | lokal bei dir | FTP-Zugangsdaten für `npm run deploy` | Nein (gitignored) |
-| `api/config.php` | **nur auf dem Server** | SQLite-Dateipfad, Session-Name | Nein, wird aktiv blockiert |
-| `api/config.example.php` | Repo | Vorlage/Dokumentation | Ja (enthält keine Geheimnisse) |
+| `.env.deploy.example` | Repo | Vorlage für `.env.deploy` | Ja (enthält keine Geheimnisse) |
+| `api/config.php` | Repo | SQLite-Dateipfad, Session-Name | Ja (enthält seit SQLite keine Geheimnisse mehr) |
 
 ## Status
 
