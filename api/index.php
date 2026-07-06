@@ -11,7 +11,12 @@ spl_autoload_register(function (string $class): void {
         return;
     }
     $relative = substr($class, strlen($prefix));
-    $path = __DIR__ . '/' . str_replace('\\', '/', $relative) . '.php';
+    $parts = explode('\\', $relative);
+    // Ordner liegen bewusst lowercase (core/controllers/models), Namespaces
+    // aber PascalCase (App\Core\...) - auf Windows (case-insensitiv) fällt
+    // das nicht auf, auf Linux-Servern (case-sensitiv) schon.
+    $parts[0] = strtolower($parts[0]);
+    $path = __DIR__ . '/' . implode('/', $parts) . '.php';
     if (is_file($path)) {
         require $path;
     }
