@@ -29,6 +29,7 @@ use App\Core\Router;
 use App\Controllers\AuthController;
 use App\Controllers\HouseholdController;
 use App\Controllers\ChildController;
+use App\Controllers\PetController;
 use App\Controllers\FeedController;
 use App\Controllers\CalendarController;
 use App\Controllers\VisibilityController;
@@ -54,6 +55,10 @@ $router->put('/households/me', [new HouseholdController(), 'updateMe']);
 $router->get('/children', [new ChildController(), 'index']);
 $router->post('/children', [new ChildController(), 'store']);
 $router->put('/children/{id}', [new ChildController(), 'updateLocation']);
+
+$router->get('/pets', [new PetController(), 'index']);
+$router->post('/pets', [new PetController(), 'store']);
+$router->delete('/pets/{id}', [new PetController(), 'destroy']);
 
 $router->get('/feed', [new FeedController(), 'index']);
 $router->post('/feed', [new FeedController(), 'store']);

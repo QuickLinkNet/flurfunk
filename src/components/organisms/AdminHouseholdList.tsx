@@ -52,6 +52,11 @@ export function AdminHouseholdList({ households, onDelete }: Props) {
               Kinder: {h.children.map((c) => `${c.name} (${c.currentLocation})`).join(', ')}
             </p>
           )}
+          {h.pets.length > 0 && (
+            <p style={{ margin: '4px 0 0', fontSize: 12 }}>
+              Haustiere: {h.pets.map((p) => `${p.name} (${p.type})`).join(', ')}
+            </p>
+          )}
         </div>
       ))}
     </div>

@@ -15,6 +15,12 @@ export interface AdminChild {
   currentLocation: string;
 }
 
+export interface AdminPet {
+  id: number;
+  name: string;
+  type: string;
+}
+
 export interface AdminHousehold {
   id: number;
   name: string;
@@ -25,6 +31,7 @@ export interface AdminHousehold {
   createdAt: string;
   members: AdminMember[];
   children: AdminChild[];
+  pets: AdminPet[];
 }
 
 export interface AdminUser extends AdminMember {

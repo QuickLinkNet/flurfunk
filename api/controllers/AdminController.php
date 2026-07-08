@@ -10,6 +10,7 @@ use App\Models\Child;
 use App\Models\Event;
 use App\Models\FeedItem;
 use App\Models\Household;
+use App\Models\Pet;
 use App\Models\User;
 
 final class AdminController
@@ -32,6 +33,11 @@ final class AdminController
                     'name' => $c['name'],
                     'currentLocation' => $c['current_location'],
                 ], Child::findByHousehold((int) $h['id'])),
+                'pets' => array_map(fn(array $p) => [
+                    'id' => (int) $p['id'],
+                    'name' => $p['name'],
+                    'type' => $p['type'],
+                ], Pet::findByHousehold((int) $h['id'])),
             ];
         }, Household::findAll());
         Response::json($households);

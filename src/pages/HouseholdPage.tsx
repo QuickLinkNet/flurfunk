@@ -1,11 +1,12 @@
 import { Link } from 'react-router-dom';
 import { DashboardTemplate } from '../components/templates/DashboardTemplate';
 import { ChildrenManager } from '../components/organisms/ChildrenManager';
+import { PetsManager } from '../components/organisms/PetsManager';
 import { VisibilitySettingsForm } from '../components/organisms/VisibilitySettingsForm';
 import { useAuth } from '../hooks/useAuth';
 
-// Entspricht /haushalt/mein aus der Sitemap (PRD Kapitel 7). Adresse/Erwachsene/
-// Haustiere folgen nach demselben Muster wie ChildrenManager.
+// Entspricht /haushalt/mein aus der Sitemap (PRD Kapitel 7). Adresse/Erwachsene
+// folgen nach demselben Muster wie ChildrenManager/PetsManager.
 export function HouseholdPage() {
   const { user } = useAuth();
   return (
@@ -13,6 +14,10 @@ export function HouseholdPage() {
       <section>
         <h2 style={{ fontSize: 14, fontWeight: 500 }}>Kinder</h2>
         <ChildrenManager />
+      </section>
+      <section>
+        <h2 style={{ fontSize: 14, fontWeight: 500 }}>Haustiere</h2>
+        <PetsManager />
       </section>
       <section>
         <h2 style={{ fontSize: 14, fontWeight: 500 }}>Sichtbarkeit</h2>
