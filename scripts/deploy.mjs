@@ -5,7 +5,9 @@ import { loadEnvFile } from './loadEnv.mjs';
 
 loadEnvFile('.env.deploy');
 
-// Hart verdrahtetes Ziel: darf NUR dieser eine Ordner sein (siehe README).
+// Ziel relativ zum FTP-Login-Root. Je nach Hoster liegt das Docroot direkt
+// im Login-Root (dann z.B. "/apps/neighborhood") oder in einem Unterordner
+// wie "html/" (dann "/html/apps/neighborhood") - siehe README.
 const remoteBase = process.env.REMOTE_BASE_DIR || '/apps/neighborhood';
 
 function fail(message) {
@@ -13,8 +15,8 @@ function fail(message) {
   process.exit(1);
 }
 
-if (!remoteBase.startsWith('/apps/') || remoteBase === '/apps/' || remoteBase.length < 8) {
-  fail(`REMOTE_BASE_DIR ("${remoteBase}") sieht nicht sicher aus. Erwartet: /apps/<name>`);
+if (remoteBase === '/' || remoteBase.trim() === '' || !remoteBase.endsWith('/neighborhood')) {
+  fail(`REMOTE_BASE_DIR ("${remoteBase}") sieht nicht sicher aus. Erwartet einen Pfad, der auf "/neighborhood" endet.`);
 }
 for (const key of ['FTP_HOST', 'FTP_USER', 'FTP_PASSWORD']) {
   if (!process.env[key]) {

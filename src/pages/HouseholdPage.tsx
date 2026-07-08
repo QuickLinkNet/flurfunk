@@ -13,6 +13,9 @@ export function HouseholdPage() {
         <h2 style={{ fontSize: 14, fontWeight: 500 }}>Kinder</h2>
         <ChildrenManager />
       </section>
+      <section>
+        <Link to="/einstellungen">Einstellungen →</Link>
+      </section>
       {user?.role === 'admin' && (
         <section>
           <Link to="/admin">Zur Verwaltung →</Link>

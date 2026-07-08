@@ -7,6 +7,7 @@ import { CalendarPage } from '../pages/CalendarPage';
 import { EventsPage } from '../pages/EventsPage';
 import { EventDetailPage } from '../pages/EventDetailPage';
 import { HouseholdPage } from '../pages/HouseholdPage';
+import { SettingsPage } from '../pages/SettingsPage';
 import { AdminPage } from '../pages/AdminPage';
 import { useAuth } from '../hooks/useAuth';
 
@@ -76,6 +77,14 @@ export function AppRoutes() {
         element={
           <RequireAuth>
             <HouseholdPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/einstellungen"
+        element={
+          <RequireAuth>
+            <SettingsPage />
           </RequireAuth>
         }
       />
