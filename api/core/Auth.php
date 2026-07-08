@@ -11,6 +11,16 @@ final class Auth
         if (session_status() === PHP_SESSION_NONE) {
             $config = require __DIR__ . '/../config.php';
             session_name($config['session_name']);
+            // Explizit setzen statt auf Server-Defaults zu vertrauen: Cookie
+            // nie über JS lesbar, nie unverschlüsselt gesendet (wir laufen
+            // ausschließlich unter HTTPS).
+            session_set_cookie_params([
+                'lifetime' => 0,
+                'path' => '/',
+                'secure' => true,
+                'httponly' => true,
+                'samesite' => 'Lax',
+            ]);
             session_start();
         }
     }
