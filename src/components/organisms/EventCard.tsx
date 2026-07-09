@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { StatusEmoji } from '../atoms/StatusEmoji';
+import { IconBadge } from '../atoms/IconBadge';
 import { EVENT_TYPE_META } from '../../utils/eventTypeMeta';
 import { formatDateTimeLabel } from '../../utils/date';
 import type { StreetEvent } from '../../types/event';
@@ -15,23 +15,38 @@ export function EventCard({ event }: Props) {
       to={`/events/${event.id}`}
       style={{
         display: 'flex',
-        gap: 12,
-        padding: '12px 14px',
+        gap: 'var(--md-space-3)',
+        padding: 'var(--md-space-3) var(--md-space-4)',
         borderRadius: 'var(--md-radius-card)',
         background: 'var(--md-color-surface)',
         border: '1px solid var(--md-color-border)',
+        boxShadow: 'var(--md-shadow-card)',
         textDecoration: 'none',
         color: 'inherit'
       }}
     >
-      <StatusEmoji emoji={meta.emoji} size={24} />
+      <IconBadge emoji={meta.emoji} tint={meta.tint} />
       <div style={{ flex: 1 }}>
-        <p style={{ margin: 0, fontSize: 13, fontWeight: 500 }}>{event.title}</p>
-        <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--md-color-on-surface-variant)' }}>
+        <p style={{ margin: 0, fontSize: 'var(--md-font-size-base)', fontWeight: 'var(--md-font-weight-medium)' }}>
+          {event.title}
+        </p>
+        <p
+          style={{
+            margin: 'var(--md-space-1) 0 0',
+            fontSize: 'var(--md-font-size-sm)',
+            color: 'var(--md-color-on-surface-variant)'
+          }}
+        >
           {meta.label} · {formatDateTimeLabel(event.startsAt)}
           {event.location ? ` · ${event.location}` : ''}
         </p>
-        <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--md-color-on-surface-variant)' }}>
+        <p
+          style={{
+            margin: 'var(--md-space-2) 0 0',
+            fontSize: 'var(--md-font-size-sm)',
+            color: 'var(--md-color-on-surface-variant)'
+          }}
+        >
           {event.rsvpCounts.yes} Zusagen · {event.rsvpCounts.maybe} vielleicht
         </p>
       </div>

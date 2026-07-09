@@ -5,7 +5,8 @@
 
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-family: var(--md-font-family);
+  font-size: var(--md-font-size-base);
   background: var(--md-color-surface-variant);
   color: var(--md-color-on-surface);
 }

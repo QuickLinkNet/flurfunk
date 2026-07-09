@@ -17,10 +17,10 @@ export function Button({ variant = 'primary', style, ...rest }: Props) {
     <button
       {...rest}
       style={{
-        padding: '10px 16px',
+        padding: 'var(--md-space-3) var(--md-space-4)',
         borderRadius: 'var(--md-radius-control)',
-        fontSize: 14,
-        fontWeight: 500,
+        fontSize: 'var(--md-font-size-md)',
+        fontWeight: 'var(--md-font-weight-medium)',
         cursor: 'pointer',
         ...styles[variant],
         ...style

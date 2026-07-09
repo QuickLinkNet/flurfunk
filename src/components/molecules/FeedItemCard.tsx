@@ -1,4 +1,4 @@
-import { StatusEmoji } from '../atoms/StatusEmoji';
+import { IconBadge } from '../atoms/IconBadge';
 import { FEED_TYPE_META } from '../../utils/feedTypeMeta';
 import type { FeedItem } from '../../types/feedItem';
 
@@ -12,20 +12,27 @@ export function FeedItemCard({ item }: Props) {
     <div
       style={{
         display: 'flex',
-        gap: 12,
-        padding: '12px 14px',
+        gap: 'var(--md-space-3)',
+        padding: 'var(--md-space-3) var(--md-space-4)',
         borderRadius: 'var(--md-radius-card)',
         background: 'var(--md-color-surface)',
-        border: '1px solid var(--md-color-border)'
+        border: '1px solid var(--md-color-border)',
+        boxShadow: 'var(--md-shadow-card)'
       }}
     >
-      <StatusEmoji emoji={meta.emoji} size={24} />
+      <IconBadge emoji={meta.emoji} tint={meta.tint} />
       <div>
-        <p style={{ margin: 0, fontSize: 13, fontWeight: 500 }}>
+        <p style={{ margin: 0, fontSize: 'var(--md-font-size-base)', fontWeight: 'var(--md-font-weight-medium)' }}>
           {item.householdName} · {meta.label}
         </p>
         {item.message && (
-          <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--md-color-on-surface-variant)' }}>
+          <p
+            style={{
+              margin: 'var(--md-space-1) 0 0',
+              fontSize: 'var(--md-font-size-sm)',
+              color: 'var(--md-color-on-surface-variant)'
+            }}
+          >
             {item.message}
           </p>
         )}
