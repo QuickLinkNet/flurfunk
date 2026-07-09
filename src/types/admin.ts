@@ -1,4 +1,5 @@
 import type { UserRole } from './user';
+import type { HouseholdInvitePerson } from './invite';
 
 export interface AdminMember {
   id: number;
@@ -32,6 +33,7 @@ export interface AdminHousehold {
   members: AdminMember[];
   children: AdminChild[];
   pets: AdminPet[];
+  invites: HouseholdInvitePerson[];
 }
 
 export interface AdminUser extends AdminMember {

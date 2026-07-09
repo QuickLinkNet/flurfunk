@@ -44,6 +44,7 @@ Auth::start();
 
 $router = new Router();
 
+$router->get('/invites/{code}', [new AuthController(), 'invitePreview']);
 $router->post('/auth/register', [new AuthController(), 'register']);
 $router->post('/auth/login', [new AuthController(), 'login']);
 $router->post('/auth/logout', [new AuthController(), 'logout']);
@@ -79,6 +80,8 @@ $router->get('/feature-flags', [new FeatureFlagController(), 'index']);
 $router->put('/admin/feature-flags', [new FeatureFlagController(), 'update']);
 
 $router->get('/admin/households', [new AdminController(), 'households']);
+$router->post('/admin/households', [new AdminController(), 'createHousehold']);
+$router->post('/admin/households/{id}/invites', [new AdminController(), 'addInvite']);
 $router->delete('/admin/households/{id}', [new AdminController(), 'deleteHousehold']);
 $router->get('/admin/users', [new AdminController(), 'users']);
 $router->put('/admin/users/{id}/role', [new AdminController(), 'updateUserRole']);

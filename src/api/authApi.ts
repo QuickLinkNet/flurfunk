@@ -14,12 +14,9 @@ export function fetchCurrentUser() {
 }
 
 interface RegisterInput {
+  code: string;
   email: string;
   password: string;
-  displayName: string;
-  inviteCode: string;
-  householdName: string;
-  addressLine: string;
 }
 
 export function register(input: RegisterInput) {

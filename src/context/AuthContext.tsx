@@ -3,12 +3,9 @@ import * as authApi from '../api/authApi';
 import type { User } from '../types/user';
 
 interface RegisterInput {
+  code: string;
   email: string;
   password: string;
-  displayName: string;
-  inviteCode: string;
-  householdName: string;
-  addressLine: string;
 }
 
 interface AuthContextValue {

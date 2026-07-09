@@ -78,7 +78,22 @@ Schema ist bereits mit `street_id` vorbereitet, damit v3.0 (mehrere Straßen) oh
 |---|---|---|
 | id | INT PK | |
 | name | VARCHAR(120) | z.B. "Musterstraße" |
-| invite_code | VARCHAR(32) UNIQUE | für Registrierung |
+| created_at | DATETIME | |
+
+### household_invites
+Ersetzt den früheren einen Straßen-Einladungscode: Admin legt einen Haushalt
+mit 1–2 Personen an, jede Person bekommt einen eigenen, einmal einlösbaren
+Code (siehe Kapitel 10, `POST /admin/households`).
+
+| Feld | Typ | Hinweis |
+|---|---|---|
+| id | INT PK | |
+| household_id | INT FK | |
+| code | VARCHAR(8) UNIQUE | vom Admin generiert, an die Person verschickt |
+| first_name | VARCHAR(60) | |
+| last_name | VARCHAR(60) | |
+| used_at | DATETIME NULL | NULL = noch nicht eingelöst |
+| used_by_user_id | INT FK NULL | |
 | created_at | DATETIME | |
 
 ### users
@@ -391,7 +406,10 @@ PHP-native Sessions (`session_start()`, `$_SESSION['user_id']`), da Frontend (Ro
 
 | Methode | Pfad | Zweck |
 |---|---|---|
-| POST | /auth/register | Registrierung per Einladungscode |
+| GET | /invites/:code | Vorschau (Name/Haushalt) vor der Registrierung |
+| POST | /auth/register | Registrierung mit personalisiertem Einladungscode |
+| POST | /admin/households (nur admin) | Haushalt + Personen anlegen, generiert Codes |
+| POST | /admin/households/:id/invites (nur admin) | weitere Person zu bestehendem Haushalt einladen |
 | POST | /auth/login | Login, setzt Session-Cookie |
 | POST | /auth/logout | Session beenden |
 | GET | /households/me | eigener Haushalt inkl. Kinder/Haustiere |
@@ -460,6 +478,6 @@ Mehrere Straßen/Nachbarschaften (Multi-Tenant über bereits vorbereitetes `stre
 ## 13. Offene Punkte / Risiken
 
 - **Direkte Live-Backend-Tests** ohne lokale PHP-Umgebung bergen ein gewisses Risiko für Produktionsfehler – Staging-Ordner (s. Kapitel 11) wird empfohlen, ist aber optional.
-- **Einladungscode-Verteilung:** muss außerhalb der App organisiert werden (z.B. durch Admin/Straßensprecher) – kein Zahlungs- oder Fremdauth-System vorgesehen.
+- **Einladungscode-Verteilung:** Admin legt Haushalt + Personen im Admin-Bereich an, die App generiert pro Person einen einmaligen Code; der eigentliche Versand (WhatsApp, Zettel, persönlich) passiert weiterhin außerhalb der App.
 - **Push-Notifications** erfordern HTTPS und einen VAPID-Key für Web-Push; technisch einfach, aber Teil des Backends (kleine PHP-Bibliothek für Web-Push nötig oder Eigenbau nach RFC 8291 – hier wäge ich bewusst zwischen "keine Dependencies" und Aufwand ab, Vorschlag: minimaler Eigenbau in `core/WebPush.php`).
 - **DSGVO/Datenschutz:** Adressen, Kinderdaten, Standort/Aufenthaltsort sind sensible Daten – Sichtbarkeits-Feinsteuerung (Kapitel 5) ist deshalb kein Nice-to-have, sondern Kernanforderung.

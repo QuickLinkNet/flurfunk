@@ -1,8 +1,7 @@
 CREATE TABLE IF NOT EXISTS streets (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
-  invite_code TEXT NOT NULL UNIQUE,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-INSERT INTO streets (name, invite_code) VALUES ('Musterstraße', 'MUSTER2026');
+INSERT INTO streets (name) VALUES ('Musterstraße');

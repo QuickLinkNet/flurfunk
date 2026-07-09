@@ -1,12 +1,14 @@
 import { Button } from '../atoms/Button';
+import { AdminAddInviteForm } from '../molecules/AdminAddInviteForm';
 import type { AdminHousehold } from '../../types/admin';
 
 interface Props {
   households: AdminHousehold[];
   onDelete: (id: number) => void;
+  onInvitesChanged: () => void;
 }
 
-export function AdminHouseholdList({ households, onDelete }: Props) {
+export function AdminHouseholdList({ households, onDelete, onInvitesChanged }: Props) {
   if (households.length === 0) {
     return <p style={{ fontSize: 13, color: 'var(--md-color-on-surface-variant)' }}>Keine Haushalte vorhanden.</p>;
   }
@@ -57,6 +59,18 @@ export function AdminHouseholdList({ households, onDelete }: Props) {
               Haustiere: {h.pets.map((p) => `${p.name} (${p.type})`).join(', ')}
             </p>
           )}
+          {h.invites.length > 0 && (
+            <div style={{ margin: '8px 0 0' }}>
+              <p style={{ margin: 0, fontSize: 12, fontWeight: 500 }}>Einladungscodes:</p>
+              {h.invites.map((invite) => (
+                <p key={invite.id} style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--md-color-on-surface-variant)' }}>
+                  {invite.firstName} {invite.lastName}: <strong>{invite.code}</strong>{' '}
+                  {invite.usedAt ? '· eingelöst' : '· offen'}
+                </p>
+              ))}
+            </div>
+          )}
+          <AdminAddInviteForm householdId={h.id} onAdded={onInvitesChanged} />
         </div>
       ))}
     </div>

@@ -6,38 +6,50 @@ use App\Core\Auth;
 use App\Core\Request;
 use App\Core\Response;
 use App\Models\Household;
-use App\Models\Street;
+use App\Models\HouseholdInvite;
 use App\Models\User;
 
 final class AuthController
 {
+    // Öffentlich: zeigt vor der eigentlichen Registrierung, für wen der Code
+    // gedacht ist (Name + Haushalt), ohne dass man sich schon einloggen muss.
+    public function invitePreview(array $params): void
+    {
+        $invite = HouseholdInvite::findByCode($params['code'] ?? '');
+        if ($invite === null || $invite['used_at'] !== null) {
+            Response::error('Einladungscode ungültig oder bereits verwendet.', 404);
+        }
+        $household = Household::findById((int) $invite['household_id']);
+        Response::json([
+            'firstName' => $invite['first_name'],
+            'lastName' => $invite['last_name'],
+            'householdName' => $household['name'] ?? null,
+        ]);
+    }
+
     public function register(): void
     {
         $body = Request::json();
         $email = trim($body['email'] ?? '');
         $password = (string) ($body['password'] ?? '');
-        $displayName = trim($body['displayName'] ?? '');
-        $inviteCode = trim($body['inviteCode'] ?? '');
-        $householdName = trim($body['householdName'] ?? '');
-        $addressLine = trim($body['addressLine'] ?? '');
+        $code = trim($body['code'] ?? '');
 
-        if ($email === '' || strlen($password) < 8 || $displayName === '' || $inviteCode === ''
-            || $householdName === '' || $addressLine === ''
-        ) {
+        if ($email === '' || strlen($password) < 8 || $code === '') {
             Response::error('Bitte alle Felder ausfüllen (Passwort mind. 8 Zeichen).', 422);
         }
         if (User::findByEmail($email) !== null) {
             Response::error('Diese E-Mail ist bereits registriert.', 409);
         }
-        $street = Street::findByInviteCode($inviteCode);
-        if ($street === null) {
-            Response::error('Ungültiger Einladungscode.', 422);
+        $invite = HouseholdInvite::findByCode($code);
+        if ($invite === null || $invite['used_at'] !== null) {
+            Response::error('Einladungscode ungültig oder bereits verwendet.', 422);
         }
 
+        $displayName = trim($invite['first_name'] . ' ' . $invite['last_name']);
         $role = User::adminExists() ? 'member' : 'admin';
         $userId = User::create($email, password_hash($password, PASSWORD_DEFAULT), $displayName, $role);
-        $householdId = Household::create((int) $street['id'], $householdName, $addressLine);
-        User::attachHousehold($userId, $householdId);
+        User::attachHousehold($userId, (int) $invite['household_id']);
+        HouseholdInvite::markUsed((int) $invite['id'], $userId);
 
         Auth::login($userId);
         Response::json($this->toPublicUser(User::findById($userId)));

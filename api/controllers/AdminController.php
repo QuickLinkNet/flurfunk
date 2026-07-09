@@ -10,7 +10,9 @@ use App\Models\Child;
 use App\Models\Event;
 use App\Models\FeedItem;
 use App\Models\Household;
+use App\Models\HouseholdInvite;
 use App\Models\Pet;
+use App\Models\Street;
 use App\Models\User;
 
 final class AdminController
@@ -38,9 +40,58 @@ final class AdminController
                     'name' => $p['name'],
                     'type' => $p['type'],
                 ], Pet::findByHousehold((int) $h['id'])),
+                'invites' => array_map([$this, 'toPublicInvite'], HouseholdInvite::findByHousehold((int) $h['id'])),
             ];
         }, Household::findAll());
         Response::json($households);
+    }
+
+    public function createHousehold(): void
+    {
+        $this->requireAdmin();
+        $body = Request::json();
+        $name = trim($body['name'] ?? '');
+        $addressLine = trim($body['addressLine'] ?? '');
+        $people = is_array($body['people'] ?? null) ? $body['people'] : [];
+
+        if ($name === '' || $addressLine === '' || count($people) === 0) {
+            Response::error('Haushaltsname, Adresse und mindestens eine Person sind Pflicht.', 422);
+        }
+
+        $street = Street::first();
+        if ($street === null) {
+            Response::error('Keine Straße konfiguriert.', 500);
+        }
+
+        $householdId = Household::create((int) $street['id'], $name, $addressLine);
+        $invites = [];
+        foreach ($people as $person) {
+            $firstName = trim($person['firstName'] ?? '');
+            $lastName = trim($person['lastName'] ?? '');
+            if ($firstName === '' || $lastName === '') {
+                continue;
+            }
+            $invites[] = $this->toPublicInvite(HouseholdInvite::create($householdId, $firstName, $lastName));
+        }
+
+        Response::json(['householdId' => $householdId, 'invites' => $invites], 201);
+    }
+
+    public function addInvite(array $params): void
+    {
+        $this->requireAdmin();
+        $householdId = (int) $params['id'];
+        if (Household::findById($householdId) === null) {
+            Response::error('Haushalt nicht gefunden.', 404);
+        }
+        $body = Request::json();
+        $firstName = trim($body['firstName'] ?? '');
+        $lastName = trim($body['lastName'] ?? '');
+        if ($firstName === '' || $lastName === '') {
+            Response::error('Vor- und Nachname sind Pflicht.', 422);
+        }
+        $invite = HouseholdInvite::create($householdId, $firstName, $lastName);
+        Response::json($this->toPublicInvite($invite), 201);
     }
 
     public function deleteHousehold(array $params): void
@@ -163,6 +214,17 @@ final class AdminController
             'role' => $u['role'],
             'householdId' => $u['household_id'] !== null ? (int) $u['household_id'] : null,
             'lastLoginAt' => $u['last_login_at'],
+        ];
+    }
+
+    private function toPublicInvite(array $i): array
+    {
+        return [
+            'id' => (int) $i['id'],
+            'code' => $i['code'],
+            'firstName' => $i['first_name'],
+            'lastName' => $i['last_name'],
+            'usedAt' => $i['used_at'],
         ];
     }
 }

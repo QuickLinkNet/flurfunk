@@ -6,6 +6,7 @@ import { AdminFeedList } from '../components/organisms/AdminFeedList';
 import { AdminEventList } from '../components/organisms/AdminEventList';
 import { AdminCalendarList } from '../components/organisms/AdminCalendarList';
 import { AdminFeatureFlagsForm } from '../components/organisms/AdminFeatureFlagsForm';
+import { AdminCreateHouseholdForm } from '../components/organisms/AdminCreateHouseholdForm';
 import {
   fetchAdminHouseholds,
   deleteAdminHousehold,
@@ -70,8 +71,12 @@ export function AdminPage() {
         <AdminFeatureFlagsForm />
       </section>
       <section>
+        <h2 style={{ fontSize: 14, fontWeight: 500 }}>Neuer Haushalt</h2>
+        <AdminCreateHouseholdForm onCreated={reload} />
+      </section>
+      <section>
         <h2 style={{ fontSize: 14, fontWeight: 500 }}>Haushalte ({households.length})</h2>
-        <AdminHouseholdList households={households} onDelete={handleDeleteHousehold} />
+        <AdminHouseholdList households={households} onDelete={handleDeleteHousehold} onInvitesChanged={reload} />
       </section>
       <section>
         <h2 style={{ fontSize: 14, fontWeight: 500 }}>Nutzer ({users.length})</h2>

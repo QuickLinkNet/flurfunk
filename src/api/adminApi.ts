@@ -1,9 +1,29 @@
 import { apiRequest } from './client';
 import type { AdminCalendarEntry, AdminEvent, AdminFeedItem, AdminHousehold, AdminUser } from '../types/admin';
+import type { HouseholdInvitePerson } from '../types/invite';
 import type { UserRole } from '../types/user';
 
 export function fetchAdminHouseholds() {
   return apiRequest<AdminHousehold[]>('/admin/households');
+}
+
+interface NewHouseholdPerson {
+  firstName: string;
+  lastName: string;
+}
+
+export function createAdminHousehold(name: string, addressLine: string, people: NewHouseholdPerson[]) {
+  return apiRequest<{ householdId: number; invites: HouseholdInvitePerson[] }>('/admin/households', {
+    method: 'POST',
+    body: JSON.stringify({ name, addressLine, people })
+  });
+}
+
+export function addAdminHouseholdInvite(householdId: number, firstName: string, lastName: string) {
+  return apiRequest<HouseholdInvitePerson>(`/admin/households/${householdId}/invites`, {
+    method: 'POST',
+    body: JSON.stringify({ firstName, lastName })
+  });
 }
 
 export function deleteAdminHousehold(id: number) {
