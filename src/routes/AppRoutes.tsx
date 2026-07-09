@@ -10,6 +10,9 @@ import { HouseholdPage } from '../pages/HouseholdPage';
 import { SettingsPage } from '../pages/SettingsPage';
 import { AdminPage } from '../pages/AdminPage';
 import { useAuth } from '../hooks/useAuth';
+import { useFeatureFlags } from '../hooks/useFeatureFlags';
+import { FEATURE_LABELS } from '../types/featureFlags';
+import type { FeatureKey } from '../types/featureFlags';
 
 function RequireAuth({ children }: { children: JSX.Element }) {
   const { user, isLoading } = useAuth();
@@ -23,6 +26,20 @@ function RequireAdmin({ children }: { children: JSX.Element }) {
   if (isLoading) return null;
   if (!user) return <Navigate to="/login" replace />;
   if (user.role !== 'admin') return <Navigate to="/dashboard" replace />;
+  return children;
+}
+
+function RequireFeature({ feature, children }: { feature: FeatureKey; children: JSX.Element }) {
+  const { isEnabled } = useFeatureFlags();
+  if (!isEnabled(feature)) {
+    return (
+      <div style={{ padding: 24, textAlign: 'center' }}>
+        <p style={{ fontSize: 13, color: 'var(--md-color-on-surface-variant)' }}>
+          {FEATURE_LABELS[feature]} ist aktuell deaktiviert.
+        </p>
+      </div>
+    );
+  }
   return children;
 }
 
@@ -44,7 +61,9 @@ export function AppRoutes() {
         path="/strasse"
         element={
           <RequireAuth>
-            <StreetFeedPage />
+            <RequireFeature feature="feed">
+              <StreetFeedPage />
+            </RequireFeature>
           </RequireAuth>
         }
       />
@@ -52,7 +71,9 @@ export function AppRoutes() {
         path="/kalender"
         element={
           <RequireAuth>
-            <CalendarPage />
+            <RequireFeature feature="calendar">
+              <CalendarPage />
+            </RequireFeature>
           </RequireAuth>
         }
       />
@@ -60,7 +81,9 @@ export function AppRoutes() {
         path="/events"
         element={
           <RequireAuth>
-            <EventsPage />
+            <RequireFeature feature="events">
+              <EventsPage />
+            </RequireFeature>
           </RequireAuth>
         }
       />
@@ -68,7 +91,9 @@ export function AppRoutes() {
         path="/events/:id"
         element={
           <RequireAuth>
-            <EventDetailPage />
+            <RequireFeature feature="events">
+              <EventDetailPage />
+            </RequireFeature>
           </RequireAuth>
         }
       />

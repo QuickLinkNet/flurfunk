@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS feature_flags (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  street_id INTEGER NOT NULL REFERENCES streets(id) ON DELETE CASCADE,
+  feature_key TEXT NOT NULL,
+  enabled INTEGER NOT NULL DEFAULT 1,
+  UNIQUE (street_id, feature_key)
+);

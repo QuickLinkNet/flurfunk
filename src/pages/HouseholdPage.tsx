@@ -4,21 +4,27 @@ import { ChildrenManager } from '../components/organisms/ChildrenManager';
 import { PetsManager } from '../components/organisms/PetsManager';
 import { VisibilitySettingsForm } from '../components/organisms/VisibilitySettingsForm';
 import { useAuth } from '../hooks/useAuth';
+import { useFeatureFlags } from '../hooks/useFeatureFlags';
 
 // Entspricht /haushalt/mein aus der Sitemap (PRD Kapitel 7). Adresse/Erwachsene
 // folgen nach demselben Muster wie ChildrenManager/PetsManager.
 export function HouseholdPage() {
   const { user } = useAuth();
+  const { isEnabled } = useFeatureFlags();
   return (
     <DashboardTemplate header={<h1 style={{ margin: 0, fontSize: 18, fontWeight: 500 }}>Mein Haushalt</h1>}>
-      <section>
-        <h2 style={{ fontSize: 14, fontWeight: 500 }}>Kinder</h2>
-        <ChildrenManager />
-      </section>
-      <section>
-        <h2 style={{ fontSize: 14, fontWeight: 500 }}>Haustiere</h2>
-        <PetsManager />
-      </section>
+      {isEnabled('children') && (
+        <section>
+          <h2 style={{ fontSize: 14, fontWeight: 500 }}>Kinder</h2>
+          <ChildrenManager />
+        </section>
+      )}
+      {isEnabled('pets') && (
+        <section>
+          <h2 style={{ fontSize: 14, fontWeight: 500 }}>Haustiere</h2>
+          <PetsManager />
+        </section>
+      )}
       <section>
         <h2 style={{ fontSize: 14, fontWeight: 500 }}>Sichtbarkeit</h2>
         <VisibilitySettingsForm />

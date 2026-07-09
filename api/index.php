@@ -35,6 +35,7 @@ use App\Controllers\CalendarController;
 use App\Controllers\VisibilityController;
 use App\Controllers\EventController;
 use App\Controllers\AdminController;
+use App\Controllers\FeatureFlagController;
 
 error_reporting(E_ALL);
 ini_set('display_errors', '0'); // Fehler nie roh an den Client durchreichen
@@ -73,6 +74,9 @@ $router->post('/events/{id}/rsvp', [new EventController(), 'rsvp']);
 
 $router->get('/households/me/visibility', [new VisibilityController(), 'me']);
 $router->put('/households/me/visibility', [new VisibilityController(), 'updateMe']);
+
+$router->get('/feature-flags', [new FeatureFlagController(), 'index']);
+$router->put('/admin/feature-flags', [new FeatureFlagController(), 'update']);
 
 $router->get('/admin/households', [new AdminController(), 'households']);
 $router->delete('/admin/households/{id}', [new AdminController(), 'deleteHousehold']);

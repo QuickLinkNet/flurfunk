@@ -1,16 +1,19 @@
 import { NavLink } from 'react-router-dom';
+import { useFeatureFlags } from '../../hooks/useFeatureFlags';
+import type { FeatureKey } from '../../types/featureFlags';
 
-const items = [
+const items: Array<{ to: string; label: string; icon: string; feature?: FeatureKey }> = [
   { to: '/dashboard', label: 'Dashboard', icon: '🏠' },
-  { to: '/kalender', label: 'Kalender', icon: '📅' },
-  { to: '/events', label: 'Events', icon: '🎉' },
-  { to: '/strasse', label: 'Straße', icon: '💬' },
-  // Zeigt vorerst auf den Haushalt, bis /einstellungen als eigene Seite existiert.
+  { to: '/kalender', label: 'Kalender', icon: '📅', feature: 'calendar' },
+  { to: '/events', label: 'Events', icon: '🎉', feature: 'events' },
+  { to: '/strasse', label: 'Straße', icon: '💬', feature: 'feed' },
   { to: '/haushalt/mein', label: 'Mehr', icon: '☰' }
 ];
 
 // Primäre mobile Navigation, siehe PRD Kapitel 7 (Sitemap).
 export function BottomNavigation() {
+  const { isEnabled } = useFeatureFlags();
+  const visibleItems = items.filter((item) => !item.feature || isEnabled(item.feature));
   return (
     <nav
       style={{
@@ -23,7 +26,7 @@ export function BottomNavigation() {
         borderTop: '1px solid var(--md-color-border)'
       }}
     >
-      {items.map((item) => (
+      {visibleItems.map((item) => (
         <NavLink
           key={item.to}
           to={item.to}
