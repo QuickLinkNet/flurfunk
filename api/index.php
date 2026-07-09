@@ -36,6 +36,7 @@ use App\Controllers\VisibilityController;
 use App\Controllers\EventController;
 use App\Controllers\AdminController;
 use App\Controllers\FeatureFlagController;
+use App\Controllers\PushController;
 
 error_reporting(E_ALL);
 ini_set('display_errors', '0'); // Fehler nie roh an den Client durchreichen
@@ -78,6 +79,12 @@ $router->put('/households/me/visibility', [new VisibilityController(), 'updateMe
 
 $router->get('/feature-flags', [new FeatureFlagController(), 'index']);
 $router->put('/admin/feature-flags', [new FeatureFlagController(), 'update']);
+
+$router->get('/push/vapid-public-key', [new PushController(), 'vapidPublicKey']);
+$router->get('/push/status', [new PushController(), 'status']);
+$router->post('/push/subscribe', [new PushController(), 'subscribe']);
+$router->post('/push/unsubscribe', [new PushController(), 'unsubscribe']);
+$router->post('/push/test', [new PushController(), 'test']);
 
 $router->get('/admin/households', [new AdminController(), 'households']);
 $router->post('/admin/households', [new AdminController(), 'createHousehold']);
