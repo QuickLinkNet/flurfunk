@@ -15,7 +15,16 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       manifest: false, // nutzt public/manifest.json
-      includeAssets: ['icons/icon-192.png', 'icons/icon-512.png']
+      includeAssets: ['icons/icon-192.png', 'icons/icon-512.png'],
+      // injectManifest statt generateSW, da wir einen eigenen push-Event-Handler
+      // brauchen (Web-Push-Benachrichtigungen) - siehe src/sw.ts.
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
+      devOptions: {
+        enabled: true, // Service Worker auch im Dev-Server aktiv, zum Testen von Push
+        type: 'module'
+      }
     })
   ]
 });

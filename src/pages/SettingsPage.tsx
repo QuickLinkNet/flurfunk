@@ -1,6 +1,7 @@
 import { DashboardTemplate } from '../components/templates/DashboardTemplate';
 import { Select } from '../components/atoms/Select';
 import { Heading } from '../components/atoms/Heading';
+import { PushNotificationSettings } from '../components/organisms/PushNotificationSettings';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../hooks/useTheme';
 import type { Theme } from '../context/ThemeContext';
@@ -26,6 +27,10 @@ export function SettingsPage() {
             </option>
           ))}
         </Select>
+      </section>
+      <section>
+        <Heading level={2}>Benachrichtigungen</Heading>
+        <PushNotificationSettings />
       </section>
       <section>
         <Heading level={2}>Account</Heading>
