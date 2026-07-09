@@ -25,3 +25,19 @@ CREATE TABLE IF NOT EXISTS household_invites (
   used_by_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Bootstrap: ohne Admin-Panel-Zugriff kann niemand einen Einladungscode
+-- erzeugen, also niemand sich registrieren - klassisches Henne-Ei-Problem.
+-- Nur falls noch gar keine Nutzer existieren, wird ein einziger fester
+-- Start-Code angelegt. Der erste, der ihn einlöst, wird automatisch Admin
+-- (siehe AuthController::register) und kann danach im Admin-Bereich echte
+-- Haushalte mit richtigen Namen/Adressen samt eigenen Codes anlegen.
+INSERT INTO households (street_id, name, address_line, status_emoji, status_label, created_at)
+SELECT id, 'Erster Haushalt', 'bitte in der Verwaltung anpassen', '🏠', 'Zuhause', CURRENT_TIMESTAMP
+FROM streets
+WHERE NOT EXISTS (SELECT 1 FROM users)
+ORDER BY id LIMIT 1;
+
+INSERT INTO household_invites (household_id, code, first_name, last_name, created_at)
+SELECT last_insert_rowid(), 'ADMIN001', 'Admin', 'Account', CURRENT_TIMESTAMP
+WHERE NOT EXISTS (SELECT 1 FROM users);
