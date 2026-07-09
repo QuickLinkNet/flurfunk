@@ -10,8 +10,16 @@ interface Props {
 export function DashboardTemplate({ header, children }: Props) {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <header style={{ padding: '16px' }}>{header}</header>
-      <main style={{ flex: 1, padding: '0 16px 16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <header style={{ padding: 'var(--md-space-4)' }}>{header}</header>
+      <main
+        style={{
+          flex: 1,
+          padding: '0 var(--md-space-4) var(--md-space-4)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 'var(--md-space-4)'
+        }}
+      >
         {children}
       </main>
       <BottomNavigation />

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Select } from '../atoms/Select';
+import { CardRow } from '../molecules/CardRow';
 import { fetchMyVisibility, updateMyVisibility } from '../../api/visibilityApi';
 import type { Visibility } from '../../utils/visibility';
 
@@ -32,26 +33,32 @@ export function VisibilitySettingsForm() {
   }
 
   if (!settings) {
-    return <p style={{ fontSize: 13, color: 'var(--md-color-on-surface-variant)' }}>Lädt …</p>;
+    return (
+      <p style={{ fontSize: 'var(--md-font-size-base)', color: 'var(--md-color-on-surface-variant)' }}>Lädt …</p>
+    );
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--md-space-2)' }}>
       {(Object.keys(FIELD_LABELS) as Field[]).map((field) => (
-        <div key={field} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 13 }}>{FIELD_LABELS[field]}</span>
-          <Select
-            value={settings[field]}
-            onChange={(e) => handleChange(field, e.target.value as Visibility)}
-            style={{ width: 160 }}
-          >
-            {OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </Select>
-        </div>
+        <CardRow
+          key={field}
+          action={
+            <Select
+              value={settings[field]}
+              onChange={(e) => handleChange(field, e.target.value as Visibility)}
+              style={{ width: 160 }}
+            >
+              {OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </Select>
+          }
+        >
+          <span style={{ fontSize: 'var(--md-font-size-base)' }}>{FIELD_LABELS[field]}</span>
+        </CardRow>
       ))}
     </div>
   );

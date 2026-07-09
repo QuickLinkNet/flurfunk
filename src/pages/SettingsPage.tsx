@@ -1,13 +1,14 @@
 import { DashboardTemplate } from '../components/templates/DashboardTemplate';
 import { Select } from '../components/atoms/Select';
+import { Heading } from '../components/atoms/Heading';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../hooks/useTheme';
 import type { Theme } from '../context/ThemeContext';
 
 const THEME_LABELS: Record<Theme, string> = {
-  system: 'Systemeinstellung',
   light: 'Hell',
-  dark: 'Dunkel'
+  dark: 'Dunkel (Nachtmodus)',
+  system: 'Systemeinstellung'
 };
 
 export function SettingsPage() {
@@ -15,9 +16,9 @@ export function SettingsPage() {
   const { theme, setTheme } = useTheme();
 
   return (
-    <DashboardTemplate header={<h1 style={{ margin: 0, fontSize: 18, fontWeight: 500 }}>Einstellungen</h1>}>
+    <DashboardTemplate header={<Heading level={1}>Einstellungen</Heading>}>
       <section>
-        <h2 style={{ fontSize: 14, fontWeight: 500 }}>Darstellung</h2>
+        <Heading level={2}>Darstellung</Heading>
         <Select value={theme} onChange={(e) => setTheme(e.target.value as Theme)} style={{ maxWidth: 220 }}>
           {(Object.keys(THEME_LABELS) as Theme[]).map((value) => (
             <option key={value} value={value}>
@@ -27,8 +28,8 @@ export function SettingsPage() {
         </Select>
       </section>
       <section>
-        <h2 style={{ fontSize: 14, fontWeight: 500 }}>Account</h2>
-        <p style={{ fontSize: 13, color: 'var(--md-color-on-surface-variant)' }}>
+        <Heading level={2}>Account</Heading>
+        <p style={{ fontSize: 'var(--md-font-size-base)', color: 'var(--md-color-on-surface-variant)' }}>
           {user?.displayName} · {user?.email}
         </p>
       </section>

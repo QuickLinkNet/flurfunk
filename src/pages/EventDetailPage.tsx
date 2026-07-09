@@ -4,6 +4,7 @@ import { DashboardTemplate } from '../components/templates/DashboardTemplate';
 import { RSVPButtonGroup } from '../components/molecules/RSVPButtonGroup';
 import { EventResponseList } from '../components/organisms/EventResponseList';
 import { Input } from '../components/atoms/Input';
+import { Heading } from '../components/atoms/Heading';
 import { fetchEvent, submitRsvp } from '../api/eventsApi';
 import { EVENT_TYPE_META } from '../utils/eventTypeMeta';
 import { formatDateTimeLabel } from '../utils/date';
@@ -44,8 +45,8 @@ export function EventDetailPage() {
 
   if (!detail) {
     return (
-      <DashboardTemplate header={<h1 style={{ margin: 0, fontSize: 18, fontWeight: 500 }}>Event</h1>}>
-        <p style={{ fontSize: 13, color: 'var(--md-color-on-surface-variant)' }}>Lädt …</p>
+      <DashboardTemplate header={<Heading level={1}>Event</Heading>}>
+        <p style={{ fontSize: 'var(--md-font-size-base)', color: 'var(--md-color-on-surface-variant)' }}>Lädt …</p>
       </DashboardTemplate>
     );
   }
@@ -53,18 +54,20 @@ export function EventDetailPage() {
   const meta = EVENT_TYPE_META[detail.event.type];
 
   return (
-    <DashboardTemplate header={<h1 style={{ margin: 0, fontSize: 18, fontWeight: 500 }}>{detail.event.title}</h1>}>
+    <DashboardTemplate header={<Heading level={1}>{detail.event.title}</Heading>}>
       <section>
-        <p style={{ fontSize: 13, color: 'var(--md-color-on-surface-variant)', margin: 0 }}>
+        <p style={{ fontSize: 'var(--md-font-size-base)', color: 'var(--md-color-on-surface-variant)', margin: 0 }}>
           {meta.emoji} {meta.label} · {formatDateTimeLabel(detail.event.startsAt)}
           {detail.event.location ? ` · ${detail.event.location}` : ''}
         </p>
         {detail.event.description && (
-          <p style={{ fontSize: 13, marginTop: 8 }}>{detail.event.description}</p>
+          <p style={{ fontSize: 'var(--md-font-size-base)', marginTop: 'var(--md-space-2)' }}>
+            {detail.event.description}
+          </p>
         )}
       </section>
       <section>
-        <h2 style={{ fontSize: 14, fontWeight: 500 }}>Deine Rückmeldung</h2>
+        <Heading level={2}>Deine Rückmeldung</Heading>
         <RSVPButtonGroup value={response} onChange={handleRsvp} disabled={isSubmitting} />
         <Input
           placeholder='Notiz, z.B. "nur Thomas kommt" (optional)'
@@ -72,11 +75,11 @@ export function EventDetailPage() {
           onChange={(e) => setNote(e.target.value)}
           onBlur={() => response && handleRsvp(response)}
           maxLength={120}
-          style={{ marginTop: 8 }}
+          style={{ marginTop: 'var(--md-space-2)' }}
         />
       </section>
       <section>
-        <h2 style={{ fontSize: 14, fontWeight: 500 }}>Wer kommt</h2>
+        <Heading level={2}>Wer kommt</Heading>
         <EventResponseList responses={detail.responses} />
       </section>
     </DashboardTemplate>

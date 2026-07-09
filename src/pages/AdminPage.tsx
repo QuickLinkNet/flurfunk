@@ -7,6 +7,7 @@ import { AdminEventList } from '../components/organisms/AdminEventList';
 import { AdminCalendarList } from '../components/organisms/AdminCalendarList';
 import { AdminFeatureFlagsForm } from '../components/organisms/AdminFeatureFlagsForm';
 import { AdminCreateHouseholdForm } from '../components/organisms/AdminCreateHouseholdForm';
+import { Heading } from '../components/atoms/Heading';
 import {
   fetchAdminHouseholds,
   deleteAdminHousehold,
@@ -65,33 +66,33 @@ export function AdminPage() {
   }
 
   return (
-    <DashboardTemplate header={<h1 style={{ margin: 0, fontSize: 18, fontWeight: 500 }}>Verwaltung</h1>}>
+    <DashboardTemplate header={<Heading level={1}>Verwaltung</Heading>}>
       <section>
-        <h2 style={{ fontSize: 14, fontWeight: 500 }}>Features</h2>
+        <Heading level={2}>Features</Heading>
         <AdminFeatureFlagsForm />
       </section>
       <section>
-        <h2 style={{ fontSize: 14, fontWeight: 500 }}>Neuer Haushalt</h2>
+        <Heading level={2}>Neuer Haushalt</Heading>
         <AdminCreateHouseholdForm onCreated={reload} />
       </section>
       <section>
-        <h2 style={{ fontSize: 14, fontWeight: 500 }}>Haushalte ({households.length})</h2>
+        <Heading level={2}>Haushalte ({households.length})</Heading>
         <AdminHouseholdList households={households} onDelete={handleDeleteHousehold} onInvitesChanged={reload} />
       </section>
       <section>
-        <h2 style={{ fontSize: 14, fontWeight: 500 }}>Nutzer ({users.length})</h2>
+        <Heading level={2}>Nutzer ({users.length})</Heading>
         <AdminUserList users={users} onRoleChange={handleRoleChange} />
       </section>
       <section>
-        <h2 style={{ fontSize: 14, fontWeight: 500 }}>Straßen-Feed ({feed.length})</h2>
+        <Heading level={2}>Straßen-Feed ({feed.length})</Heading>
         <AdminFeedList items={feed} onDelete={handleDeleteFeedItem} />
       </section>
       <section>
-        <h2 style={{ fontSize: 14, fontWeight: 500 }}>Events ({events.length})</h2>
+        <Heading level={2}>Events ({events.length})</Heading>
         <AdminEventList events={events} onDelete={handleDeleteEvent} />
       </section>
       <section>
-        <h2 style={{ fontSize: 14, fontWeight: 500 }}>Kalender ({calendar.length})</h2>
+        <Heading level={2}>Kalender ({calendar.length})</Heading>
         <AdminCalendarList entries={calendar} onDelete={handleDeleteCalendarEntry} />
       </section>
     </DashboardTemplate>

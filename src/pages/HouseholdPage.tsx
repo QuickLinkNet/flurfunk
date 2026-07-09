@@ -3,6 +3,7 @@ import { DashboardTemplate } from '../components/templates/DashboardTemplate';
 import { ChildrenManager } from '../components/organisms/ChildrenManager';
 import { PetsManager } from '../components/organisms/PetsManager';
 import { VisibilitySettingsForm } from '../components/organisms/VisibilitySettingsForm';
+import { Heading } from '../components/atoms/Heading';
 import { useAuth } from '../hooks/useAuth';
 import { useFeatureFlags } from '../hooks/useFeatureFlags';
 
@@ -12,21 +13,21 @@ export function HouseholdPage() {
   const { user } = useAuth();
   const { isEnabled } = useFeatureFlags();
   return (
-    <DashboardTemplate header={<h1 style={{ margin: 0, fontSize: 18, fontWeight: 500 }}>Mein Haushalt</h1>}>
+    <DashboardTemplate header={<Heading level={1}>Mein Haushalt</Heading>}>
       {isEnabled('children') && (
         <section>
-          <h2 style={{ fontSize: 14, fontWeight: 500 }}>Kinder</h2>
+          <Heading level={2}>Kinder</Heading>
           <ChildrenManager />
         </section>
       )}
       {isEnabled('pets') && (
         <section>
-          <h2 style={{ fontSize: 14, fontWeight: 500 }}>Haustiere</h2>
+          <Heading level={2}>Haustiere</Heading>
           <PetsManager />
         </section>
       )}
       <section>
-        <h2 style={{ fontSize: 14, fontWeight: 500 }}>Sichtbarkeit</h2>
+        <Heading level={2}>Sichtbarkeit</Heading>
         <VisibilitySettingsForm />
       </section>
       <section>

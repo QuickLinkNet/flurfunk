@@ -1,4 +1,5 @@
 import { Button } from '../atoms/Button';
+import { IconBadge } from '../atoms/IconBadge';
 import { AdminAddInviteForm } from '../molecules/AdminAddInviteForm';
 import type { AdminHousehold } from '../../types/admin';
 
@@ -10,28 +11,42 @@ interface Props {
 
 export function AdminHouseholdList({ households, onDelete, onInvitesChanged }: Props) {
   if (households.length === 0) {
-    return <p style={{ fontSize: 13, color: 'var(--md-color-on-surface-variant)' }}>Keine Haushalte vorhanden.</p>;
+    return (
+      <p style={{ fontSize: 'var(--md-font-size-base)', color: 'var(--md-color-on-surface-variant)' }}>
+        Keine Haushalte vorhanden.
+      </p>
+    );
   }
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--md-space-2)' }}>
       {households.map((h) => (
         <div
           key={h.id}
           style={{
-            padding: '12px 14px',
+            padding: 'var(--md-space-3) var(--md-space-4)',
             borderRadius: 'var(--md-radius-card)',
             background: 'var(--md-color-surface)',
-            border: '1px solid var(--md-color-border)'
+            border: '1px solid var(--md-color-border)',
+            boxShadow: 'var(--md-shadow-card)'
           }}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <div>
-              <p style={{ margin: 0, fontSize: 13, fontWeight: 500 }}>
-                {h.statusEmoji} {h.name}
-              </p>
-              <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--md-color-on-surface-variant)' }}>
-                {h.addressLine} · {h.streetName}
-              </p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 'var(--md-space-3)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--md-space-3)' }}>
+              <IconBadge emoji={h.statusEmoji} tint="primary" />
+              <div>
+                <p style={{ margin: 0, fontSize: 'var(--md-font-size-base)', fontWeight: 'var(--md-font-weight-medium)' }}>
+                  {h.name}
+                </p>
+                <p
+                  style={{
+                    margin: 'var(--md-space-1) 0 0',
+                    fontSize: 'var(--md-font-size-sm)',
+                    color: 'var(--md-color-on-surface-variant)'
+                  }}
+                >
+                  {h.addressLine} · {h.streetName}
+                </p>
+              </div>
             </div>
             <Button
               variant="ghost"
@@ -45,25 +60,34 @@ export function AdminHouseholdList({ households, onDelete, onInvitesChanged }: P
             </Button>
           </div>
           {h.members.length > 0 && (
-            <p style={{ margin: '8px 0 0', fontSize: 12 }}>
+            <p style={{ margin: 'var(--md-space-3) 0 0', fontSize: 'var(--md-font-size-sm)' }}>
               Mitglieder: {h.members.map((m) => `${m.displayName} (${m.role})`).join(', ')}
             </p>
           )}
           {h.children.length > 0 && (
-            <p style={{ margin: '4px 0 0', fontSize: 12 }}>
+            <p style={{ margin: 'var(--md-space-1) 0 0', fontSize: 'var(--md-font-size-sm)' }}>
               Kinder: {h.children.map((c) => `${c.name} (${c.currentLocation})`).join(', ')}
             </p>
           )}
           {h.pets.length > 0 && (
-            <p style={{ margin: '4px 0 0', fontSize: 12 }}>
+            <p style={{ margin: 'var(--md-space-1) 0 0', fontSize: 'var(--md-font-size-sm)' }}>
               Haustiere: {h.pets.map((p) => `${p.name} (${p.type})`).join(', ')}
             </p>
           )}
           {h.invites.length > 0 && (
-            <div style={{ margin: '8px 0 0' }}>
-              <p style={{ margin: 0, fontSize: 12, fontWeight: 500 }}>Einladungscodes:</p>
+            <div style={{ margin: 'var(--md-space-3) 0 0' }}>
+              <p style={{ margin: 0, fontSize: 'var(--md-font-size-sm)', fontWeight: 'var(--md-font-weight-medium)' }}>
+                Einladungscodes:
+              </p>
               {h.invites.map((invite) => (
-                <p key={invite.id} style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--md-color-on-surface-variant)' }}>
+                <p
+                  key={invite.id}
+                  style={{
+                    margin: 'var(--md-space-1) 0 0',
+                    fontSize: 'var(--md-font-size-sm)',
+                    color: 'var(--md-color-on-surface-variant)'
+                  }}
+                >
                   {invite.firstName} {invite.lastName}: <strong>{invite.code}</strong>{' '}
                   {invite.usedAt ? '· eingelöst' : '· offen'}
                 </p>

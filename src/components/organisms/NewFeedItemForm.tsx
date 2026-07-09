@@ -28,7 +28,7 @@ export function NewFeedItemForm({ onCreated }: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--md-space-2)' }}>
       <Select value={type} onChange={(e) => setType(e.target.value as FeedItemType)}>
         {FEED_TYPE_OPTIONS.map(([value, meta]) => (
           <option key={value} value={value}>

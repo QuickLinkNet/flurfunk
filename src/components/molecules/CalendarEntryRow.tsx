@@ -1,3 +1,4 @@
+import { CardRow } from './CardRow';
 import { formatDayLabel } from '../../utils/date';
 import type { CalendarEntry } from '../../types/calendarEntry';
 
@@ -18,20 +19,14 @@ interface Props {
 
 export function CalendarEntryRow({ entry }: Props) {
   return (
-    <div
-      style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        padding: '10px 14px',
-        borderRadius: 'var(--md-radius-control)',
-        background: 'var(--md-color-surface)',
-        border: '1px solid var(--md-color-border)'
-      }}
+    <CardRow
+      action={
+        <span style={{ fontSize: 'var(--md-font-size-sm)', color: 'var(--md-color-on-surface-variant)' }}>
+          {TYPE_LABELS[entry.type]} · {formatDayLabel(entry.startsAt)}
+        </span>
+      }
     >
-      <span style={{ fontSize: 13, fontWeight: 500 }}>{entry.title}</span>
-      <span style={{ fontSize: 12, color: 'var(--md-color-on-surface-variant)' }}>
-        {TYPE_LABELS[entry.type]} · {formatDayLabel(entry.startsAt)}
-      </span>
-    </div>
+      <span style={{ fontSize: 'var(--md-font-size-base)', fontWeight: 'var(--md-font-weight-medium)' }}>{entry.title}</span>
+    </CardRow>
   );
 }

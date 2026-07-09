@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { DashboardTemplate } from '../components/templates/DashboardTemplate';
 import { EventList } from '../components/organisms/EventList';
 import { NewEventForm } from '../components/organisms/NewEventForm';
+import { Heading } from '../components/atoms/Heading';
 import { fetchEvents } from '../api/eventsApi';
 import type { StreetEvent } from '../types/event';
 
@@ -15,13 +16,13 @@ export function EventsPage() {
   useEffect(() => reload(), [reload]);
 
   return (
-    <DashboardTemplate header={<h1 style={{ margin: 0, fontSize: 18, fontWeight: 500 }}>Events</h1>}>
+    <DashboardTemplate header={<Heading level={1}>Events</Heading>}>
       <section>
-        <h2 style={{ fontSize: 14, fontWeight: 500 }}>Neues Event</h2>
+        <Heading level={2}>Neues Event</Heading>
         <NewEventForm onCreated={reload} />
       </section>
       <section>
-        <h2 style={{ fontSize: 14, fontWeight: 500 }}>Geplant</h2>
+        <Heading level={2}>Geplant</Heading>
         <EventList events={events} />
       </section>
     </DashboardTemplate>

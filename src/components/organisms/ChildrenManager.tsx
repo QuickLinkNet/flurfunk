@@ -29,13 +29,13 @@ export function ChildrenManager() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--md-space-3)' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--md-space-2)' }}>
         {children.map((child) => (
           <ChildRow key={child.id} child={child} onLocationChange={handleLocationChange} />
         ))}
       </div>
-      <form onSubmit={handleAdd} style={{ display: 'flex', gap: 8 }}>
+      <form onSubmit={handleAdd} style={{ display: 'flex', gap: 'var(--md-space-2)' }}>
         <Input placeholder="Name des Kindes" value={newName} onChange={(e) => setNewName(e.target.value)} />
         <Button type="submit">Hinzufügen</Button>
       </form>

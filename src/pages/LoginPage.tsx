@@ -23,9 +23,9 @@ export function LoginPage() {
   }
 
   return (
-    <div style={{ maxWidth: 360, margin: '80px auto', padding: '0 20px' }}>
-      <h1 style={{ fontSize: 20, fontWeight: 500 }}>Anmelden</h1>
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+    <div style={{ maxWidth: 360, margin: '80px auto', padding: '0 var(--md-space-5)' }}>
+      <h1 style={{ fontSize: 'var(--md-font-size-2xl)', fontWeight: 'var(--md-font-weight-medium)' }}>Anmelden</h1>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--md-space-3)' }}>
         <Input type="email" placeholder="E-Mail" value={email} onChange={(e) => setEmail(e.target.value)} required />
         <Input
           type="password"
@@ -34,10 +34,10 @@ export function LoginPage() {
           onChange={(e) => setPassword(e.target.value)}
           required
         />
-        {error && <p style={{ color: 'crimson', fontSize: 13 }}>{error}</p>}
+        {error && <p style={{ color: 'var(--md-color-error)', fontSize: 'var(--md-font-size-base)' }}>{error}</p>}
         <Button type="submit">Anmelden</Button>
       </form>
-      <p style={{ fontSize: 13, marginTop: 16 }}>
+      <p style={{ fontSize: 'var(--md-font-size-base)', marginTop: 'var(--md-space-4)' }}>
         Noch kein Konto? <Link to="/registrieren">Haushalt registrieren</Link>
       </p>
     </div>

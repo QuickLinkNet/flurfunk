@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { Input } from '../atoms/Input';
 import { Select } from '../atoms/Select';
 import { Button } from '../atoms/Button';
+import { CardRow } from '../molecules/CardRow';
 import { fetchPets, createPet, deletePet } from '../../api/petsApi';
 import { PET_TYPE_LABELS } from '../../types/pet';
 import type { Pet, PetType } from '../../types/pet';
@@ -31,32 +32,24 @@ export function PetsManager() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--md-space-3)' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--md-space-2)' }}>
         {pets.map((pet) => (
-          <div
+          <CardRow
             key={pet.id}
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              gap: 12,
-              padding: '10px 14px',
-              borderRadius: 'var(--md-radius-control)',
-              background: 'var(--md-color-surface)',
-              border: '1px solid var(--md-color-border)'
-            }}
+            action={
+              <Button variant="ghost" onClick={() => handleDelete(pet.id)}>
+                Entfernen
+              </Button>
+            }
           >
-            <span style={{ fontSize: 14, fontWeight: 500 }}>
+            <span style={{ fontSize: 'var(--md-font-size-md)', fontWeight: 'var(--md-font-weight-medium)' }}>
               {PET_TYPE_LABELS[pet.type]} {pet.name}
             </span>
-            <Button variant="ghost" onClick={() => handleDelete(pet.id)}>
-              Entfernen
-            </Button>
-          </div>
+          </CardRow>
         ))}
       </div>
-      <form onSubmit={handleAdd} style={{ display: 'flex', gap: 8 }}>
+      <form onSubmit={handleAdd} style={{ display: 'flex', gap: 'var(--md-space-2)' }}>
         <Input placeholder="Name des Haustiers" value={name} onChange={(e) => setName(e.target.value)} />
         <Select value={type} onChange={(e) => setType(e.target.value as PetType)} style={{ width: 140 }}>
           {(Object.keys(PET_TYPE_LABELS) as PetType[]).map((value) => (

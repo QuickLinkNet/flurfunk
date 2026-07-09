@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { DashboardTemplate } from '../components/templates/DashboardTemplate';
 import { FeedList } from '../components/organisms/FeedList';
 import { NewFeedItemForm } from '../components/organisms/NewFeedItemForm';
+import { Heading } from '../components/atoms/Heading';
 import { fetchFeed } from '../api/feedApi';
 import type { FeedItem } from '../types/feedItem';
 
@@ -15,13 +16,13 @@ export function StreetFeedPage() {
   useEffect(() => reload(), [reload]);
 
   return (
-    <DashboardTemplate header={<h1 style={{ margin: 0, fontSize: 18, fontWeight: 500 }}>Straße</h1>}>
+    <DashboardTemplate header={<Heading level={1}>Straße</Heading>}>
       <section>
-        <h2 style={{ fontSize: 14, fontWeight: 500 }}>Neuer Eintrag</h2>
+        <Heading level={2}>Neuer Eintrag</Heading>
         <NewFeedItemForm onCreated={reload} />
       </section>
       <section>
-        <h2 style={{ fontSize: 14, fontWeight: 500 }}>Aktuelles</h2>
+        <Heading level={2}>Aktuelles</Heading>
         <FeedList items={items} />
       </section>
     </DashboardTemplate>

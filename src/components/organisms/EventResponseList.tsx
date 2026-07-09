@@ -1,3 +1,4 @@
+import { CardRow } from '../molecules/CardRow';
 import type { EventResponseEntry } from '../../types/event';
 
 interface Props {
@@ -23,32 +24,38 @@ function describeAttendance(r: EventResponseEntry): string {
 
 export function EventResponseList({ responses }: Props) {
   if (responses.length === 0) {
-    return <p style={{ fontSize: 13, color: 'var(--md-color-on-surface-variant)' }}>Noch keine Rückmeldungen.</p>;
+    return (
+      <p style={{ fontSize: 'var(--md-font-size-base)', color: 'var(--md-color-on-surface-variant)' }}>
+        Noch keine Rückmeldungen.
+      </p>
+    );
   }
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--md-space-2)' }}>
       {responses.map((r) => (
-        <div
+        <CardRow
           key={r.id}
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            padding: '10px 14px',
-            borderRadius: 'var(--md-radius-control)',
-            background: 'var(--md-color-surface)',
-            border: '1px solid var(--md-color-border)'
-          }}
+          action={
+            <span style={{ fontSize: 'var(--md-font-size-sm)', color: 'var(--md-color-on-surface-variant)' }}>
+              {RESPONSE_LABELS[r.response]}
+            </span>
+          }
         >
-          <div>
-            <p style={{ margin: 0, fontSize: 13, fontWeight: 500 }}>{r.householdName}</p>
-            {describeAttendance(r) && (
-              <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--md-color-on-surface-variant)' }}>
-                {describeAttendance(r)}
-              </p>
-            )}
-          </div>
-          <span style={{ fontSize: 12, color: 'var(--md-color-on-surface-variant)' }}>{RESPONSE_LABELS[r.response]}</span>
-        </div>
+          <p style={{ margin: 0, fontSize: 'var(--md-font-size-base)', fontWeight: 'var(--md-font-weight-medium)' }}>
+            {r.householdName}
+          </p>
+          {describeAttendance(r) && (
+            <p
+              style={{
+                margin: 'var(--md-space-1) 0 0',
+                fontSize: 'var(--md-font-size-sm)',
+                color: 'var(--md-color-on-surface-variant)'
+              }}
+            >
+              {describeAttendance(r)}
+            </p>
+          )}
+        </CardRow>
       ))}
     </div>
   );

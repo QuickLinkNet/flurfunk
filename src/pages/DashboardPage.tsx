@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { DashboardTemplate } from '../components/templates/DashboardTemplate';
 import { HouseholdStatusList } from '../components/organisms/HouseholdStatusList';
+import { Heading } from '../components/atoms/Heading';
 import { fetchVisibleHouseholds } from '../api/householdsApi';
 import { useAuth } from '../hooks/useAuth';
 import type { Household } from '../types/household';
@@ -17,13 +18,15 @@ export function DashboardPage() {
     <DashboardTemplate
       header={
         <div>
-          <p style={{ margin: 0, fontSize: 13, color: 'var(--md-color-on-surface-variant)' }}>Guten Morgen</p>
-          <h1 style={{ margin: 0, fontSize: 18, fontWeight: 500 }}>{user?.displayName ?? '...'}</h1>
+          <p style={{ margin: 0, fontSize: 'var(--md-font-size-base)', color: 'var(--md-color-on-surface-variant)' }}>
+            Guten Morgen
+          </p>
+          <Heading level={1}>{user?.displayName ?? '...'}</Heading>
         </div>
       }
     >
       <section>
-        <h2 style={{ fontSize: 14, fontWeight: 500 }}>Wer ist da?</h2>
+        <Heading level={2}>Wer ist da?</Heading>
         <HouseholdStatusList households={households} />
       </section>
     </DashboardTemplate>

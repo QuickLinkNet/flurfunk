@@ -15,7 +15,7 @@ const OPTIONS: Array<{ value: RsvpResponse; label: string }> = [
 
 export function RSVPButtonGroup({ value, onChange, disabled }: Props) {
   return (
-    <div style={{ display: 'flex', gap: 8 }}>
+    <div style={{ display: 'flex', gap: 'var(--md-space-2)' }}>
       {OPTIONS.map((option) => (
         <Button
           key={option.value}

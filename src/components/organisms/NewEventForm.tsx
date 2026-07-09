@@ -38,7 +38,7 @@ export function NewEventForm({ onCreated }: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--md-space-2)' }}>
       <Input placeholder="Titel" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={120} required />
       <Select value={type} onChange={(e) => setType(e.target.value as EventType)}>
         {EVENT_TYPE_OPTIONS.map(([value, meta]) => (

@@ -47,9 +47,9 @@ export function RegisterPage() {
   }
 
   return (
-    <div style={{ maxWidth: 360, margin: '40px auto', padding: '0 20px' }}>
-      <h1 style={{ fontSize: 20, fontWeight: 500 }}>Registrieren</h1>
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+    <div style={{ maxWidth: 360, margin: '40px auto', padding: '0 var(--md-space-5)' }}>
+      <h1 style={{ fontSize: 'var(--md-font-size-2xl)', fontWeight: 'var(--md-font-weight-medium)' }}>Registrieren</h1>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--md-space-3)' }}>
         <Input
           placeholder="Einladungscode"
           value={code}
@@ -58,7 +58,7 @@ export function RegisterPage() {
           required
         />
         {preview && (
-          <p style={{ fontSize: 13, margin: 0, color: 'var(--md-color-secondary)' }}>
+          <p style={{ fontSize: 'var(--md-font-size-base)', margin: 0, color: 'var(--md-color-secondary)' }}>
             Hallo {preview.firstName} {preview.lastName}! Du trittst dem Haushalt "{preview.householdName}" bei.
           </p>
         )}
@@ -71,12 +71,12 @@ export function RegisterPage() {
           minLength={8}
           required
         />
-        {error && <p style={{ color: 'crimson', fontSize: 13 }}>{error}</p>}
+        {error && <p style={{ color: 'var(--md-color-error)', fontSize: 'var(--md-font-size-base)' }}>{error}</p>}
         <Button type="submit" disabled={isSubmitting}>
           {isSubmitting ? 'Wird angelegt …' : 'Registrieren'}
         </Button>
       </form>
-      <p style={{ fontSize: 13, marginTop: 16 }}>
+      <p style={{ fontSize: 'var(--md-font-size-base)', marginTop: 'var(--md-space-4)' }}>
         Schon registriert? <Link to="/login">Anmelden</Link>
       </p>
     </div>

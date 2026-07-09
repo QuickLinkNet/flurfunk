@@ -23,7 +23,9 @@ export function CalendarPage() {
           <Button variant="ghost" onClick={() => setMonth((m) => addMonths(m, -1))}>
             ‹
           </Button>
-          <h1 style={{ margin: 0, fontSize: 16, fontWeight: 500 }}>{formatMonthLabel(month)}</h1>
+          <h1 style={{ margin: 0, fontSize: 'var(--md-font-size-lg)', fontWeight: 'var(--md-font-weight-medium)' }}>
+            {formatMonthLabel(month)}
+          </h1>
           <Button variant="ghost" onClick={() => setMonth((m) => addMonths(m, 1))}>
             ›
           </Button>
