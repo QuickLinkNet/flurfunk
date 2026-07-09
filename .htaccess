@@ -1,6 +1,7 @@
 # Root-.htaccess für die gebaute SPA (Vite-Output).
 # /api/ wird NICHT umgeschrieben – dort greift api/.htaccess.
 RewriteEngine On
+RewriteBase /apps/neighborhood/
 RewriteRule ^api/ - [L]
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
