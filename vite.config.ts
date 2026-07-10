@@ -21,6 +21,11 @@ export default defineConfig({
       strategies: 'injectManifest',
       srcDir: 'src',
       filename: 'sw.ts',
+      // Kein automatisch injiziertes <script>-Tag - wir registrieren selbst
+      // über virtual:pwa-register (src/pwaUpdate.ts), damit ein bereits
+      // offener Tab eine neue Version zuverlässig aktiviert UND neu lädt,
+      // statt auf unbestimmte Zeit die alte Version aus dem Cache zu zeigen.
+      injectRegister: false,
       devOptions: {
         enabled: true, // Service Worker auch im Dev-Server aktiv, zum Testen von Push
         type: 'module'
