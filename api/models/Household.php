@@ -42,6 +42,14 @@ final class Household
         $stmt->execute([$emoji, $label, $note, $householdId]);
     }
 
+    public static function updateDetails(int $householdId, string $name, string $addressLine, string $avatarKey): void
+    {
+        $stmt = Database::pdo()->prepare(
+            'UPDATE households SET name = ?, address_line = ?, avatar_key = ? WHERE id = ?'
+        );
+        $stmt->execute([$name, $addressLine, $avatarKey, $householdId]);
+    }
+
     public static function create(int $streetId, string $name, string $addressLine): int
     {
         $stmt = Database::pdo()->prepare(

@@ -1,0 +1,79 @@
+.compact-manager {
+  display: grid;
+  gap: var(--md-space-3);
+}
+
+.compact-manager h3,
+.compact-manager p {
+  margin: 0;
+}
+
+.compact-manager h3 {
+  color: var(--md-color-brand-green);
+  font-size: var(--md-font-size-lg);
+}
+
+.compact-manager p {
+  margin-top: 4px;
+  color: var(--md-color-on-surface-variant);
+  font-size: var(--md-font-size-sm);
+  line-height: 1.4;
+}
+
+.compact-list {
+  display: grid;
+  gap: var(--md-space-2);
+}
+
+.compact-form,
+.inline-actions,
+.push-settings-row {
+  display: flex;
+  gap: var(--md-space-2);
+}
+
+.compact-form,
+.push-settings-row {
+  align-items: center;
+}
+
+.compact-form {
+  flex-wrap: wrap;
+}
+
+.compact-form input {
+  flex: 1 1 220px;
+}
+
+.inline-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.empty-note {
+  padding: var(--md-space-3);
+  border: 1px dashed rgba(216, 204, 186, 0.92);
+  border-radius: var(--md-radius-control);
+  background: rgba(255, 253, 252, 0.68);
+}
+
+.push-settings-row {
+  justify-content: space-between;
+}
+
+@media (max-width: 767px) {
+  .compact-form,
+  .inline-actions,
+  .push-settings-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .compact-form input,
+  .compact-form select,
+  .compact-form button,
+  .inline-actions select,
+  .inline-actions button {
+    width: 100% !important;
+  }
+}

@@ -1,46 +1,32 @@
-import { Button } from '../atoms/Button';
+import { AdminDeleteButton } from '../molecules/AdminDeleteButton';
+import { AdminEmptyState } from '../molecules/AdminEmptyState';
+import { AdminListStack } from '../molecules/AdminListStack';
 import { CardRow } from '../molecules/CardRow';
 import { formatDateTimeLabel } from '../../utils/date';
 import type { AdminCalendarEntry } from '../../types/admin';
 
 interface Props {
   entries: AdminCalendarEntry[];
-  onDelete: (id: number) => void;
+  onDelete: (entry: AdminCalendarEntry) => void;
 }
 
 export function AdminCalendarList({ entries, onDelete }: Props) {
   if (entries.length === 0) {
-    return (
-      <p style={{ fontSize: 'var(--md-font-size-base)', color: 'var(--md-color-on-surface-variant)' }}>
-        Keine Kalendereinträge vorhanden.
-      </p>
-    );
+    return <AdminEmptyState>Keine Kalendereinträge vorhanden.</AdminEmptyState>;
   }
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--md-space-2)' }}>
+    <AdminListStack>
       {entries.map((entry) => (
-        <CardRow
-          key={entry.id}
-          action={
-            <Button variant="ghost" onClick={() => onDelete(entry.id)}>
-              Löschen
-            </Button>
-          }
-        >
+        <CardRow key={entry.id} action={<AdminDeleteButton onClick={() => onDelete(entry)} />}>
           <p style={{ margin: 0, fontSize: 'var(--md-font-size-base)', fontWeight: 'var(--md-font-weight-medium)' }}>
             {entry.title}
           </p>
-          <p
-            style={{
-              margin: 'var(--md-space-1) 0 0',
-              fontSize: 'var(--md-font-size-sm)',
-              color: 'var(--md-color-on-surface-variant)'
-            }}
-          >
+          <p style={{ margin: 'var(--md-space-1) 0 0', fontSize: 'var(--md-font-size-sm)', color: 'var(--md-color-on-surface-variant)' }}>
             {entry.type} · {formatDateTimeLabel(entry.startsAt)}
           </p>
         </CardRow>
       ))}
-    </div>
+    </AdminListStack>
   );
 }

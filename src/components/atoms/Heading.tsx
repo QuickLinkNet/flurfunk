@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 interface Props {
   level: 1 | 2;
   children: ReactNode;
+  className?: string;
 }
 
 const SIZE_BY_LEVEL: Record<1 | 2, string> = {
@@ -10,10 +11,17 @@ const SIZE_BY_LEVEL: Record<1 | 2, string> = {
   2: 'var(--md-font-size-md)'
 };
 
-export function Heading({ level, children }: Props) {
+export function Heading({ level, children, className }: Props) {
   const Tag = level === 1 ? 'h1' : 'h2';
   return (
-    <Tag style={{ margin: 0, fontSize: SIZE_BY_LEVEL[level], fontWeight: 'var(--md-font-weight-medium)' }}>
+    <Tag
+      className={className}
+      style={{
+        margin: 0,
+        fontSize: `var(--md-heading-font-size, ${SIZE_BY_LEVEL[level]})`,
+        fontWeight: 'var(--md-heading-font-weight, var(--md-font-weight-medium))'
+      }}
+    >
       {children}
     </Tag>
   );

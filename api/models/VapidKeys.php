@@ -5,8 +5,8 @@ namespace App\Models;
 use App\Core\Database;
 
 // VAPID-Schlüsselpaar (RFC 8292) authentifiziert unseren Server gegenüber
-// den Push-Diensten (FCM, Mozilla Autopush etc.). Wird beim ersten Zugriff
-// automatisch generiert und in der DB abgelegt - kein manueller Server-Schritt.
+// den Push-Diensten. Es wird beim ersten Zugriff automatisch generiert und
+// in der DB abgelegt.
 final class VapidKeys
 {
     public static function get(): array
@@ -31,8 +31,8 @@ final class VapidKeys
         $details = openssl_pkey_get_details($keyPair);
 
         // x/y können kürzer als 32 Byte sein, wenn der Wert führende
-        // Null-Bytes hat - für den unkomprimierten EC-Punkt (0x04 || x || y)
-        // müssen es aber immer genau 32 Byte pro Koordinate sein.
+        // Null-Bytes hat. Für den unkomprimierten EC-Punkt müssen es aber
+        // immer genau 32 Byte pro Koordinate sein.
         $x = str_pad($details['ec']['x'], 32, "\x00", STR_PAD_LEFT);
         $y = str_pad($details['ec']['y'], 32, "\x00", STR_PAD_LEFT);
         $publicKey = self::base64UrlEncode("\x04" . $x . $y);

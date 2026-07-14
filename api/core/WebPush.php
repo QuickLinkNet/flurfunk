@@ -4,16 +4,12 @@ namespace App\Core;
 
 use App\Models\VapidKeys;
 
-// Minimaler Web-Push-Client ohne externe Library (bewusste Entscheidung laut
-// PRD Kapitel 13, um keine Composer-Abhängigkeit einzuführen). Sendet
-// ausschließlich payload-lose Pushes (nur VAPID-Auth, RFC 8292) - die
-// vollständige Payload-Verschlüsselung nach RFC 8291 (ECDH+HKDF+AES-GCM)
-// wäre deutlich mehr Kryptocode für wenig Zusatznutzen: der Service Worker
-// zeigt bei jedem Push einfach einen Hinweistext, kein geheimer Inhalt nötig.
+// Minimaler Web-Push-Client ohne externe Library. Sendet bewusst nur
+// payload-lose Pushes: Der Service Worker zeigt bei jedem Push einen
+// generischen Hinweistext.
 final class WebPush
 {
-    // Gibt den HTTP-Statuscode des Push-Dienstes zurück (201 = angenommen,
-    // 404/410 = Subscription ist tot und sollte gelöscht werden).
+    // Gibt den HTTP-Statuscode des Push-Dienstes zurück.
     public static function send(string $endpoint): int
     {
         $vapid = VapidKeys::get();
@@ -69,8 +65,7 @@ final class WebPush
         return $unsigned . '.' . VapidKeys::base64UrlEncode(self::derToRawSignature($derSignature));
     }
 
-    // openssl_sign liefert eine DER-kodierte ECDSA-Signatur (variable Länge),
-    // JWS (ES256) verlangt aber das feste 64-Byte-Format r||s (RFC 7515).
+    // openssl_sign liefert DER, JWS ES256 verlangt aber r||s mit 64 Byte.
     private static function derToRawSignature(string $der): string
     {
         $offset = 2; // 0x30 <Gesamtlänge>

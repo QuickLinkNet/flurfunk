@@ -1,4 +1,5 @@
 import { apiRequest } from './client';
+import type { PushSendResult } from '../types/push';
 
 export function fetchVapidPublicKey() {
   return apiRequest<{ publicKey: string }>('/push/vapid-public-key');
@@ -17,5 +18,5 @@ export function unsubscribePush(endpoint: string) {
 }
 
 export function sendTestPush() {
-  return apiRequest<{ sent: number; total: number }>('/push/test', { method: 'POST' });
+  return apiRequest<PushSendResult>('/push/test', { method: 'POST' });
 }

@@ -38,4 +38,16 @@ final class Child
         );
         $stmt->execute([$location, $note, $childId]);
     }
+
+    public static function updateName(int $childId, string $name): void
+    {
+        $stmt = Database::pdo()->prepare('UPDATE children SET name = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?');
+        $stmt->execute([$name, $childId]);
+    }
+
+    public static function delete(int $childId): void
+    {
+        $stmt = Database::pdo()->prepare('DELETE FROM children WHERE id = ?');
+        $stmt->execute([$childId]);
+    }
 }

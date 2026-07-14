@@ -15,8 +15,8 @@ final class AuthController
     // gedacht ist (Name + Haushalt), ohne dass man sich schon einloggen muss.
     public function invitePreview(array $params): void
     {
-        $invite = HouseholdInvite::findByCode($params['code'] ?? '');
-        if ($invite === null || $invite['used_at'] !== null) {
+        $invite = HouseholdInvite::findByCode((string) ($params['code'] ?? ''));
+        if ($invite === null || $invite['used_at'] !== null || ($invite['revoked_at'] ?? null) !== null) {
             Response::error('Einladungscode ungültig oder bereits verwendet.', 404);
         }
         $household = Household::findById((int) $invite['household_id']);
@@ -32,7 +32,7 @@ final class AuthController
         $body = Request::json();
         $email = trim($body['email'] ?? '');
         $password = (string) ($body['password'] ?? '');
-        $code = trim($body['code'] ?? '');
+        $code = strtoupper(trim($body['code'] ?? ''));
 
         if ($email === '' || strlen($password) < 8 || $code === '') {
             Response::error('Bitte alle Felder ausfüllen (Passwort mind. 8 Zeichen).', 422);
@@ -41,7 +41,7 @@ final class AuthController
             Response::error('Diese E-Mail ist bereits registriert.', 409);
         }
         $invite = HouseholdInvite::findByCode($code);
-        if ($invite === null || $invite['used_at'] !== null) {
+        if ($invite === null || $invite['used_at'] !== null || ($invite['revoked_at'] ?? null) !== null) {
             Response::error('Einladungscode ungültig oder bereits verwendet.', 422);
         }
 
@@ -76,6 +76,43 @@ final class AuthController
         Response::json(null);
     }
 
+    public function completeOnboarding(): void
+    {
+        $userId = Auth::requireLogin();
+        $user = User::findById($userId);
+        if ($user === null || $user['household_id'] === null) {
+            Response::error('Kein Haushalt zugeordnet.', 422);
+        }
+        $household = Household::findById((int) $user['household_id']);
+        if ($household === null) {
+            Response::error('Haushalt nicht gefunden.', 404);
+        }
+        $missing = [];
+        if (trim((string) ($household['name'] ?? '')) === '') {
+            $missing[] = 'Haushaltsname';
+        }
+        if (trim((string) ($household['address_line'] ?? '')) === '') {
+            $missing[] = 'Adresse';
+        }
+        if ($missing !== []) {
+            Response::error('Bitte ergänze zuerst: ' . implode(', ', $missing) . '.', 422);
+        }
+        User::completeOnboarding($userId);
+        Response::json($this->toPublicUser(User::findById($userId)));
+    }
+
+    public function saveOnboardingProgress(): void
+    {
+        $userId = Auth::requireLogin();
+        $body = Request::json();
+        $step = (string) ($body['step'] ?? '');
+        if (!in_array($step, ['household', 'family', 'privacy', 'push'], true)) {
+            Response::error('Ungültiger Onboarding-Schritt.', 422);
+        }
+        User::updateOnboardingProgress($userId, $step);
+        Response::json($this->toPublicUser(User::findById($userId)));
+    }
+
     public function me(): void
     {
         $userId = Auth::requireLogin();
@@ -94,6 +131,8 @@ final class AuthController
             'displayName' => $user['display_name'],
             'role' => $user['role'],
             'householdId' => $user['household_id'] !== null ? (int) $user['household_id'] : null,
+            'onboardingCompletedAt' => $user['onboarding_completed_at'] ?? null,
+            'onboardingCurrentStep' => $user['onboarding_current_step'] ?? 'household',
         ];
     }
 }

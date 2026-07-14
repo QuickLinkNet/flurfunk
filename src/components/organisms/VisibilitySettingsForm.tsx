@@ -39,7 +39,12 @@ export function VisibilitySettingsForm() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--md-space-2)' }}>
+    <div className="compact-manager">
+      <div>
+        <h3>Sichtbarkeit</h3>
+        <p>Diese Angaben kannst du jederzeit im Haushalt oder in den Einstellungen ändern.</p>
+      </div>
+      <div className="compact-list">
       {(Object.keys(FIELD_LABELS) as Field[]).map((field) => (
         <CardRow
           key={field}
@@ -60,6 +65,7 @@ export function VisibilitySettingsForm() {
           <span style={{ fontSize: 'var(--md-font-size-base)' }}>{FIELD_LABELS[field]}</span>
         </CardRow>
       ))}
+      </div>
     </div>
   );
 }

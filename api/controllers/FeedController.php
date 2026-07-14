@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Core\Auth;
+use App\Core\PushService;
 use App\Core\Request;
 use App\Core\Response;
 use App\Models\FeedItem;
@@ -33,14 +34,25 @@ final class FeedController
             ? $body['visibility']
             : 'neighbors';
 
+        $expiresAt = $this->normalizeExpiresAt($body['expiresAt'] ?? null);
         $id = FeedItem::create(
             (int) $user['household_id'],
             $type,
-            $body['message'] ?? null,
+            $this->normalizeMessage($body['message'] ?? null),
             $visibility,
-            $body['expiresAt'] ?? null
+            $expiresAt
         );
-        Response::json(['id' => $id], 201);
+
+        $push = null;
+        if ($visibility !== 'private') {
+            try {
+                $push = PushService::sendFeedUpdate($userId);
+            } catch (\Throwable $e) {
+                error_log('Feed push failed: ' . $e->getMessage());
+            }
+        }
+
+        Response::json(['id' => $id, 'push' => $push], 201);
     }
 
     private function toPublicItem(array $item): array
@@ -52,6 +64,23 @@ final class FeedController
             'message' => $item['message'],
             'visibility' => $item['visibility'],
             'createdAt' => $item['created_at'],
+            'expiresAt' => $item['expires_at'],
         ];
+    }
+
+    private function normalizeMessage(mixed $message): ?string
+    {
+        $normalized = trim((string) ($message ?? ''));
+        return $normalized !== '' ? $normalized : null;
+    }
+
+    private function normalizeExpiresAt(mixed $expiresAt): ?string
+    {
+        $normalized = trim((string) ($expiresAt ?? ''));
+        if ($normalized === '') {
+            return null;
+        }
+        $timestamp = strtotime($normalized);
+        return $timestamp !== false ? date('Y-m-d H:i:s', $timestamp) : null;
     }
 }

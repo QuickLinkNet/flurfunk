@@ -68,4 +68,18 @@ final class User
         $stmt = Database::pdo()->prepare('UPDATE users SET role = ? WHERE id = ?');
         $stmt->execute([$role, $id]);
     }
+
+    public static function completeOnboarding(int $id): void
+    {
+        $stmt = Database::pdo()->prepare(
+            "UPDATE users SET onboarding_completed_at = CURRENT_TIMESTAMP, onboarding_current_step = 'push' WHERE id = ?"
+        );
+        $stmt->execute([$id]);
+    }
+
+    public static function updateOnboardingProgress(int $id, string $step): void
+    {
+        $stmt = Database::pdo()->prepare('UPDATE users SET onboarding_current_step = ? WHERE id = ?');
+        $stmt->execute([$step, $id]);
+    }
 }

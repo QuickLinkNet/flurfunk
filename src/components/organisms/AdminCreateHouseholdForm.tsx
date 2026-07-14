@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
-import { Input } from '../atoms/Input';
 import { Button } from '../atoms/Button';
+import { Input } from '../atoms/Input';
+import { InviteCodeRow } from '../molecules/InviteCodeRow';
 import { createAdminHousehold } from '../../api/adminApi';
 import type { HouseholdInvitePerson } from '../../types/invite';
 
@@ -20,6 +21,7 @@ export function AdminCreateHouseholdForm({ onCreated }: Props) {
   const [addressLine, setAddressLine] = useState('');
   const [people, setPeople] = useState<Person[]>([{ ...EMPTY_PERSON }]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [createdInvites, setCreatedInvites] = useState<HouseholdInvitePerson[] | null>(null);
 
   function updatePerson(index: number, patch: Partial<Person>) {
@@ -34,10 +36,15 @@ export function AdminCreateHouseholdForm({ onCreated }: Props) {
     setPeople((prev) => prev.filter((_, i) => i !== index));
   }
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
+  async function handleSubmit(event: FormEvent) {
+    event.preventDefault();
     const validPeople = people.filter((p) => p.firstName.trim() && p.lastName.trim());
-    if (!name.trim() || !addressLine.trim() || validPeople.length === 0) return;
+    setError(null);
+    if (!name.trim() || !addressLine.trim() || validPeople.length === 0) {
+      setError('Bitte Haushalt, Adresse und mindestens eine Person ausfüllen.');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const result = await createAdminHousehold(name.trim(), addressLine.trim(), validPeople);
@@ -46,59 +53,74 @@ export function AdminCreateHouseholdForm({ onCreated }: Props) {
       setAddressLine('');
       setPeople([{ ...EMPTY_PERSON }]);
       onCreated();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Haushalt konnte nicht angelegt werden.');
     } finally {
       setIsSubmitting(false);
     }
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--md-space-3)' }}>
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--md-space-3)' }}>
-        <Input placeholder="Haushaltsname (z.B. Familie Schneider)" value={name} onChange={(e) => setName(e.target.value)} />
-        <Input placeholder="Adresse" value={addressLine} onChange={(e) => setAddressLine(e.target.value)} />
-        {people.map((person, index) => (
-          <div key={index} style={{ display: 'flex', gap: 'var(--md-space-2)' }}>
-            <Input
-              placeholder="Vorname"
-              value={person.firstName}
-              onChange={(e) => updatePerson(index, { firstName: e.target.value })}
-            />
-            <Input
-              placeholder="Nachname"
-              value={person.lastName}
-              onChange={(e) => updatePerson(index, { lastName: e.target.value })}
-            />
-            {people.length > 1 && (
-              <Button type="button" variant="ghost" onClick={() => removePersonRow(index)}>
-                ×
-              </Button>
-            )}
-          </div>
-        ))}
-        <Button type="button" variant="ghost" onClick={addPersonRow}>
-          + Person hinzufügen
-        </Button>
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Wird angelegt …' : 'Haushalt anlegen'}
-        </Button>
+    <div className="md-stack">
+      <form onSubmit={handleSubmit} className="md-stack">
+        <div className="md-form-grid">
+          <Input placeholder="Haushaltsname (z. B. Familie Schneider)" value={name} onChange={(event) => setName(event.target.value)} />
+          <Input placeholder="Adresse" value={addressLine} onChange={(event) => setAddressLine(event.target.value)} />
+        </div>
+
+        <div className="md-stack" style={{ gap: 'var(--md-space-2)' }}>
+          {people.map((person, index) => (
+            <div key={index} className="md-action-row">
+              <div className="md-form-grid">
+                <Input
+                  placeholder="Vorname"
+                  value={person.firstName}
+                  onChange={(event) => updatePerson(index, { firstName: event.target.value })}
+                />
+                <Input
+                  placeholder="Nachname"
+                  value={person.lastName}
+                  onChange={(event) => updatePerson(index, { lastName: event.target.value })}
+                />
+              </div>
+              {people.length > 1 && (
+                <Button type="button" variant="ghost" onClick={() => removePersonRow(index)}>
+                  Entfernen
+                </Button>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {error && <p style={{ margin: 0, color: 'var(--md-color-error)', fontSize: 'var(--md-font-size-sm)' }}>{error}</p>}
+
+        <div className="md-card-actions">
+          <Button type="button" variant="ghost" onClick={addPersonRow}>
+            + Person hinzufügen
+          </Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Wird angelegt...' : 'Haushalt anlegen'}
+          </Button>
+        </div>
       </form>
+
       {createdInvites && (
-        <div
+        <section
           style={{
             padding: 'var(--md-space-3)',
             borderRadius: 'var(--md-radius-control)',
             background: 'var(--md-color-secondary-container)'
           }}
         >
-          <p style={{ margin: 0, fontSize: 'var(--md-font-size-sm)', fontWeight: 'var(--md-font-weight-medium)' }}>
-            Codes zum Verschicken:
+          <p style={{ margin: '0 0 var(--md-space-2)', fontSize: 'var(--md-font-size-sm)', fontWeight: 'var(--md-font-weight-medium)' }}>
+            Neue Codes zum Verschicken
           </p>
-          {createdInvites.map((invite) => (
-            <p key={invite.id} style={{ margin: 'var(--md-space-1) 0 0', fontSize: 'var(--md-font-size-sm)' }}>
-              {invite.firstName} {invite.lastName}: <strong>{invite.code}</strong>
-            </p>
-          ))}
-        </div>
+          <div className="md-stack" style={{ gap: 'var(--md-space-2)' }}>
+            {createdInvites.map((invite) => (
+              <InviteCodeRow key={invite.id} invite={invite} />
+            ))}
+          </div>
+        </section>
       )}
     </div>
   );

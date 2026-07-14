@@ -1,7 +1,20 @@
 @import './theme-light.css';
 @import './theme-dark.css';
+@import './app-layout.css';
+@import './manager.css';
+@import './admin.css';
+@import './auth.css';
+@import './calendar.css';
+@import './dashboard.css';
+@import './onboarding.css';
 
 * { box-sizing: border-box; }
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
 
 body {
   margin: 0;
@@ -9,8 +22,4 @@ body {
   font-size: var(--md-font-size-base);
   background: var(--md-color-surface-variant);
   color: var(--md-color-on-surface);
-}
-
-button {
-  font-family: inherit;
 }

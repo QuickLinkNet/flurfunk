@@ -3,14 +3,24 @@ import { Input } from '../atoms/Input';
 import { Select } from '../atoms/Select';
 import { Button } from '../atoms/Button';
 import { CardRow } from '../molecules/CardRow';
-import { fetchPets, createPet, deletePet } from '../../api/petsApi';
+import { ConfirmDialog } from '../molecules/ConfirmDialog';
+import { EditEntityDialog } from '../molecules/EditEntityDialog';
+import { fetchPets, createPet, deletePet, updatePet } from '../../api/petsApi';
 import { PET_TYPE_LABELS } from '../../types/pet';
 import type { Pet, PetType } from '../../types/pet';
 
-export function PetsManager() {
+interface Props {
+  compact?: boolean;
+}
+
+export function PetsManager({ compact = false }: Props) {
   const [pets, setPets] = useState<Pet[]>([]);
   const [name, setName] = useState('');
   const [type, setType] = useState<PetType>('dog');
+  const [editingPet, setEditingPet] = useState<Pet | null>(null);
+  const [deletingPet, setDeletingPet] = useState<Pet | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   function reload() {
     fetchPets().then(setPets).catch(() => setPets([]));
@@ -26,21 +36,54 @@ export function PetsManager() {
     reload();
   }
 
-  async function handleDelete(id: number) {
-    await deletePet(id);
-    reload();
+  async function handleDelete() {
+    if (!deletingPet) return;
+    setIsDeleting(true);
+    try {
+      await deletePet(deletingPet.id);
+      setDeletingPet(null);
+      reload();
+    } finally {
+      setIsDeleting(false);
+    }
+  }
+
+  async function handleEdit(nextName: string, nextType?: string) {
+    if (!editingPet) return;
+    const petType = (nextType ?? editingPet.type) as PetType;
+    if (nextName === editingPet.name && petType === editingPet.type) {
+      setEditingPet(null);
+      return;
+    }
+    setIsEditing(true);
+    try {
+      await updatePet(editingPet.id, nextName, petType);
+      setEditingPet(null);
+      reload();
+    } finally {
+      setIsEditing(false);
+    }
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--md-space-3)' }}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--md-space-2)' }}>
+    <section className={compact ? 'onboarding-subsection compact-manager' : 'compact-manager'}>
+      <div>
+        <h3>Haustiere</h3>
+        <p>Optional. Nützlich, falls Nachbarn euch bei Tür, Garten oder Betreuung helfen.</p>
+      </div>
+      <div className="compact-list">
         {pets.map((pet) => (
           <CardRow
             key={pet.id}
             action={
-              <Button variant="ghost" onClick={() => handleDelete(pet.id)}>
-                Entfernen
-              </Button>
+              <div className="inline-actions">
+                <Button type="button" variant="ghost" onClick={() => setEditingPet(pet)}>
+                  Bearbeiten
+                </Button>
+                <Button type="button" variant="ghost" onClick={() => setDeletingPet(pet)}>
+                  Entfernen
+                </Button>
+              </div>
             }
           >
             <span style={{ fontSize: 'var(--md-font-size-md)', fontWeight: 'var(--md-font-weight-medium)' }}>
@@ -48,10 +91,11 @@ export function PetsManager() {
             </span>
           </CardRow>
         ))}
+        {pets.length === 0 && <p className="empty-note">Noch keine Haustiere angelegt.</p>}
       </div>
-      <form onSubmit={handleAdd} style={{ display: 'flex', gap: 'var(--md-space-2)' }}>
+      <form onSubmit={handleAdd} className="compact-form">
         <Input placeholder="Name des Haustiers" value={name} onChange={(e) => setName(e.target.value)} />
-        <Select value={type} onChange={(e) => setType(e.target.value as PetType)} style={{ width: 140 }}>
+        <Select value={type} onChange={(e) => setType(e.target.value as PetType)} style={{ width: 150 }}>
           {(Object.keys(PET_TYPE_LABELS) as PetType[]).map((value) => (
             <option key={value} value={value}>
               {PET_TYPE_LABELS[value]}
@@ -60,6 +104,26 @@ export function PetsManager() {
         </Select>
         <Button type="submit">Hinzufügen</Button>
       </form>
-    </div>
+      <EditEntityDialog
+        open={Boolean(editingPet)}
+        title="Haustier bearbeiten"
+        nameLabel="Name des Haustiers"
+        initialName={editingPet?.name ?? ''}
+        typeValue={editingPet?.type ?? 'dog'}
+        typeOptions={(Object.keys(PET_TYPE_LABELS) as PetType[]).map((value) => ({ value, label: PET_TYPE_LABELS[value] }))}
+        loading={isEditing}
+        onClose={() => setEditingPet(null)}
+        onSave={handleEdit}
+      />
+      <ConfirmDialog
+        open={Boolean(deletingPet)}
+        title="Haustier entfernen"
+        description={`Soll ${deletingPet?.name ?? 'dieses Haustier'} wirklich aus eurem Haushalt entfernt werden?`}
+        confirmLabel="Entfernen"
+        loading={isDeleting}
+        onConfirm={handleDelete}
+        onCancel={() => setDeletingPet(null)}
+      />
+    </section>
   );
 }

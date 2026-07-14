@@ -40,6 +40,23 @@ final class PetController
         Response::json(null);
     }
 
+    public function update(array $params): void
+    {
+        $householdId = $this->requireHouseholdId();
+        $petId = (int) $params['id'];
+        if (!Pet::belongsToHousehold($petId, $householdId)) {
+            Response::error('Haustier gehört nicht zu deinem Haushalt.', 403);
+        }
+        $body = Request::json();
+        $name = trim($body['name'] ?? '');
+        if ($name === '') {
+            Response::error('Name des Haustiers fehlt.', 422);
+        }
+        $type = in_array($body['type'] ?? '', Pet::TYPES, true) ? $body['type'] : 'other';
+        Pet::update($petId, $name, $type);
+        Response::json(null);
+    }
+
     private function requireHouseholdId(): int
     {
         $userId = Auth::requireLogin();

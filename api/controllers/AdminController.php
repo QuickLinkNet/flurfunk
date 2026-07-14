@@ -7,11 +7,13 @@ use App\Core\Request;
 use App\Core\Response;
 use App\Models\CalendarEntry;
 use App\Models\Child;
+use App\Models\DashboardNotice;
 use App\Models\Event;
 use App\Models\FeedItem;
 use App\Models\Household;
 use App\Models\HouseholdInvite;
 use App\Models\Pet;
+use App\Models\PushSubscription;
 use App\Models\Street;
 use App\Models\User;
 
@@ -25,6 +27,7 @@ final class AdminController
                 'id' => (int) $h['id'],
                 'name' => $h['name'],
                 'addressLine' => $h['address_line'],
+                'avatarKey' => $h['avatar_key'] ?? 'home',
                 'streetName' => $h['street_name'],
                 'statusEmoji' => $h['status_emoji'],
                 'statusLabel' => $h['status_label'],
@@ -94,6 +97,31 @@ final class AdminController
         Response::json($this->toPublicInvite($invite), 201);
     }
 
+    public function revokeInvite(array $params): void
+    {
+        $this->requireAdmin();
+        HouseholdInvite::revoke((int) $params['id']);
+        Response::json(null);
+    }
+
+    public function updateHousehold(array $params): void
+    {
+        $this->requireAdmin();
+        $householdId = (int) $params['id'];
+        if (Household::findById($householdId) === null) {
+            Response::error('Haushalt nicht gefunden.', 404);
+        }
+        $body = Request::json();
+        $name = trim($body['name'] ?? '');
+        $addressLine = trim($body['addressLine'] ?? '');
+        $avatarKey = trim($body['avatarKey'] ?? 'home');
+        if ($name === '' || $addressLine === '') {
+            Response::error('Haushaltsname und Adresse sind Pflicht.', 422);
+        }
+        Household::updateDetails($householdId, $name, $addressLine, $avatarKey);
+        Response::json(null);
+    }
+
     public function deleteHousehold(array $params): void
     {
         $this->requireAdmin();
@@ -107,6 +135,7 @@ final class AdminController
         $users = array_map(function (array $u): array {
             $public = $this->toPublicUser($u);
             $public['householdName'] = $u['household_name'];
+            $public['pushSubscribed'] = PushSubscription::hasAny((int) $u['id']);
             return $public;
         }, User::findAll());
         Response::json($users);
@@ -138,6 +167,7 @@ final class AdminController
             'message' => $f['message'],
             'visibility' => $f['visibility'],
             'createdAt' => $f['created_at'],
+            'expiresAt' => $f['expires_at'],
         ], FeedItem::findAll());
         Response::json($items);
     }
@@ -195,6 +225,31 @@ final class AdminController
         Response::json(null);
     }
 
+    public function notices(): void
+    {
+        $this->requireAdmin();
+        Response::json(array_map([$this, 'toPublicNotice'], DashboardNotice::findAll()));
+    }
+
+    public function createNotice(): void
+    {
+        $this->requireAdmin();
+        $body = Request::json();
+        $title = trim($body['title'] ?? '');
+        $message = trim($body['message'] ?? '');
+        if ($title === '' || $message === '') {
+            Response::error('Titel und Nachricht sind Pflicht.', 422);
+        }
+        Response::json($this->toPublicNotice(DashboardNotice::create($title, $message)), 201);
+    }
+
+    public function deleteNotice(array $params): void
+    {
+        $this->requireAdmin();
+        DashboardNotice::delete((int) $params['id']);
+        Response::json(null);
+    }
+
     private function requireAdmin(): int
     {
         $userId = Auth::requireLogin();
@@ -214,17 +269,42 @@ final class AdminController
             'role' => $u['role'],
             'householdId' => $u['household_id'] !== null ? (int) $u['household_id'] : null,
             'lastLoginAt' => $u['last_login_at'],
+            'onboardingCompletedAt' => $u['onboarding_completed_at'] ?? null,
+            'onboardingCurrentStep' => $u['onboarding_current_step'] ?? 'household',
+            'pushSubscribed' => PushSubscription::hasAny((int) $u['id']),
         ];
     }
 
     private function toPublicInvite(array $i): array
     {
+        $usedUserId = $i['used_user_id'] ?? null;
+
         return [
             'id' => (int) $i['id'],
             'code' => $i['code'],
             'firstName' => $i['first_name'],
             'lastName' => $i['last_name'],
             'usedAt' => $i['used_at'],
+            'revokedAt' => $i['revoked_at'] ?? null,
+            'usedByUser' => $usedUserId !== null ? [
+                'id' => (int) $usedUserId,
+                'email' => $i['used_user_email'],
+                'displayName' => $i['used_user_display_name'],
+                'onboardingCompletedAt' => $i['used_user_onboarding_completed_at'] ?? null,
+                'onboardingCurrentStep' => $i['used_user_onboarding_current_step'] ?? 'household',
+                'pushSubscribed' => PushSubscription::hasAny((int) $usedUserId),
+            ] : null,
+        ];
+    }
+
+    private function toPublicNotice(array $n): array
+    {
+        return [
+            'id' => (int) $n['id'],
+            'title' => $n['title'],
+            'message' => $n['message'],
+            'isActive' => (bool) $n['is_active'],
+            'createdAt' => $n['created_at'],
         ];
     }
 }

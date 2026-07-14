@@ -33,13 +33,21 @@ final class HouseholdInvite
 
     public static function findById(int $id): array
     {
-        $stmt = Database::pdo()->prepare('SELECT * FROM household_invites WHERE id = ?');
+        $stmt = Database::pdo()->prepare(
+            'SELECT hi.*, u.id AS used_user_id, u.email AS used_user_email, u.display_name AS used_user_display_name,
+                    u.onboarding_completed_at AS used_user_onboarding_completed_at,
+                    u.onboarding_current_step AS used_user_onboarding_current_step
+             FROM household_invites hi
+             LEFT JOIN users u ON u.id = hi.used_by_user_id
+             WHERE hi.id = ?'
+        );
         $stmt->execute([$id]);
         return $stmt->fetch();
     }
 
     public static function findByCode(string $code): ?array
     {
+        $code = strtoupper(trim($code));
         $stmt = Database::pdo()->prepare('SELECT * FROM household_invites WHERE code = ? LIMIT 1');
         $stmt->execute([$code]);
         return $stmt->fetch() ?: null;
@@ -48,7 +56,13 @@ final class HouseholdInvite
     public static function findByHousehold(int $householdId): array
     {
         $stmt = Database::pdo()->prepare(
-            'SELECT * FROM household_invites WHERE household_id = ? ORDER BY created_at'
+            'SELECT hi.*, u.id AS used_user_id, u.email AS used_user_email, u.display_name AS used_user_display_name,
+                    u.onboarding_completed_at AS used_user_onboarding_completed_at,
+                    u.onboarding_current_step AS used_user_onboarding_current_step
+             FROM household_invites hi
+             LEFT JOIN users u ON u.id = hi.used_by_user_id
+             WHERE hi.household_id = ?
+             ORDER BY hi.created_at'
         );
         $stmt->execute([$householdId]);
         return $stmt->fetchAll();
@@ -60,6 +74,14 @@ final class HouseholdInvite
             'UPDATE household_invites SET used_at = CURRENT_TIMESTAMP, used_by_user_id = ? WHERE id = ?'
         );
         $stmt->execute([$userId, $inviteId]);
+    }
+
+    public static function revoke(int $inviteId): void
+    {
+        $stmt = Database::pdo()->prepare(
+            'UPDATE household_invites SET revoked_at = CURRENT_TIMESTAMP WHERE id = ? AND used_at IS NULL'
+        );
+        $stmt->execute([$inviteId]);
     }
 
     private static function generateCode(): string

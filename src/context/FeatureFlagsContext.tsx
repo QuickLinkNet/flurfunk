@@ -5,7 +5,7 @@ import type { FeatureFlags, FeatureKey } from '../types/featureFlags';
 interface FeatureFlagsContextValue {
   flags: FeatureFlags | null;
   isEnabled: (key: FeatureKey) => boolean;
-  refresh: () => void;
+  refresh: () => Promise<void>;
 }
 
 export const FeatureFlagsContext = createContext<FeatureFlagsContextValue | undefined>(undefined);
@@ -13,11 +13,17 @@ export const FeatureFlagsContext = createContext<FeatureFlagsContextValue | unde
 export function FeatureFlagsProvider({ children }: { children: ReactNode }) {
   const [flags, setFlags] = useState<FeatureFlags | null>(null);
 
-  function refresh() {
-    fetchFeatureFlags().then(setFlags).catch(() => setFlags(null));
+  async function refresh() {
+    try {
+      setFlags(await fetchFeatureFlags());
+    } catch {
+      setFlags(null);
+    }
   }
 
-  useEffect(refresh, []);
+  useEffect(() => {
+    void refresh();
+  }, []);
 
   // Solange die Flags noch nicht geladen sind, gilt alles als aktiv -
   // verhindert ein kurzes Aufblitzen/Verschwinden der Navigation.

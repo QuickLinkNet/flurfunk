@@ -1,3 +1,5 @@
+import { useNavigate } from 'react-router-dom';
+import { Button } from '../components/atoms/Button';
 import { DashboardTemplate } from '../components/templates/DashboardTemplate';
 import { Select } from '../components/atoms/Select';
 import { Heading } from '../components/atoms/Heading';
@@ -13,8 +15,14 @@ const THEME_LABELS: Record<Theme, string> = {
 };
 
 export function SettingsPage() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { theme, setTheme } = useTheme();
+  const navigate = useNavigate();
+
+  async function handleLogout() {
+    await logout();
+    navigate('/login', { replace: true });
+  }
 
   return (
     <DashboardTemplate header={<Heading level={1}>Einstellungen</Heading>}>
@@ -37,6 +45,9 @@ export function SettingsPage() {
         <p style={{ fontSize: 'var(--md-font-size-base)', color: 'var(--md-color-on-surface-variant)' }}>
           {user?.displayName} · {user?.email}
         </p>
+        <Button type="button" variant="ghost" onClick={handleLogout}>
+          Abmelden
+        </Button>
       </section>
     </DashboardTemplate>
   );

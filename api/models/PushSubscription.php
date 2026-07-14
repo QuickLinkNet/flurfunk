@@ -8,15 +8,20 @@ final class PushSubscription
 {
     public static function subscribe(int $userId, string $endpoint, string $p256dh, string $auth): void
     {
-        $stmt = Database::pdo()->prepare(
-            'INSERT INTO push_subscriptions (user_id, endpoint, p256dh, auth, created_at)
-             VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
-             ON CONFLICT(endpoint) DO UPDATE SET
-                user_id = excluded.user_id,
-                p256dh = excluded.p256dh,
-                auth = excluded.auth'
-        );
-        $stmt->execute([$userId, $endpoint, $p256dh, $auth]);
+        $pdo = Database::pdo();
+        $pdo->beginTransaction();
+        try {
+            $pdo->prepare('DELETE FROM push_subscriptions WHERE endpoint = ?')->execute([$endpoint]);
+            $stmt = $pdo->prepare(
+                'INSERT INTO push_subscriptions (user_id, endpoint, p256dh, auth, created_at)
+                 VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)'
+            );
+            $stmt->execute([$userId, $endpoint, $p256dh, $auth]);
+            $pdo->commit();
+        } catch (\Throwable $e) {
+            $pdo->rollBack();
+            throw $e;
+        }
     }
 
     public static function unsubscribe(int $userId, string $endpoint): void
@@ -28,6 +33,13 @@ final class PushSubscription
     public static function findByUser(int $userId): array
     {
         $stmt = Database::pdo()->prepare('SELECT * FROM push_subscriptions WHERE user_id = ?');
+        $stmt->execute([$userId]);
+        return $stmt->fetchAll();
+    }
+
+    public static function findAllExceptUser(int $userId): array
+    {
+        $stmt = Database::pdo()->prepare('SELECT * FROM push_subscriptions WHERE user_id != ?');
         $stmt->execute([$userId]);
         return $stmt->fetchAll();
     }

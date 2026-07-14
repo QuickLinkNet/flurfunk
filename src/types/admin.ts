@@ -1,5 +1,8 @@
 import type { UserRole } from './user';
 import type { HouseholdInvitePerson } from './invite';
+import type { OnboardingStep } from './onboarding';
+
+export type AdminTab = 'overview' | 'households' | 'invites' | 'users' | 'content' | 'calendar' | 'system';
 
 export interface AdminMember {
   id: number;
@@ -8,6 +11,9 @@ export interface AdminMember {
   role: UserRole;
   householdId: number | null;
   lastLoginAt: string | null;
+  onboardingCompletedAt: string | null;
+  onboardingCurrentStep: OnboardingStep;
+  pushSubscribed: boolean;
 }
 
 export interface AdminChild {
@@ -26,6 +32,7 @@ export interface AdminHousehold {
   id: number;
   name: string;
   addressLine: string;
+  avatarKey: string;
   streetName: string;
   statusEmoji: string;
   statusLabel: string;
@@ -47,6 +54,7 @@ export interface AdminFeedItem {
   message: string | null;
   visibility: string;
   createdAt: string;
+  expiresAt: string | null;
 }
 
 export interface AdminEvent {
@@ -65,4 +73,12 @@ export interface AdminCalendarEntry {
   title: string;
   startsAt: string;
   endsAt: string | null;
+}
+
+export interface AdminNotice {
+  id: number;
+  title: string;
+  message: string;
+  isActive: boolean;
+  createdAt: string;
 }

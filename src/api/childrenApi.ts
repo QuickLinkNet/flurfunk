@@ -12,3 +12,11 @@ export function createChild(name: string, birthdate?: string) {
 export function updateChildLocation(childId: number, location: ChildLocation, note?: string) {
   return apiRequest<null>(`/children/${childId}`, { method: 'PUT', body: JSON.stringify({ location, note }) });
 }
+
+export function updateChildName(childId: number, name: string) {
+  return apiRequest<null>(`/children/${childId}`, { method: 'PUT', body: JSON.stringify({ name }) });
+}
+
+export function deleteChild(childId: number) {
+  return apiRequest<null>(`/children/${childId}`, { method: 'DELETE' });
+}

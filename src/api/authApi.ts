@@ -1,4 +1,5 @@
 import { apiRequest } from './client';
+import type { OnboardingStep } from '../types/onboarding';
 import type { User } from '../types/user';
 
 export function login(email: string, password: string) {
@@ -11,6 +12,14 @@ export function logout() {
 
 export function fetchCurrentUser() {
   return apiRequest<User>('/auth/me');
+}
+
+export function completeOnboarding() {
+  return apiRequest<User>('/auth/onboarding/complete', { method: 'POST' });
+}
+
+export function saveOnboardingProgress(step: OnboardingStep) {
+  return apiRequest<User>('/auth/onboarding/progress', { method: 'POST', body: JSON.stringify({ step }) });
 }
 
 interface RegisterInput {

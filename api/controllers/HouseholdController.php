@@ -36,14 +36,30 @@ final class HouseholdController
         if ($user === null || $user['household_id'] === null) {
             Response::error('Kein Haushalt zugeordnet.', 404);
         }
+
         $body = Request::json();
-        Household::updateStatus(
-            (int) $user['household_id'],
-            $body['statusEmoji'] ?? '🏠',
-            $body['statusLabel'] ?? 'Zuhause',
-            $body['statusNote'] ?? null
-        );
-        Response::json(Household::findById((int) $user['household_id']));
+        $householdId = (int) $user['household_id'];
+
+        if (isset($body['name']) || isset($body['addressLine']) || isset($body['avatarKey'])) {
+            $name = trim($body['name'] ?? '');
+            $addressLine = trim($body['addressLine'] ?? '');
+            $avatarKey = trim($body['avatarKey'] ?? 'home');
+            if ($name === '' || $addressLine === '') {
+                Response::error('Haushaltsname und Adresse sind Pflicht.', 422);
+            }
+            Household::updateDetails($householdId, $name, $addressLine, $avatarKey);
+        }
+
+        if (isset($body['statusEmoji']) || isset($body['statusLabel']) || array_key_exists('statusNote', $body)) {
+            Household::updateStatus(
+                $householdId,
+                $body['statusEmoji'] ?? '🏠',
+                $body['statusLabel'] ?? 'Zuhause',
+                $body['statusNote'] ?? null
+            );
+        }
+
+        Response::json($this->toPublicHousehold(Household::findById($householdId)));
     }
 
     private function toPublicHousehold(array $h): array
@@ -52,6 +68,7 @@ final class HouseholdController
             'id' => (int) $h['id'],
             'name' => $h['name'],
             'addressLine' => $h['address_line'],
+            'avatarKey' => $h['avatar_key'] ?? 'home',
             'statusEmoji' => $h['status_emoji'],
             'statusLabel' => $h['status_label'],
             'statusNote' => $h['status_note'],

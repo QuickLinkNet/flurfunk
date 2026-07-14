@@ -36,12 +36,30 @@ final class ChildController
             Response::error('Kind gehört nicht zu deinem Haushalt.', 403);
         }
         $body = Request::json();
+        $name = trim($body['name'] ?? '');
+        if ($name !== '') {
+            Child::updateName($childId, $name);
+        }
         $allowed = ['mama', 'papa', 'both', 'grandparents', 'friends', 'vacation', 'school', 'kindergarten', 'other'];
-        $location = $body['location'] ?? '';
+        $location = $body['location'] ?? null;
+        if ($location === null) {
+            Response::json(null);
+        }
         if (!in_array($location, $allowed, true)) {
             Response::error('Ungültiger Aufenthaltsort.', 422);
         }
         Child::updateLocation($childId, $location, $body['note'] ?? null);
+        Response::json(null);
+    }
+
+    public function destroy(array $params): void
+    {
+        $householdId = $this->requireHouseholdId();
+        $childId = (int) $params['id'];
+        if (!Child::belongsToHousehold($childId, $householdId)) {
+            Response::error('Kind gehört nicht zu deinem Haushalt.', 403);
+        }
+        Child::delete($childId);
         Response::json(null);
     }
 

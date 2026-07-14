@@ -9,4 +9,5 @@ export interface FeedItem {
   message: string | null;
   visibility: 'public' | 'neighbors' | 'private';
   createdAt: string;
+  expiresAt: string | null;
 }

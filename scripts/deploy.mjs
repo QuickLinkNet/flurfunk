@@ -72,6 +72,7 @@ try {
 
   console.log('Lade Frontend (dist/) hoch …');
   await uploadContents(client, 'dist');
+  await client.uploadFrom('.htaccess', '.htaccess');
 
   console.log('Lade Backend (api/) hoch …');
   await client.ensureDir('api'); // relativ zu remoteBase -> remoteBase/api

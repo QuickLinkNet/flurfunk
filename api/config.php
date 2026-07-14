@@ -1,13 +1,11 @@
 <?php
-// Wird ganz normal mit deployed (kein Geheimnis mehr enthalten, da SQLite
-// keine Zugangsdaten braucht). Nur ändern, falls du den DB-Dateipfad,
-// den Session-Namen oder eine andere Domain für CORS brauchst.
+
+// Wird ganz normal mit deployed. Enthält seit SQLite keine Zugangsdaten mehr.
 return [
     'db' => [
-        // Pfad zur SQLite-Datei. Liegt unter api/data/, das per .htaccess
-        // vor direktem Web-Zugriff geschützt ist (siehe api/data/.htaccess).
+        // Liegt unter api/data/, das per .htaccess vor direktem Web-Zugriff
+        // geschützt ist.
         'path' => __DIR__ . '/data/database.sqlite',
     ],
     'session_name' => 'nachbarn_session',
-    'cors_origin' => null, // null = gleiche Domain, kein CORS nötig
 ];

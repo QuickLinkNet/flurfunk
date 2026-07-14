@@ -36,4 +36,10 @@ final class Pet
         $stmt = Database::pdo()->prepare('DELETE FROM pets WHERE id = ?');
         $stmt->execute([$id]);
     }
+
+    public static function update(int $id, string $name, string $type): void
+    {
+        $stmt = Database::pdo()->prepare('UPDATE pets SET name = ?, type = ? WHERE id = ?');
+        $stmt->execute([$name, $type, $id]);
+    }
 }

@@ -6,6 +6,16 @@ interface Props {
   item: FeedItem;
 }
 
+function formatDate(value: string): string {
+  return new Intl.DateTimeFormat('de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }).format(new Date(value.replace(' ', 'T')));
+}
+
+function visibilityLabel(value: FeedItem['visibility']): string {
+  if (value === 'public') return 'öffentlich';
+  if (value === 'private') return 'privat';
+  return 'Nachbarschaft';
+}
+
 export function FeedItemCard({ item }: Props) {
   const meta = FEED_TYPE_META[item.type];
   return (
@@ -21,7 +31,7 @@ export function FeedItemCard({ item }: Props) {
       }}
     >
       <IconBadge emoji={meta.emoji} tint={meta.tint} />
-      <div>
+      <div style={{ minWidth: 0 }}>
         <p style={{ margin: 0, fontSize: 'var(--md-font-size-base)', fontWeight: 'var(--md-font-weight-medium)' }}>
           {item.householdName} · {meta.label}
         </p>
@@ -36,6 +46,10 @@ export function FeedItemCard({ item }: Props) {
             {item.message}
           </p>
         )}
+        <p style={{ margin: 'var(--md-space-2) 0 0', fontSize: 'var(--md-font-size-xs)', color: 'var(--md-color-on-surface-variant)' }}>
+          {visibilityLabel(item.visibility)} · {formatDate(item.createdAt)}
+          {item.expiresAt ? ` · bis ${formatDate(item.expiresAt)}` : ''}
+        </p>
       </div>
     </div>
   );

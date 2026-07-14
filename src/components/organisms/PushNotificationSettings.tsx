@@ -1,22 +1,65 @@
 import { useEffect, useState } from 'react';
 import { Switch } from '../atoms/Switch';
 import { Button } from '../atoms/Button';
-import { fetchVapidPublicKey, subscribePush, unsubscribePush, sendTestPush } from '../../api/pushApi';
-import { isPushSupported, getCurrentSubscription, enablePush, disablePush } from '../../utils/push';
+import { fetchPushStatus, fetchVapidPublicKey, sendTestPush, subscribePush, unsubscribePush } from '../../api/pushApi';
+import { disablePush, enablePush, getCurrentSubscription, isPushSupported } from '../../utils/push';
 
-type Status = 'loading' | 'unsupported' | 'off' | 'on';
+type Status = 'loading' | 'unsupported' | 'blocked' | 'off' | 'local-only' | 'on';
+
+function permissionState(): NotificationPermission | 'unsupported' {
+  return 'Notification' in window ? Notification.permission : 'unsupported';
+}
+
+function statusLabel(status: Status): string {
+  if (status === 'on') return 'Aktiv';
+  if (status === 'local-only') return 'Nur im Browser aktiv';
+  if (status === 'blocked') return 'Blockiert';
+  if (status === 'unsupported') return 'Nicht unterstützt';
+  if (status === 'loading') return 'Wird geprüft';
+  return 'Inaktiv';
+}
+
+function statusText(status: Status): string {
+  if (status === 'on') return 'Dieses Gerät ist für Push-Benachrichtigungen angemeldet.';
+  if (status === 'local-only') return 'Der Browser hat ein Abo, der Server kennt es aber nicht. Einmal aus- und wieder einschalten.';
+  if (status === 'blocked') return 'Benachrichtigungen sind im Browser blockiert. Bitte in den Website-Einstellungen freigeben.';
+  if (status === 'unsupported') return 'Dieser Browser oder dieses Gerät unterstützt Push-Benachrichtigungen nicht.';
+  if (status === 'loading') return 'Status wird geprüft...';
+  return 'Push ist auf diesem Gerät noch nicht aktiviert.';
+}
 
 export function PushNotificationSettings() {
   const [status, setStatus] = useState<Status>('loading');
   const [isBusy, setIsBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!isPushSupported()) {
-      setStatus('unsupported');
-      return;
+  async function refreshStatus() {
+    try {
+      if (!isPushSupported()) {
+        setStatus('unsupported');
+        return;
+      }
+      if (permissionState() === 'denied') {
+        setStatus('blocked');
+        return;
+      }
+
+      const [subscription, serverStatus] = await Promise.all([
+        getCurrentSubscription(),
+        fetchPushStatus().catch(() => ({ subscribed: false }))
+      ]);
+
+      if (subscription && serverStatus.subscribed) setStatus('on');
+      else if (subscription) setStatus('local-only');
+      else setStatus('off');
+    } catch (err) {
+      setStatus('off');
+      setMessage(err instanceof Error ? err.message : 'Push-Status konnte nicht geprüft werden.');
     }
-    getCurrentSubscription().then((sub) => setStatus(sub ? 'on' : 'off'));
+  }
+
+  useEffect(() => {
+    refreshStatus();
   }, []);
 
   async function handleToggle(enabled: boolean) {
@@ -27,14 +70,16 @@ export function PushNotificationSettings() {
         const { publicKey } = await fetchVapidPublicKey();
         const subscription = await enablePush(publicKey);
         await subscribePush(subscription);
-        setStatus('on');
+        setMessage('Benachrichtigungen aktiviert.');
       } else {
         const endpoint = await disablePush();
         if (endpoint) await unsubscribePush(endpoint);
-        setStatus('off');
+        setMessage('Benachrichtigungen deaktiviert.');
       }
+      await refreshStatus();
     } catch (err) {
       setMessage(err instanceof Error ? err.message : 'Das hat nicht funktioniert.');
+      await refreshStatus();
     } finally {
       setIsBusy(false);
     }
@@ -45,39 +90,39 @@ export function PushNotificationSettings() {
     setIsBusy(true);
     try {
       const result = await sendTestPush();
-      setMessage(result.sent > 0 ? 'Test gesendet — sollte gleich ankommen.' : 'Konnte nicht zugestellt werden.');
+      const codes = result.statuses?.length ? ` Codes: ${result.statuses.join(', ')}` : '';
+      setMessage(result.sent > 0 ? `Test gesendet (${result.sent}/${result.total}).${codes}` : `Konnte nicht zugestellt werden.${codes}`);
     } catch (err) {
       setMessage(err instanceof Error ? err.message : 'Test fehlgeschlagen.');
     } finally {
       setIsBusy(false);
+      await refreshStatus();
     }
   }
 
-  if (status === 'loading') {
-    return <p style={{ fontSize: 'var(--md-font-size-base)', color: 'var(--md-color-on-surface-variant)' }}>Lädt …</p>;
-  }
-
-  if (status === 'unsupported') {
-    return (
-      <p style={{ fontSize: 'var(--md-font-size-base)', color: 'var(--md-color-on-surface-variant)' }}>
-        Push-Benachrichtigungen werden von diesem Gerät/Browser nicht unterstützt.
-      </p>
-    );
-  }
-
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--md-space-2)' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 'var(--md-space-3)' }}>
-        <span style={{ fontSize: 'var(--md-font-size-base)' }}>Benachrichtigungen aktiv</span>
-        <Switch checked={status === 'on'} onChange={handleToggle} disabled={isBusy} />
+    <div className="compact-manager">
+      <div className="push-settings-row">
+        <div>
+          <strong style={{ display: 'block', fontSize: 'var(--md-font-size-base)' }}>{statusLabel(status)}</strong>
+          <span style={{ display: 'block', marginTop: 2, fontSize: 'var(--md-font-size-sm)', color: 'var(--md-color-on-surface-variant)' }}>
+            {statusText(status)}
+          </span>
+        </div>
+        <Switch checked={status === 'on'} onChange={handleToggle} disabled={isBusy || status === 'unsupported' || status === 'blocked' || status === 'loading'} />
       </div>
-      {status === 'on' && (
-        <Button variant="ghost" onClick={handleTest} disabled={isBusy}>
-          Test-Benachrichtigung senden
+
+      <div className="md-card-actions">
+        <Button type="button" variant="ghost" onClick={refreshStatus} disabled={isBusy || status === 'loading'}>
+          Status prüfen
         </Button>
-      )}
+        <Button type="button" variant="ghost" onClick={handleTest} disabled={isBusy || status !== 'on'}>
+          Test senden
+        </Button>
+      </div>
+
       {message && (
-        <p style={{ fontSize: 'var(--md-font-size-sm)', color: 'var(--md-color-on-surface-variant)', margin: 0 }}>
+        <p style={{ fontSize: 'var(--md-font-size-sm)', color: message.includes('nicht') || message.includes('fehl') ? 'var(--md-color-error)' : 'var(--md-color-on-surface-variant)', margin: 0 }}>
           {message}
         </p>
       )}

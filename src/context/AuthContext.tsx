@@ -1,5 +1,6 @@
 import { createContext, useEffect, useState, type ReactNode } from 'react';
 import * as authApi from '../api/authApi';
+import type { OnboardingStep } from '../types/onboarding';
 import type { User } from '../types/user';
 
 interface RegisterInput {
@@ -11,9 +12,11 @@ interface RegisterInput {
 interface AuthContextValue {
   user: User | null;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<User>;
   register: (input: RegisterInput) => Promise<void>;
   logout: () => Promise<void>;
+  completeOnboarding: () => Promise<void>;
+  saveOnboardingProgress: (step: OnboardingStep) => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -33,6 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function login(email: string, password: string) {
     const loggedInUser = await authApi.login(email, password);
     setUser(loggedInUser);
+    return loggedInUser;
   }
 
   async function register(input: RegisterInput) {
@@ -45,5 +49,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }
 
-  return <AuthContext.Provider value={{ user, isLoading, login, register, logout }}>{children}</AuthContext.Provider>;
+  async function completeOnboarding() {
+    setUser(await authApi.completeOnboarding());
+  }
+
+  async function saveOnboardingProgress(step: OnboardingStep) {
+    setUser(await authApi.saveOnboardingProgress(step));
+  }
+
+  return (
+    <AuthContext.Provider value={{ user, isLoading, login, register, logout, completeOnboarding, saveOnboardingProgress }}>
+      {children}
+    </AuthContext.Provider>
+  );
 }

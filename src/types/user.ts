@@ -1,3 +1,5 @@
+import type { OnboardingStep } from './onboarding';
+
 export type UserRole = 'admin' | 'member' | 'guest';
 
 export interface User {
@@ -6,4 +8,6 @@ export interface User {
   displayName: string;
   role: UserRole;
   householdId: number | null;
+  onboardingCompletedAt: string | null;
+  onboardingCurrentStep: OnboardingStep;
 }

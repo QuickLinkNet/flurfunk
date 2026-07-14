@@ -1,15 +1,39 @@
-import { Button } from '../atoms/Button';
-import { IconBadge } from '../atoms/IconBadge';
-import { AdminAddInviteForm } from '../molecules/AdminAddInviteForm';
+import { useState } from 'react';
+import { ConfirmDialog } from '../molecules/ConfirmDialog';
+import { AdminHouseholdCard } from './AdminHouseholdCard';
+import { revokeAdminInvite, updateAdminHousehold } from '../../api/adminApi';
 import type { AdminHousehold } from '../../types/admin';
+import type { InviteFilter } from '../molecules/AdminInviteSection';
 
 interface Props {
   households: AdminHousehold[];
-  onDelete: (id: number) => void;
+  onDelete: (id: number) => void | Promise<void>;
   onInvitesChanged: () => void;
+  onHouseholdChanged: () => void;
 }
 
-export function AdminHouseholdList({ households, onDelete, onInvitesChanged }: Props) {
+type PendingAction =
+  | {
+      type: 'revokeInvite';
+      id: number;
+      title: string;
+      description: string;
+      confirmLabel: string;
+    }
+  | {
+      type: 'deleteHousehold';
+      id: number;
+      title: string;
+      description: string;
+      confirmLabel: string;
+    };
+
+export function AdminHouseholdList({ households, onDelete, onInvitesChanged, onHouseholdChanged }: Props) {
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [inviteFilter, setInviteFilter] = useState<InviteFilter>('open');
+  const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
+  const [confirmLoading, setConfirmLoading] = useState(false);
+
   if (households.length === 0) {
     return (
       <p style={{ fontSize: 'var(--md-font-size-base)', color: 'var(--md-color-on-surface-variant)' }}>
@@ -17,86 +41,75 @@ export function AdminHouseholdList({ households, onDelete, onInvitesChanged }: P
       </p>
     );
   }
+
+  function requestRevokeInvite(id: number) {
+    setPendingAction({
+      type: 'revokeInvite',
+      id,
+      title: 'Einladungscode widerrufen?',
+      description: 'Der Code kann danach nicht mehr für eine Registrierung genutzt werden.',
+      confirmLabel: 'Widerrufen'
+    });
+  }
+
+  function requestDeleteHousehold(id: number, name: string) {
+    setPendingAction({
+      type: 'deleteHousehold',
+      id,
+      title: 'Haushalt löschen?',
+      description: `Der Haushalt "${name}" wird mit Kindern, Haustieren, Feed und Events gelöscht.`,
+      confirmLabel: 'Löschen'
+    });
+  }
+
+  async function confirmPendingAction() {
+    if (!pendingAction) return;
+
+    setConfirmLoading(true);
+    try {
+      if (pendingAction.type === 'revokeInvite') {
+        await revokeAdminInvite(pendingAction.id);
+        onInvitesChanged();
+      } else {
+        await onDelete(pendingAction.id);
+      }
+      setPendingAction(null);
+    } finally {
+      setConfirmLoading(false);
+    }
+  }
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--md-space-2)' }}>
-      {households.map((h) => (
-        <div
-          key={h.id}
-          style={{
-            padding: 'var(--md-space-3) var(--md-space-4)',
-            borderRadius: 'var(--md-radius-card)',
-            background: 'var(--md-color-surface)',
-            border: '1px solid var(--md-color-border)',
-            boxShadow: 'var(--md-shadow-card)'
-          }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 'var(--md-space-3)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--md-space-3)' }}>
-              <IconBadge emoji={h.statusEmoji} tint="primary" />
-              <div>
-                <p style={{ margin: 0, fontSize: 'var(--md-font-size-base)', fontWeight: 'var(--md-font-weight-medium)' }}>
-                  {h.name}
-                </p>
-                <p
-                  style={{
-                    margin: 'var(--md-space-1) 0 0',
-                    fontSize: 'var(--md-font-size-sm)',
-                    color: 'var(--md-color-on-surface-variant)'
-                  }}
-                >
-                  {h.addressLine} · {h.streetName}
-                </p>
-              </div>
-            </div>
-            <Button
-              variant="ghost"
-              onClick={() => {
-                if (confirm(`Haushalt "${h.name}" wirklich löschen? Kinder/Feed/Events werden mitgelöscht.`)) {
-                  onDelete(h.id);
-                }
-              }}
-            >
-              Löschen
-            </Button>
-          </div>
-          {h.members.length > 0 && (
-            <p style={{ margin: 'var(--md-space-3) 0 0', fontSize: 'var(--md-font-size-sm)' }}>
-              Mitglieder: {h.members.map((m) => `${m.displayName} (${m.role})`).join(', ')}
-            </p>
-          )}
-          {h.children.length > 0 && (
-            <p style={{ margin: 'var(--md-space-1) 0 0', fontSize: 'var(--md-font-size-sm)' }}>
-              Kinder: {h.children.map((c) => `${c.name} (${c.currentLocation})`).join(', ')}
-            </p>
-          )}
-          {h.pets.length > 0 && (
-            <p style={{ margin: 'var(--md-space-1) 0 0', fontSize: 'var(--md-font-size-sm)' }}>
-              Haustiere: {h.pets.map((p) => `${p.name} (${p.type})`).join(', ')}
-            </p>
-          )}
-          {h.invites.length > 0 && (
-            <div style={{ margin: 'var(--md-space-3) 0 0' }}>
-              <p style={{ margin: 0, fontSize: 'var(--md-font-size-sm)', fontWeight: 'var(--md-font-weight-medium)' }}>
-                Einladungscodes:
-              </p>
-              {h.invites.map((invite) => (
-                <p
-                  key={invite.id}
-                  style={{
-                    margin: 'var(--md-space-1) 0 0',
-                    fontSize: 'var(--md-font-size-sm)',
-                    color: 'var(--md-color-on-surface-variant)'
-                  }}
-                >
-                  {invite.firstName} {invite.lastName}: <strong>{invite.code}</strong>{' '}
-                  {invite.usedAt ? '· eingelöst' : '· offen'}
-                </p>
-              ))}
-            </div>
-          )}
-          <AdminAddInviteForm householdId={h.id} onAdded={onInvitesChanged} />
-        </div>
-      ))}
-    </div>
+    <>
+      <div className="md-stack">
+        {households.map((household) => (
+          <AdminHouseholdCard
+            key={household.id}
+            household={household}
+            isEditing={editingId === household.id}
+            inviteFilter={inviteFilter}
+            onToggleEdit={() => setEditingId((current) => (current === household.id ? null : household.id))}
+            onDelete={() => requestDeleteHousehold(household.id, household.name)}
+            onSave={async (name, addressLine, avatarKey) => {
+              await updateAdminHousehold(household.id, name, addressLine, avatarKey);
+              onHouseholdChanged();
+              setEditingId(null);
+            }}
+            onInviteFilterChange={setInviteFilter}
+            onRevokeInvite={requestRevokeInvite}
+            onInvitesChanged={onInvitesChanged}
+          />
+        ))}
+      </div>
+      <ConfirmDialog
+        open={pendingAction !== null}
+        title={pendingAction?.title ?? ''}
+        description={pendingAction?.description ?? ''}
+        confirmLabel={pendingAction?.confirmLabel}
+        loading={confirmLoading}
+        onCancel={() => setPendingAction(null)}
+        onConfirm={confirmPendingAction}
+      />
+    </>
   );
 }

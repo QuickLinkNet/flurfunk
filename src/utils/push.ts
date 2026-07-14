@@ -13,9 +13,18 @@ function urlBase64ToUint8Array(base64Url: string): Uint8Array<ArrayBuffer> {
   return bytes;
 }
 
+async function serviceWorkerReady(): Promise<ServiceWorkerRegistration> {
+  return Promise.race([
+    navigator.serviceWorker.ready,
+    new Promise<never>((_, reject) => {
+      window.setTimeout(() => reject(new Error('Service Worker ist noch nicht aktiv. Seite neu laden und erneut versuchen.')), 8000);
+    })
+  ]);
+}
+
 export async function getCurrentSubscription(): Promise<PushSubscription | null> {
   if (!isPushSupported()) return null;
-  const registration = await navigator.serviceWorker.ready;
+  const registration = await serviceWorkerReady();
   return registration.pushManager.getSubscription();
 }
 
@@ -24,7 +33,11 @@ export async function enablePush(vapidPublicKey: string): Promise<PushSubscripti
   if (permission !== 'granted') {
     throw new Error('Berechtigung für Benachrichtigungen wurde nicht erteilt.');
   }
-  const registration = await navigator.serviceWorker.ready;
+  const registration = await serviceWorkerReady();
+  const existingSubscription = await registration.pushManager.getSubscription();
+  if (existingSubscription) {
+    return existingSubscription.toJSON();
+  }
   const subscription = await registration.pushManager.subscribe({
     userVisibleOnly: true,
     applicationServerKey: urlBase64ToUint8Array(vapidPublicKey)
@@ -32,10 +45,10 @@ export async function enablePush(vapidPublicKey: string): Promise<PushSubscripti
   return subscription.toJSON();
 }
 
-// Gibt den Endpoint des soeben gekündigten Abos zurück (zum Löschen beim
-// Server), oder null, falls ohnehin kein Abo aktiv war.
+// Gibt den Endpoint des soeben gekündigten Abos zurück, damit der Server die
+// Subscription löschen kann. Wenn kein Abo aktiv war, kommt null zurück.
 export async function disablePush(): Promise<string | null> {
-  const registration = await navigator.serviceWorker.ready;
+  const registration = await serviceWorkerReady();
   const subscription = await registration.pushManager.getSubscription();
   if (!subscription) return null;
   const endpoint = subscription.endpoint;

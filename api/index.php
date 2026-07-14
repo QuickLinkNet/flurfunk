@@ -23,6 +23,7 @@ spl_autoload_register(function (string $class): void {
 });
 
 use App\Core\Auth;
+use App\Core\Cors;
 use App\Core\Request;
 use App\Core\Response;
 use App\Core\Router;
@@ -32,15 +33,19 @@ use App\Controllers\ChildController;
 use App\Controllers\PetController;
 use App\Controllers\FeedController;
 use App\Controllers\CalendarController;
+use App\Controllers\DashboardController;
 use App\Controllers\VisibilityController;
 use App\Controllers\EventController;
 use App\Controllers\AdminController;
+use App\Controllers\AdminPushController;
 use App\Controllers\FeatureFlagController;
 use App\Controllers\PushController;
 
 error_reporting(E_ALL);
 ini_set('display_errors', '0'); // Fehler nie roh an den Client durchreichen
 
+Cors::handlePreflight();
+Cors::apply();
 Auth::start();
 
 $router = new Router();
@@ -49,7 +54,11 @@ $router->get('/invites/{code}', [new AuthController(), 'invitePreview']);
 $router->post('/auth/register', [new AuthController(), 'register']);
 $router->post('/auth/login', [new AuthController(), 'login']);
 $router->post('/auth/logout', [new AuthController(), 'logout']);
+$router->post('/auth/onboarding/complete', [new AuthController(), 'completeOnboarding']);
+$router->post('/auth/onboarding/progress', [new AuthController(), 'saveOnboardingProgress']);
 $router->get('/auth/me', [new AuthController(), 'me']);
+
+$router->get('/dashboard', [new DashboardController(), 'index']);
 
 $router->get('/households', [new HouseholdController(), 'index']);
 $router->get('/households/me', [new HouseholdController(), 'me']);
@@ -58,9 +67,11 @@ $router->put('/households/me', [new HouseholdController(), 'updateMe']);
 $router->get('/children', [new ChildController(), 'index']);
 $router->post('/children', [new ChildController(), 'store']);
 $router->put('/children/{id}', [new ChildController(), 'updateLocation']);
+$router->delete('/children/{id}', [new ChildController(), 'destroy']);
 
 $router->get('/pets', [new PetController(), 'index']);
 $router->post('/pets', [new PetController(), 'store']);
+$router->put('/pets/{id}', [new PetController(), 'update']);
 $router->delete('/pets/{id}', [new PetController(), 'destroy']);
 
 $router->get('/feed', [new FeedController(), 'index']);
@@ -88,16 +99,22 @@ $router->post('/push/test', [new PushController(), 'test']);
 
 $router->get('/admin/households', [new AdminController(), 'households']);
 $router->post('/admin/households', [new AdminController(), 'createHousehold']);
+$router->put('/admin/households/{id}', [new AdminController(), 'updateHousehold']);
 $router->post('/admin/households/{id}/invites', [new AdminController(), 'addInvite']);
 $router->delete('/admin/households/{id}', [new AdminController(), 'deleteHousehold']);
+$router->delete('/admin/invites/{id}', [new AdminController(), 'revokeInvite']);
 $router->get('/admin/users', [new AdminController(), 'users']);
 $router->put('/admin/users/{id}/role', [new AdminController(), 'updateUserRole']);
+$router->post('/admin/users/{id}/push-test', [new AdminPushController(), 'sendUserPushTest']);
 $router->get('/admin/feed', [new AdminController(), 'feed']);
 $router->delete('/admin/feed/{id}', [new AdminController(), 'deleteFeedItem']);
 $router->get('/admin/events', [new AdminController(), 'events']);
 $router->delete('/admin/events/{id}', [new AdminController(), 'deleteEvent']);
 $router->get('/admin/calendar', [new AdminController(), 'calendar']);
 $router->delete('/admin/calendar/{id}', [new AdminController(), 'deleteCalendarEntry']);
+$router->get('/admin/notices', [new AdminController(), 'notices']);
+$router->post('/admin/notices', [new AdminController(), 'createNotice']);
+$router->delete('/admin/notices/{id}', [new AdminController(), 'deleteNotice']);
 
 try {
     $router->dispatch(Request::method(), Request::path());

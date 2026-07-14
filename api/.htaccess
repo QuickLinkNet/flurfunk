@@ -1,3 +1,16 @@
+<IfModule mod_headers.c>
+SetEnvIfNoCase Origin "^https://www\.red-it\.org$" CORS_ORIGIN=$0
+SetEnvIfNoCase Origin "^http://(localhost|127\.0\.0\.1):[0-9]+$" CORS_ORIGIN=$0
+
+Header onsuccess unset Access-Control-Allow-Origin
+Header always unset Access-Control-Allow-Origin
+Header always set Access-Control-Allow-Origin "%{CORS_ORIGIN}e" env=CORS_ORIGIN
+Header always set Access-Control-Allow-Credentials "true" env=CORS_ORIGIN
+Header always set Access-Control-Allow-Headers "Content-Type" env=CORS_ORIGIN
+Header always set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS" env=CORS_ORIGIN
+Header always merge Vary "Origin" env=CORS_ORIGIN
+</IfModule>
+
 RewriteEngine On
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule ^ index.php [QSA,L]

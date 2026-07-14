@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Input } from '../components/atoms/Input';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/atoms/Button';
+import { AuthInputField } from '../components/molecules/AuthInputField';
+import { AuthShell } from '../components/templates/AuthShell';
 import { useAuth } from '../hooks/useAuth';
 
 export function LoginPage() {
@@ -15,31 +16,39 @@ export function LoginPage() {
     e.preventDefault();
     setError(null);
     try {
-      await login(email, password);
-      navigate('/dashboard');
+      const loggedInUser = await login(email, password);
+      navigate(loggedInUser.onboardingCompletedAt ? '/dashboard' : '/start', { replace: true });
     } catch {
       setError('Login fehlgeschlagen. E-Mail oder Passwort prüfen.');
     }
   }
 
   return (
-    <div style={{ maxWidth: 360, margin: '80px auto', padding: '0 var(--md-space-5)' }}>
-      <h1 style={{ fontSize: 'var(--md-font-size-2xl)', fontWeight: 'var(--md-font-weight-medium)' }}>Anmelden</h1>
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--md-space-3)' }}>
-        <Input type="email" placeholder="E-Mail" value={email} onChange={(e) => setEmail(e.target.value)} required />
-        <Input
+    <AuthShell title="Flurfunk" subtitle="Was in unserer Straße wichtig ist.">
+      <form onSubmit={handleSubmit}>
+        <AuthInputField
+          icon="mail"
+          type="email"
+          placeholder="E-Mail-Adresse"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+        <AuthInputField
+          icon="lock"
           type="password"
           placeholder="Passwort"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
         />
-        {error && <p style={{ color: 'var(--md-color-error)', fontSize: 'var(--md-font-size-base)' }}>{error}</p>}
+        {error && <p style={{ color: 'var(--md-color-error)', fontSize: 'var(--md-font-size-base)', margin: 0 }}>{error}</p>}
         <Button type="submit">Anmelden</Button>
       </form>
-      <p style={{ fontSize: 'var(--md-font-size-base)', marginTop: 'var(--md-space-4)' }}>
-        Noch kein Konto? <Link to="/registrieren">Haushalt registrieren</Link>
-      </p>
-    </div>
+      <div className="auth-divider">oder</div>
+      <Button type="button" variant="ghost" onClick={() => navigate('/registrieren')}>
+        Mit Einladungscode beitreten
+      </Button>
+    </AuthShell>
   );
 }

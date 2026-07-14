@@ -1,6 +1,7 @@
 import { apiRequest } from './client';
-import type { AdminCalendarEntry, AdminEvent, AdminFeedItem, AdminHousehold, AdminUser } from '../types/admin';
+import type { AdminCalendarEntry, AdminEvent, AdminFeedItem, AdminHousehold, AdminNotice, AdminUser } from '../types/admin';
 import type { HouseholdInvitePerson } from '../types/invite';
+import type { PushSendResult } from '../types/push';
 import type { UserRole } from '../types/user';
 
 export function fetchAdminHouseholds() {
@@ -26,6 +27,17 @@ export function addAdminHouseholdInvite(householdId: number, firstName: string, 
   });
 }
 
+export function revokeAdminInvite(id: number) {
+  return apiRequest<null>(`/admin/invites/${id}`, { method: 'DELETE' });
+}
+
+export function updateAdminHousehold(id: number, name: string, addressLine: string, avatarKey: string) {
+  return apiRequest<null>(`/admin/households/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify({ name, addressLine, avatarKey })
+  });
+}
+
 export function deleteAdminHousehold(id: number) {
   return apiRequest<null>(`/admin/households/${id}`, { method: 'DELETE' });
 }
@@ -36,6 +48,14 @@ export function fetchAdminUsers() {
 
 export function updateAdminUserRole(id: number, role: UserRole) {
   return apiRequest<null>(`/admin/users/${id}/role`, { method: 'PUT', body: JSON.stringify({ role }) });
+}
+
+export interface AdminPushTestResult extends PushSendResult {
+  userId: number;
+}
+
+export function sendAdminUserPushTest(id: number) {
+  return apiRequest<AdminPushTestResult>(`/admin/users/${id}/push-test`, { method: 'POST' });
 }
 
 export function fetchAdminFeed() {
@@ -60,4 +80,19 @@ export function fetchAdminCalendar() {
 
 export function deleteAdminCalendarEntry(id: number) {
   return apiRequest<null>(`/admin/calendar/${id}`, { method: 'DELETE' });
+}
+
+export function fetchAdminNotices() {
+  return apiRequest<AdminNotice[]>('/admin/notices');
+}
+
+export function createAdminNotice(title: string, message: string) {
+  return apiRequest<AdminNotice>('/admin/notices', {
+    method: 'POST',
+    body: JSON.stringify({ title, message })
+  });
+}
+
+export function deleteAdminNotice(id: number) {
+  return apiRequest<null>(`/admin/notices/${id}`, { method: 'DELETE' });
 }

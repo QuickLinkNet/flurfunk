@@ -2,6 +2,8 @@ import { Link } from 'react-router-dom';
 import { DashboardTemplate } from '../components/templates/DashboardTemplate';
 import { ChildrenManager } from '../components/organisms/ChildrenManager';
 import { PetsManager } from '../components/organisms/PetsManager';
+import { HouseholdStatusForm } from '../components/organisms/HouseholdStatusForm';
+import { MyHouseholdDetailsForm } from '../components/organisms/MyHouseholdDetailsForm';
 import { VisibilitySettingsForm } from '../components/organisms/VisibilitySettingsForm';
 import { Heading } from '../components/atoms/Heading';
 import { useAuth } from '../hooks/useAuth';
@@ -12,8 +14,17 @@ import { useFeatureFlags } from '../hooks/useFeatureFlags';
 export function HouseholdPage() {
   const { user } = useAuth();
   const { isEnabled } = useFeatureFlags();
+
   return (
     <DashboardTemplate header={<Heading level={1}>Mein Haushalt</Heading>}>
+      <section>
+        <Heading level={2}>Haushalt</Heading>
+        <MyHouseholdDetailsForm />
+      </section>
+      <section>
+        <Heading level={2}>Status</Heading>
+        <HouseholdStatusForm />
+      </section>
       {isEnabled('children') && (
         <section>
           <Heading level={2}>Kinder</Heading>

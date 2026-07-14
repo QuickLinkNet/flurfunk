@@ -1,38 +1,26 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { DashboardTemplate } from '../components/templates/DashboardTemplate';
-import { CalendarEntryList } from '../components/organisms/CalendarEntryList';
-import { Button } from '../components/atoms/Button';
+import { CalendarBoard } from '../components/organisms/CalendarBoard';
+import { Heading } from '../components/atoms/Heading';
 import { fetchCalendarEntries } from '../api/calendarApi';
-import { startOfMonth, endOfMonth, addMonths, toISODate, formatMonthLabel } from '../utils/date';
+import { startOfMonth, endOfMonth, addMonths, toISODate } from '../utils/date';
 import type { CalendarEntry } from '../types/calendarEntry';
 
 export function CalendarPage() {
-  const [month, setMonth] = useState(() => startOfMonth(new Date()));
+  const [anchorDate] = useState(() => new Date());
   const [entries, setEntries] = useState<CalendarEntry[]>([]);
 
-  useEffect(() => {
-    const from = toISODate(startOfMonth(month));
-    const to = toISODate(endOfMonth(month));
+  const reload = useCallback(() => {
+    const from = toISODate(startOfMonth(addMonths(anchorDate, -2)));
+    const to = toISODate(endOfMonth(addMonths(anchorDate, 6)));
     fetchCalendarEntries(from, to).then(setEntries).catch(() => setEntries([]));
-  }, [month]);
+  }, [anchorDate]);
+
+  useEffect(() => reload(), [reload]);
 
   return (
-    <DashboardTemplate
-      header={
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Button variant="ghost" onClick={() => setMonth((m) => addMonths(m, -1))}>
-            ‹
-          </Button>
-          <h1 style={{ margin: 0, fontSize: 'var(--md-font-size-lg)', fontWeight: 'var(--md-font-weight-medium)' }}>
-            {formatMonthLabel(month)}
-          </h1>
-          <Button variant="ghost" onClick={() => setMonth((m) => addMonths(m, 1))}>
-            ›
-          </Button>
-        </div>
-      }
-    >
-      <CalendarEntryList entries={entries} />
+    <DashboardTemplate header={<Heading level={1}>Kalender</Heading>}>
+      <CalendarBoard entries={entries} onChanged={reload} />
     </DashboardTemplate>
   );
 }

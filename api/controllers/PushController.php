@@ -3,9 +3,9 @@
 namespace App\Controllers;
 
 use App\Core\Auth;
+use App\Core\PushService;
 use App\Core\Request;
 use App\Core\Response;
-use App\Core\WebPush;
 use App\Models\PushSubscription;
 use App\Models\VapidKeys;
 
@@ -53,21 +53,10 @@ final class PushController
     public function test(): void
     {
         $userId = Auth::requireLogin();
-        $subscriptions = PushSubscription::findByUser($userId);
-        if (count($subscriptions) === 0) {
+        $result = PushService::sendTestToUser($userId);
+        if ($result['total'] === 0) {
             Response::error('Keine aktive Push-Anmeldung gefunden.', 404);
         }
-        $sent = 0;
-        foreach ($subscriptions as $sub) {
-            $status = WebPush::send($sub['endpoint']);
-            if ($status === 404 || $status === 410) {
-                PushSubscription::deleteByEndpoint($sub['endpoint']);
-                continue;
-            }
-            if ($status >= 200 && $status < 300) {
-                $sent++;
-            }
-        }
-        Response::json(['sent' => $sent, 'total' => count($subscriptions)]);
+        Response::json($result);
     }
 }

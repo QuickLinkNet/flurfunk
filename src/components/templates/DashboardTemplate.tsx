@@ -1,28 +1,23 @@
 import type { ReactNode } from 'react';
+import { AppSidebar } from '../organisms/AppSidebar';
 import { BottomNavigation } from '../organisms/BottomNavigation';
 
 interface Props {
   header: ReactNode;
   children: ReactNode;
+  shellClassName?: string;
+  contentClassName?: string;
 }
 
-// Layout-Gerüst für die Dashboard-Seite: Header + Inhalt + Bottom-Nav.
-export function DashboardTemplate({ header, children }: Props) {
+export function DashboardTemplate({ header, children, shellClassName, contentClassName }: Props) {
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <header style={{ padding: 'var(--md-space-4)' }}>{header}</header>
-      <main
-        style={{
-          flex: 1,
-          padding: '0 var(--md-space-4) var(--md-space-4)',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 'var(--md-space-4)'
-        }}
-      >
-        {children}
-      </main>
-      <BottomNavigation />
+    <div className={shellClassName ? `dashboard-shell ${shellClassName}` : 'dashboard-shell'}>
+      <AppSidebar />
+      <div className={contentClassName ? `app-content ${contentClassName}` : 'app-content'}>
+        <header className="app-page-header">{header}</header>
+        <main className="app-page-main">{children}</main>
+        <BottomNavigation />
+      </div>
     </div>
   );
 }

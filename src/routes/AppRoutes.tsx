@@ -9,6 +9,7 @@ import { EventDetailPage } from '../pages/EventDetailPage';
 import { HouseholdPage } from '../pages/HouseholdPage';
 import { SettingsPage } from '../pages/SettingsPage';
 import { AdminPage } from '../pages/AdminPage';
+import { OnboardingPage } from '../pages/OnboardingPage';
 import { useAuth } from '../hooks/useAuth';
 import { useFeatureFlags } from '../hooks/useFeatureFlags';
 import { FEATURE_LABELS } from '../types/featureFlags';
@@ -49,6 +50,14 @@ export function AppRoutes() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/registrieren" element={<RegisterPage />} />
       <Route path="/registrieren/:inviteCode" element={<RegisterPage />} />
+      <Route
+        path="/start"
+        element={
+          <RequireAuth>
+            <OnboardingPage />
+          </RequireAuth>
+        }
+      />
       <Route
         path="/dashboard"
         element={

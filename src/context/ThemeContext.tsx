@@ -23,9 +23,8 @@ function applyTheme(theme: Theme): void {
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  // Hell ist der bewusste Standard-Look (siehe Mockup); Dunkel ist ein
-  // Nachtmodus, den man aktiv in den Einstellungen wählt, statt automatisch
-  // der Systemeinstellung zu folgen.
+  // Hell ist der bewusste Standard-Look; Dunkel ist ein Nachtmodus, den man
+  // aktiv in den Einstellungen wählt.
   const [theme, setThemeState] = useState<Theme>(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
     return stored === 'light' || stored === 'dark' || stored === 'system' ? stored : 'light';

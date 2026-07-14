@@ -29,11 +29,15 @@ final class FeatureFlag
 
     public static function upsert(int $streetId, string $feature, bool $enabled): void
     {
-        $stmt = Database::pdo()->prepare(
-            'INSERT INTO feature_flags (street_id, feature_key, enabled)
-             VALUES (?, ?, ?)
-             ON CONFLICT(street_id, feature_key) DO UPDATE SET enabled = excluded.enabled'
+        $pdo = Database::pdo();
+        $insert = $pdo->prepare(
+            'INSERT OR IGNORE INTO feature_flags (street_id, feature_key, enabled) VALUES (?, ?, ?)'
         );
-        $stmt->execute([$streetId, $feature, $enabled ? 1 : 0]);
+        $insert->execute([$streetId, $feature, $enabled ? 1 : 0]);
+
+        $update = $pdo->prepare(
+            'UPDATE feature_flags SET enabled = ? WHERE street_id = ? AND feature_key = ?'
+        );
+        $update->execute([$enabled ? 1 : 0, $streetId, $feature]);
     }
 }

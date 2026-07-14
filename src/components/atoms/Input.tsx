@@ -6,12 +6,14 @@ export function Input(props: InputHTMLAttributes<HTMLInputElement>) {
       {...props}
       style={{
         width: '100%',
-        padding: 'var(--md-space-3)',
+        minHeight: 48,
+        padding: 'var(--md-space-3) var(--md-space-4)',
         borderRadius: 'var(--md-radius-control)',
         border: '1px solid var(--md-color-border)',
         fontSize: 'var(--md-font-size-md)',
-        background: 'var(--md-color-surface)',
+        background: 'rgba(255, 253, 252, 0.82)',
         color: 'var(--md-color-on-surface)',
+        outlineColor: 'var(--md-color-primary)',
         ...props.style
       }}
     />

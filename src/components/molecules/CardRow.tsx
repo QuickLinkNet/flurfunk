@@ -5,8 +5,7 @@ interface Props {
   action?: ReactNode;
 }
 
-// Gemeinsames Karten-Layout für Listenzeilen im ganzen Frontend (Admin-Listen,
-// Kinder, Haustiere, Kalender, RSVP-Antworten) - Inhalt links, Aktion rechts.
+// Gemeinsames Karten-Layout für Listenzeilen: Inhalt links, Aktion rechts.
 export function CardRow({ children, action }: Props) {
   return (
     <div

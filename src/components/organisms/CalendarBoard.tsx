@@ -1,0 +1,129 @@
+import { useMemo, useState } from 'react';
+import FullCalendar from '@fullcalendar/react';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import timeGridPlugin from '@fullcalendar/timegrid';
+import listPlugin from '@fullcalendar/list';
+import interactionPlugin from '@fullcalendar/interaction';
+import deLocale from '@fullcalendar/core/locales/de';
+import { CalendarEntryDetail } from '../molecules/CalendarEntryDetail';
+import { NewCalendarEntryForm } from './NewCalendarEntryForm';
+import { CALENDAR_TYPE_META, CALENDAR_TYPE_OPTIONS } from '../../utils/calendarTypeMeta';
+import type { CalendarEntry } from '../../types/calendarEntry';
+import type { CSSProperties } from 'react';
+
+interface Props {
+  entries: CalendarEntry[];
+  onChanged: () => void;
+}
+
+type Filter = CalendarEntry['type'];
+
+export function CalendarBoard({ entries, onChanged }: Props) {
+  const [filters, setFilters] = useState<Set<Filter>>(() => new Set(CALENDAR_TYPE_OPTIONS.map(([type]) => type)));
+  const [isCreating, setIsCreating] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<string | undefined>();
+  const [selectedEntryId, setSelectedEntryId] = useState<number | null>(null);
+  const selectedEntry = useMemo(() => entries.find((entry) => entry.id === selectedEntryId) ?? null, [entries, selectedEntryId]);
+
+  const events = useMemo(
+    () =>
+      entries
+        .filter((entry) => filters.has(entry.type))
+        .map((entry) => {
+          const meta = CALENDAR_TYPE_META[entry.type];
+          return {
+            id: String(entry.id),
+            title: entry.title,
+            start: entry.startsAt,
+            end: entry.endsAt ?? undefined,
+            allDay: entry.allDay,
+            backgroundColor: meta.color,
+            borderColor: meta.color,
+            extendedProps: { type: entry.type, label: meta.label }
+          };
+        }),
+    [entries, filters]
+  );
+
+  function toggleFilter(type: Filter) {
+    setFilters((current) => {
+      const next = new Set(current);
+      if (next.has(type)) next.delete(type);
+      else next.add(type);
+      return next;
+    });
+  }
+
+  function setAllFilters() {
+    setFilters(new Set(CALENDAR_TYPE_OPTIONS.map(([type]) => type)));
+  }
+
+  return (
+    <div className="calendar-board">
+      <div className="calendar-toolbar">
+        <div className="calendar-filterbar">
+          <button type="button" className="calendar-filterchip" data-active={filters.size === CALENDAR_TYPE_OPTIONS.length} onClick={setAllFilters}>
+            Alle
+          </button>
+          {CALENDAR_TYPE_OPTIONS.map(([type, meta]) => (
+            <button
+              key={type}
+              type="button"
+              className="calendar-filterchip"
+              data-active={filters.has(type)}
+              onClick={() => toggleFilter(type)}
+              style={{ '--calendar-color': meta.color } as CSSProperties}
+            >
+              {meta.label}
+            </button>
+          ))}
+        </div>
+        <button type="button" className="calendar-create-button" onClick={() => setIsCreating((current) => !current)}>
+          + Termin
+        </button>
+      </div>
+      {isCreating && (
+        <NewCalendarEntryForm
+          initialDate={selectedDate}
+          onCreated={() => {
+            setIsCreating(false);
+            onChanged();
+          }}
+        />
+      )}
+      {selectedEntry && <CalendarEntryDetail entry={selectedEntry} onClose={() => setSelectedEntryId(null)} />}
+      <FullCalendar
+        plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
+        locale={deLocale}
+        initialView="dayGridMonth"
+        headerToolbar={{
+          left: 'prev,next today',
+          center: 'title',
+          right: 'dayGridMonth,timeGridWeek,listWeek'
+        }}
+        buttonText={{
+          today: 'Heute',
+          month: 'Monat',
+          week: 'Woche',
+          list: 'Liste'
+        }}
+        events={events}
+        height="auto"
+        firstDay={1}
+        nowIndicator
+        dayMaxEvents={3}
+        eventDisplay="block"
+        selectable
+        dateClick={(info) => {
+          setSelectedDate(info.dateStr);
+          setSelectedEntryId(null);
+          setIsCreating(true);
+        }}
+        eventClick={(info) => {
+          setSelectedEntryId(Number(info.event.id));
+          setIsCreating(false);
+        }}
+      />
+    </div>
+  );
+}

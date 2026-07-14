@@ -1,19 +1,22 @@
 :root {
-  --md-color-primary: #D85A30;
-  --md-color-primary-container: #FAECE7;
-  --md-color-secondary: #639922;
-  --md-color-secondary-container: #EAF3DE;
-  --md-color-info: #3B82C4;
-  --md-color-info-container: #DEEBF8;
-  --md-color-error: #C4453B;
-  --md-color-error-container: #FBE3E0;
-  --md-color-surface: #FFFFFF;
-  --md-color-surface-variant: #F1EFE8;
-  --md-color-on-surface: #2C2C2A;
-  --md-color-on-surface-variant: #5F5E5A;
-  --md-color-border: #D3D1C7;
+  --md-color-primary: #C8643F;
+  --md-color-primary-container: #F4E5D8;
+  --md-color-secondary: #243D2B;
+  --md-color-secondary-container: #ECE4D7;
+  --md-color-info: #516F58;
+  --md-color-info-container: #E5ECDC;
+  --md-color-error: #B94D3F;
+  --md-color-error-container: #F7DDD7;
+  --md-color-surface: #FFFDFC;
+  --md-color-surface-variant: #F5EFE4;
+  --md-color-on-surface: #1F3025;
+  --md-color-on-surface-variant: #655E54;
+  --md-color-border: #D8CCBA;
+  --md-color-paper: #FFF9EF;
+  --md-color-brand-clay: #C8643F;
+  --md-color-brand-green: #243D2B;
 
-  --md-radius-card: 20px;
+  --md-radius-card: 18px;
   --md-radius-control: 12px;
 
   /* Typografie-Skala - jede Textgröße im UI referenziert eine dieser Stufen
@@ -39,5 +42,5 @@
   --md-space-5: 24px;
   --md-space-6: 32px;
 
-  --md-shadow-card: 0 1px 3px rgba(44, 44, 42, 0.08), 0 1px 2px rgba(44, 44, 42, 0.04);
+  --md-shadow-card: 0 14px 34px rgba(70, 49, 30, 0.11), 0 2px 8px rgba(70, 49, 30, 0.06);
 }
