@@ -8,6 +8,36 @@
   gap: var(--md-space-2);
 }
 
+.calendar-filter-panel {
+  display: grid;
+  gap: var(--md-space-2);
+  min-width: 0;
+}
+
+.calendar-filter-summary {
+  display: flex;
+  align-items: center;
+  gap: var(--md-space-2);
+  color: var(--md-color-on-surface-variant);
+  font-size: var(--md-font-size-sm);
+}
+
+.calendar-filter-summary strong {
+  color: var(--md-color-brand-green);
+  font-size: var(--md-font-size-lg);
+}
+
+.calendar-filter-summary button {
+  min-height: 32px;
+  margin-left: auto;
+  padding: 0 var(--md-space-2);
+  border: 1px solid var(--md-color-border);
+  border-radius: 999px;
+  background: var(--md-color-surface);
+  color: var(--md-color-primary);
+  font-size: var(--md-font-size-sm);
+}
+
 .calendar-filterbar {
   display: flex;
   gap: var(--md-space-2);
@@ -48,6 +78,15 @@
 .calendar-filterchip:not([data-active='true']):hover {
   background: var(--md-color-paper);
   color: var(--calendar-color, var(--md-color-primary));
+}
+
+.calendar-empty-filter {
+  margin: 0;
+  padding: var(--md-space-3);
+  border: 1px dashed rgba(216, 204, 186, 0.92);
+  border-radius: var(--md-radius-control);
+  color: var(--md-color-on-surface-variant);
+  background: rgba(255, 253, 252, 0.68);
 }
 
 .calendar-board .fc {
@@ -101,6 +140,22 @@
   font-size: var(--md-font-size-xs);
 }
 
+.calendar-board .fc .fc-list {
+  border-color: var(--md-color-border);
+  border-radius: var(--md-radius-control);
+  overflow: hidden;
+}
+
+.calendar-board .fc .fc-list-day-cushion,
+.calendar-board .fc .fc-list-event:hover td {
+  background: var(--md-color-paper);
+}
+
+.calendar-board .fc .fc-list-event-title,
+.calendar-board .fc .fc-list-event-time {
+  color: var(--md-color-on-surface);
+}
+
 @media (min-width: 768px) {
   .calendar-board .fc .fc-toolbar {
     display: flex;
@@ -109,5 +164,29 @@
   .calendar-toolbar {
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: start;
+  }
+}
+
+@media (max-width: 767px) {
+  .calendar-create-button {
+    width: 100%;
+  }
+
+  .calendar-board .fc {
+    padding: var(--md-space-2);
+  }
+
+  .calendar-board .fc .fc-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .calendar-board .fc .fc-toolbar-title {
+    font-size: var(--md-font-size-md);
+    text-align: center;
+  }
+
+  .calendar-board .fc .fc-button {
+    padding: var(--md-space-2);
+    font-size: var(--md-font-size-sm);
   }
 }

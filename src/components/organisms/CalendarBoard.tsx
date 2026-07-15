@@ -30,6 +30,10 @@ export function CalendarBoard({ entries, onChanged }: Props) {
   const [selectedDate, setSelectedDate] = useState<string | undefined>();
   const [selectedEntryId, setSelectedEntryId] = useState<number | null>(null);
   const selectedEntry = useMemo(() => entries.find((entry) => entry.id === selectedEntryId) ?? null, [entries, selectedEntryId]);
+  const visibleEntryCount = entries.filter((entry) => filters.has(entry.type)).length;
+  const allFiltersActive = filters.size === CALENDAR_TYPE_OPTIONS.length;
+  const hasActiveFilters = filters.size > 0;
+  const initialView = typeof window !== 'undefined' && window.innerWidth < 720 ? 'listWeek' : 'dayGridMonth';
 
   const events = useMemo(
     () =>
@@ -64,6 +68,10 @@ export function CalendarBoard({ entries, onChanged }: Props) {
     setFilters(new Set(CALENDAR_TYPE_OPTIONS.map(([type]) => type)));
   }
 
+  function clearFilters() {
+    setFilters(new Set());
+  }
+
   async function confirmDelete() {
     if (!deletingEntry) return;
     setIsDeleting(true);
@@ -80,22 +88,31 @@ export function CalendarBoard({ entries, onChanged }: Props) {
   return (
     <div className="calendar-board">
       <div className="calendar-toolbar">
-        <div className="calendar-filterbar">
-          <button type="button" className="calendar-filterchip" data-active={filters.size === CALENDAR_TYPE_OPTIONS.length} onClick={setAllFilters}>
-            Alle
-          </button>
-          {CALENDAR_TYPE_OPTIONS.map(([type, meta]) => (
-            <button
-              key={type}
-              type="button"
-              className="calendar-filterchip"
-              data-active={filters.has(type)}
-              onClick={() => toggleFilter(type)}
-              style={{ '--calendar-color': meta.color } as CSSProperties}
-            >
-              {meta.label}
+        <div className="calendar-filter-panel">
+          <div className="calendar-filter-summary">
+            <strong>{visibleEntryCount}</strong>
+            <span>{visibleEntryCount === 1 ? 'Termin sichtbar' : 'Termine sichtbar'}</span>
+            <button type="button" onClick={allFiltersActive ? clearFilters : setAllFilters}>
+              {allFiltersActive ? 'Alle aus' : 'Alle an'}
             </button>
-          ))}
+          </div>
+          <div className="calendar-filterbar">
+            <button type="button" className="calendar-filterchip" data-active={allFiltersActive} onClick={setAllFilters}>
+              Alle
+            </button>
+            {CALENDAR_TYPE_OPTIONS.map(([type, meta]) => (
+              <button
+                key={type}
+                type="button"
+                className="calendar-filterchip"
+                data-active={filters.has(type)}
+                onClick={() => toggleFilter(type)}
+                style={{ '--calendar-color': meta.color } as CSSProperties}
+              >
+                {meta.label}
+              </button>
+            ))}
+          </div>
         </div>
         <button
           type="button"
@@ -109,6 +126,7 @@ export function CalendarBoard({ entries, onChanged }: Props) {
           + Termin
         </button>
       </div>
+      {!hasActiveFilters && <p className="calendar-empty-filter">Alle Kategorien sind ausgeblendet.</p>}
       {selectedEntry && !editingEntry && (
         <CalendarEntryDetail
           entry={selectedEntry}
@@ -120,7 +138,16 @@ export function CalendarBoard({ entries, onChanged }: Props) {
       <FullCalendar
         plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
         locale={deLocale}
-        initialView="dayGridMonth"
+        initialView={initialView}
+        views={{
+          dayGridMonth: { dayMaxEvents: 3 },
+          timeGridWeek: { dayHeaderFormat: { weekday: 'short', day: '2-digit', month: '2-digit' } },
+          listWeek: { noEventsText: 'Keine Termine in dieser Woche.' }
+        }}
+        windowResize={(arg) => {
+          const nextView = window.innerWidth < 720 ? 'listWeek' : 'dayGridMonth';
+          if (arg.view.type !== nextView) arg.view.calendar.changeView(nextView);
+        }}
         headerToolbar={{
           left: 'prev,next today',
           center: 'title',
