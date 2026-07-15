@@ -85,6 +85,8 @@ $router->delete('/calendar/{id}', [new CalendarController(), 'destroy']);
 $router->get('/events', [new EventController(), 'index']);
 $router->post('/events', [new EventController(), 'store']);
 $router->get('/events/{id}', [new EventController(), 'show']);
+$router->put('/events/{id}', [new EventController(), 'update']);
+$router->delete('/events/{id}', [new EventController(), 'destroy']);
 $router->post('/events/{id}/rsvp', [new EventController(), 'rsvp']);
 
 $router->get('/households/me/visibility', [new VisibilityController(), 'me']);

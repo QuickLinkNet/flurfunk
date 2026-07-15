@@ -13,8 +13,12 @@ final class EventController
 {
     public function index(): void
     {
-        $viewerRole = $this->viewerRole();
-        Response::json(array_map([$this, 'toPublicEvent'], Event::findUpcoming($viewerRole)));
+        $user = $this->viewerUser();
+        $viewerRole = $user['role'] ?? 'guest';
+        Response::json(array_map(
+            fn(array $event) => $this->toPublicEvent($event, $user),
+            Event::findUpcoming($viewerRole)
+        ));
     }
 
     public function show(array $params): void
@@ -23,9 +27,10 @@ final class EventController
         if ($event === null || !$this->isVisible($event, $this->viewerRole())) {
             Response::error('Event nicht gefunden.', 404);
         }
+        $user = $this->viewerUser();
         $responses = EventResponse::findByEvent((int) $event['id']);
         Response::json([
-            'event' => $this->toPublicEvent($event),
+            'event' => $this->toPublicEvent($event, $user),
             'responses' => array_map([$this, 'toPublicResponse'], $responses),
         ]);
     }
@@ -37,31 +42,47 @@ final class EventController
         if ($user === null || $user['household_id'] === null) {
             Response::error('Kein Haushalt zugeordnet.', 404);
         }
-        $body = Request::json();
-        $title = trim($body['title'] ?? '');
-        $type = $body['type'] ?? '';
-        $startsAt = $body['startsAt'] ?? '';
-        if ($title === '' || $startsAt === '') {
-            Response::error('Titel und Startzeit sind Pflichtfelder.', 422);
-        }
-        if (!in_array($type, Event::TYPES, true)) {
-            Response::error('Unbekannter Event-Typ.', 422);
-        }
-        $visibility = in_array($body['visibility'] ?? '', ['public', 'neighbors'], true)
-            ? $body['visibility']
-            : 'neighbors';
+        $payload = $this->validatedEventPayload(Request::json());
 
         $id = Event::create(
             (int) $user['household_id'],
-            $title,
-            $type,
-            $body['description'] ?? null,
-            $body['location'] ?? null,
-            $startsAt,
-            $body['endsAt'] ?? null,
-            $visibility
+            $payload['title'],
+            $payload['type'],
+            $payload['description'],
+            $payload['location'],
+            $payload['startsAt'],
+            $payload['endsAt'],
+            $payload['visibility']
         );
         Response::json(['id' => $id], 201);
+    }
+
+    public function update(array $params): void
+    {
+        $event = $this->requireManagingEvent((int) $params['id']);
+        $body = Request::json();
+        $payload = $this->validatedEventPayload($body);
+
+        Event::update(
+            (int) $event['id'],
+            $payload['title'],
+            $payload['type'],
+            $payload['description'],
+            $payload['location'],
+            $payload['startsAt'],
+            $payload['endsAt'],
+            $payload['visibility']
+        );
+
+        $user = $this->viewerUser();
+        Response::json($this->toPublicEvent(Event::findById((int) $event['id']), $user));
+    }
+
+    public function destroy(array $params): void
+    {
+        $event = $this->requireManagingEvent((int) $params['id']);
+        Event::delete((int) $event['id']);
+        Response::json(null);
     }
 
     public function rsvp(array $params): void
@@ -84,8 +105,8 @@ final class EventController
             (int) $event['id'],
             (int) $user['household_id'],
             $response,
-            isset($body['adultsCount']) ? (int) $body['adultsCount'] : null,
-            isset($body['childrenCount']) ? (int) $body['childrenCount'] : null,
+            isset($body['adultsCount']) ? max(0, (int) $body['adultsCount']) : null,
+            isset($body['childrenCount']) ? max(0, (int) $body['childrenCount']) : null,
             $body['note'] ?? null,
             $userId
         );
@@ -98,6 +119,61 @@ final class EventController
         return $userId !== null ? (User::findById($userId)['role'] ?? 'guest') : 'guest';
     }
 
+    private function viewerUser(): array
+    {
+        $userId = Auth::userId();
+        if ($userId === null) {
+            return ['role' => 'guest', 'household_id' => null];
+        }
+        return User::findById($userId) ?? ['role' => 'guest', 'household_id' => null];
+    }
+
+    private function requireManagingEvent(int $eventId): array
+    {
+        $userId = Auth::requireLogin();
+        $user = User::findById($userId);
+        $event = Event::findById($eventId);
+        if ($user === null || $event === null) {
+            Response::error('Event nicht gefunden.', 404);
+        }
+        $isOwner = $user['household_id'] !== null && (int) $user['household_id'] === (int) $event['creator_household_id'];
+        if ($user['role'] !== 'admin' && !$isOwner) {
+            Response::error('Du kannst nur eigene Events bearbeiten.', 403);
+        }
+        return $event;
+    }
+
+    private function validatedEventPayload(array $body): array
+    {
+        $title = trim($body['title'] ?? '');
+        $type = $body['type'] ?? '';
+        $startsAt = $body['startsAt'] ?? '';
+        if ($title === '' || $startsAt === '') {
+            Response::error('Titel und Startzeit sind Pflichtfelder.', 422);
+        }
+        $endsAt = trim((string) ($body['endsAt'] ?? ''));
+        $endsAt = $endsAt !== '' ? $endsAt : null;
+        if ($endsAt !== null && strtotime((string) $endsAt) < strtotime((string) $startsAt)) {
+            Response::error('Die Endzeit darf nicht vor der Startzeit liegen.', 422);
+        }
+        if (!in_array($type, Event::TYPES, true)) {
+            Response::error('Unbekannter Event-Typ.', 422);
+        }
+        $visibility = in_array($body['visibility'] ?? '', ['public', 'neighbors'], true)
+            ? $body['visibility']
+            : 'neighbors';
+
+        return [
+            'title' => $title,
+            'type' => $type,
+            'description' => $body['description'] ?? null,
+            'location' => $body['location'] ?? null,
+            'startsAt' => $startsAt,
+            'endsAt' => $endsAt,
+            'visibility' => $visibility,
+        ];
+    }
+
     private function isVisible(array $event, string $viewerRole): bool
     {
         if ($event['visibility'] === 'public') {
@@ -106,8 +182,13 @@ final class EventController
         return $viewerRole !== 'guest';
     }
 
-    private function toPublicEvent(array $e): array
+    private function toPublicEvent(?array $e, array $viewerUser = ['role' => 'guest', 'household_id' => null]): array
     {
+        if ($e === null) {
+            Response::error('Event nicht gefunden.', 404);
+        }
+        $canManage = ($viewerUser['role'] ?? 'guest') === 'admin'
+            || ($viewerUser['household_id'] !== null && (int) $viewerUser['household_id'] === (int) $e['creator_household_id']);
         return [
             'id' => (int) $e['id'],
             'title' => $e['title'],
@@ -119,6 +200,7 @@ final class EventController
             'visibility' => $e['visibility'],
             'creatorHouseholdName' => $e['creator_household_name'],
             'createdAt' => $e['created_at'],
+            'canManage' => $canManage,
             'rsvpCounts' => [
                 'yes' => (int) ($e['yes_count'] ?? 0),
                 'maybe' => (int) ($e['maybe_count'] ?? 0),

@@ -11,6 +11,12 @@ const RESPONSE_LABELS: Record<EventResponseEntry['response'], string> = {
   no: 'Absage'
 };
 
+function totalFor(responses: EventResponseEntry[], field: 'adultsCount' | 'childrenCount'): number {
+  return responses
+    .filter((response) => response.response !== 'no')
+    .reduce((sum, response) => sum + (response[field] ?? 0), 0);
+}
+
 function describeAttendance(r: EventResponseEntry): string {
   if (r.note) return r.note;
   if (r.adultsCount != null || r.childrenCount != null) {
@@ -23,6 +29,12 @@ function describeAttendance(r: EventResponseEntry): string {
 }
 
 export function EventResponseList({ responses }: Props) {
+  const yesCount = responses.filter((response) => response.response === 'yes').length;
+  const maybeCount = responses.filter((response) => response.response === 'maybe').length;
+  const noCount = responses.filter((response) => response.response === 'no').length;
+  const adultTotal = totalFor(responses, 'adultsCount');
+  const childTotal = totalFor(responses, 'childrenCount');
+
   if (responses.length === 0) {
     return (
       <p style={{ fontSize: 'var(--md-font-size-base)', color: 'var(--md-color-on-surface-variant)' }}>
@@ -31,7 +43,13 @@ export function EventResponseList({ responses }: Props) {
     );
   }
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--md-space-2)' }}>
+    <div className="event-response-stack">
+      <div className="event-response-summary">
+        <span>{yesCount} Zusagen</span>
+        <span>{maybeCount} vielleicht</span>
+        <span>{noCount} Absagen</span>
+        {(adultTotal > 0 || childTotal > 0) && <span>{adultTotal} Erwachsene · {childTotal} Kinder</span>}
+      </div>
       {responses.map((r) => (
         <CardRow
           key={r.id}

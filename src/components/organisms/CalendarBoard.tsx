@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -22,14 +23,15 @@ interface Props {
 type Filter = CalendarEntry['type'];
 
 export function CalendarBoard({ entries, onChanged }: Props) {
+  const navigate = useNavigate();
   const [filters, setFilters] = useState<Set<Filter>>(() => new Set(CALENDAR_TYPE_OPTIONS.map(([type]) => type)));
   const [isCreating, setIsCreating] = useState(false);
   const [editingEntry, setEditingEntry] = useState<CalendarEntry | null>(null);
   const [deletingEntry, setDeletingEntry] = useState<CalendarEntry | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string | undefined>();
-  const [selectedEntryId, setSelectedEntryId] = useState<number | null>(null);
-  const selectedEntry = useMemo(() => entries.find((entry) => entry.id === selectedEntryId) ?? null, [entries, selectedEntryId]);
+  const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
+  const selectedEntry = useMemo(() => entries.find((entry) => String(entry.id) === selectedEntryId) ?? null, [entries, selectedEntryId]);
   const visibleEntryCount = entries.filter((entry) => filters.has(entry.type)).length;
   const allFiltersActive = filters.size === CALENDAR_TYPE_OPTIONS.length;
   const hasActiveFilters = filters.size > 0;
@@ -76,7 +78,7 @@ export function CalendarBoard({ entries, onChanged }: Props) {
     if (!deletingEntry) return;
     setIsDeleting(true);
     try {
-      await deleteCalendarEntry(deletingEntry.id);
+      await deleteCalendarEntry(Number(deletingEntry.id));
       setDeletingEntry(null);
       setSelectedEntryId(null);
       onChanged();
@@ -172,7 +174,12 @@ export function CalendarBoard({ entries, onChanged }: Props) {
           setIsCreating(true);
         }}
         eventClick={(info) => {
-          setSelectedEntryId(Number(info.event.id));
+          const entry = entries.find((item) => String(item.id) === info.event.id);
+          if (entry?.source === 'event' && entry.eventId) {
+            navigate(`/events/${entry.eventId}`);
+            return;
+          }
+          setSelectedEntryId(info.event.id);
           setIsCreating(false);
           setEditingEntry(null);
         }}

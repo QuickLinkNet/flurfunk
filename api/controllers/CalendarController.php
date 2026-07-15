@@ -6,6 +6,7 @@ use App\Core\Auth;
 use App\Core\Request;
 use App\Core\Response;
 use App\Models\CalendarEntry;
+use App\Models\Event;
 use App\Models\User;
 
 final class CalendarController
@@ -20,11 +21,16 @@ final class CalendarController
         $viewerRole = $user !== null ? ($user['role'] ?? 'guest') : 'guest';
         $viewerHouseholdId = $user['household_id'] ?? null;
 
-        $entries = CalendarEntry::findInRange($from, $to, $viewerRole, $viewerHouseholdId !== null ? (int) $viewerHouseholdId : null);
-        Response::json(array_map(
+        $calendarEntries = CalendarEntry::findInRange($from, $to, $viewerRole, $viewerHouseholdId !== null ? (int) $viewerHouseholdId : null);
+        $entries = array_map(
             fn(array $entry) => $this->toPublicEntry($entry, $viewerRole, $viewerHouseholdId !== null ? (int) $viewerHouseholdId : null),
-            $entries
-        ));
+            $calendarEntries
+        );
+        $events = array_map([$this, 'toCalendarEvent'], Event::findInRange($from, $to, $viewerRole));
+
+        $items = array_merge($entries, $events);
+        usort($items, fn(array $a, array $b) => strcmp($a['startsAt'], $b['startsAt']));
+        Response::json($items);
     }
 
     public function store(): void
@@ -127,6 +133,24 @@ final class CalendarController
             'allDay' => (bool) $e['all_day'],
             'visibility' => $e['visibility'],
             'canManage' => $canManage,
+            'source' => 'calendar',
+            'eventId' => null,
+        ];
+    }
+
+    private function toCalendarEvent(array $e): array
+    {
+        return [
+            'id' => 'event-' . (int) $e['id'],
+            'type' => 'event',
+            'title' => $e['title'],
+            'startsAt' => $e['starts_at'],
+            'endsAt' => $e['ends_at'],
+            'allDay' => false,
+            'visibility' => $e['visibility'],
+            'canManage' => false,
+            'source' => 'event',
+            'eventId' => (int) $e['id'],
         ];
     }
 }

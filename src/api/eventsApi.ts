@@ -23,6 +23,14 @@ export function createEvent(event: NewEvent) {
   return apiRequest<{ id: number }>('/events', { method: 'POST', body: JSON.stringify(event) });
 }
 
+export function updateEvent(id: number, event: NewEvent) {
+  return apiRequest<StreetEvent>(`/events/${id}`, { method: 'PUT', body: JSON.stringify(event) });
+}
+
+export function deleteEvent(id: number) {
+  return apiRequest<null>(`/events/${id}`, { method: 'DELETE' });
+}
+
 interface RsvpInput {
   response: RsvpResponse;
   adultsCount?: number;

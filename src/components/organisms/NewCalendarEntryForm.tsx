@@ -65,7 +65,7 @@ export function NewCalendarEntryForm({ initialDate, entry, onCreated, onCancel }
         allDay,
         visibility
       };
-      if (entry) await updateCalendarEntry(entry.id, payload);
+      if (entry) await updateCalendarEntry(Number(entry.id), payload);
       else await createCalendarEntry(payload);
       setTitle('');
       setEndsAt('');

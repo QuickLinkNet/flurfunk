@@ -15,6 +15,7 @@ export interface StreetEvent {
   visibility: 'public' | 'neighbors';
   creatorHouseholdName: string;
   createdAt: string;
+  canManage: boolean;
   rsvpCounts: { yes: number; maybe: number; no: number };
 }
 

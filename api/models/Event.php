@@ -32,6 +32,22 @@ final class Event
         return $stmt->fetchAll();
     }
 
+    public static function findInRange(string $from, string $to, ?string $viewerRole): array
+    {
+        $allowed = $viewerRole === 'guest' ? ['public'] : ['public', 'neighbors'];
+        $placeholders = implode(',', array_fill(0, count($allowed), '?'));
+        $stmt = Database::pdo()->prepare(
+            "SELECT e.*, h.name AS creator_household_name
+             FROM events e
+             JOIN households h ON h.id = e.creator_household_id
+             WHERE e.visibility IN ($placeholders)
+               AND e.starts_at < ? AND (e.ends_at IS NULL OR e.ends_at >= ?)
+             ORDER BY e.starts_at"
+        );
+        $stmt->execute([...$allowed, $to, $from]);
+        return $stmt->fetchAll();
+    }
+
     public static function findById(int $id): ?array
     {
         $stmt = Database::pdo()->prepare(
@@ -64,6 +80,24 @@ final class Event
             $creatorHouseholdId, $title, $type, $description, $location, $startsAt, $endsAt, $visibility,
         ]);
         return (int) Database::pdo()->lastInsertId();
+    }
+
+    public static function update(
+        int $id,
+        string $title,
+        string $type,
+        ?string $description,
+        ?string $location,
+        string $startsAt,
+        ?string $endsAt,
+        string $visibility
+    ): void {
+        $stmt = Database::pdo()->prepare(
+            'UPDATE events
+             SET title = ?, type = ?, description = ?, location = ?, starts_at = ?, ends_at = ?, visibility = ?
+             WHERE id = ?'
+        );
+        $stmt->execute([$title, $type, $description, $location, $startsAt, $endsAt, $visibility, $id]);
     }
 
     // Admin-Ansicht: alle Events unabhängig von Sichtbarkeit, inkl. RSVP-Zählern.
