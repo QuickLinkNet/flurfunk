@@ -5,4 +5,6 @@ export interface CalendarEntry {
   startsAt: string;
   endsAt: string | null;
   allDay: boolean;
+  visibility: 'public' | 'neighbors' | 'private';
+  canManage: boolean;
 }

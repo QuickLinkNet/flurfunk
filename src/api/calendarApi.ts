@@ -18,3 +18,11 @@ export interface NewCalendarEntry {
 export function createCalendarEntry(entry: NewCalendarEntry) {
   return apiRequest<{ id: number }>('/calendar', { method: 'POST', body: JSON.stringify(entry) });
 }
+
+export function updateCalendarEntry(id: number, entry: NewCalendarEntry) {
+  return apiRequest<CalendarEntry>(`/calendar/${id}`, { method: 'PUT', body: JSON.stringify(entry) });
+}
+
+export function deleteCalendarEntry(id: number) {
+  return apiRequest<null>(`/calendar/${id}`, { method: 'DELETE' });
+}

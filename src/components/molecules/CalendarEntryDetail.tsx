@@ -1,16 +1,19 @@
 import { CALENDAR_TYPE_META } from '../../utils/calendarTypeMeta';
+import { Button } from '../atoms/Button';
 import type { CalendarEntry } from '../../types/calendarEntry';
 
 interface Props {
   entry: CalendarEntry;
   onClose: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
 }
 
 function formatDateTime(value: string): string {
   return new Intl.DateTimeFormat('de-DE', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value.replace(' ', 'T')));
 }
 
-export function CalendarEntryDetail({ entry, onClose }: Props) {
+export function CalendarEntryDetail({ entry, onClose, onEdit, onDelete }: Props) {
   const meta = CALENDAR_TYPE_META[entry.type];
   return (
     <section
@@ -38,6 +41,16 @@ export function CalendarEntryDetail({ entry, onClose }: Props) {
         {entry.allDay ? 'Ganztägig' : formatDateTime(entry.startsAt)}
         {entry.endsAt ? ` bis ${entry.allDay ? entry.endsAt : formatDateTime(entry.endsAt)}` : ''}
       </p>
+      {entry.canManage && (
+        <div className="md-card-actions">
+          <Button type="button" variant="ghost" onClick={onEdit}>
+            Bearbeiten
+          </Button>
+          <Button type="button" variant="ghost" onClick={onDelete}>
+            Löschen
+          </Button>
+        </div>
+      )}
     </section>
   );
 }

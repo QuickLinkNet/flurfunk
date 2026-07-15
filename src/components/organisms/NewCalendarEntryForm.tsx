@@ -2,13 +2,15 @@ import { useState, type FormEvent } from 'react';
 import { Button } from '../atoms/Button';
 import { Input } from '../atoms/Input';
 import { Select } from '../atoms/Select';
-import { createCalendarEntry } from '../../api/calendarApi';
+import { createCalendarEntry, updateCalendarEntry } from '../../api/calendarApi';
 import { CALENDAR_TYPE_OPTIONS } from '../../utils/calendarTypeMeta';
 import type { CalendarEntry } from '../../types/calendarEntry';
 
 interface Props {
   initialDate?: string;
+  entry?: CalendarEntry;
   onCreated: () => void;
+  onCancel?: () => void;
 }
 
 function localDateTimeValue(date?: string): string {
@@ -17,15 +19,33 @@ function localDateTimeValue(date?: string): string {
   return value.toISOString().slice(0, 16);
 }
 
-export function NewCalendarEntryForm({ initialDate, onCreated }: Props) {
-  const [title, setTitle] = useState('');
-  const [type, setType] = useState<CalendarEntry['type']>('appointment');
-  const [startsAt, setStartsAt] = useState(() => localDateTimeValue(initialDate));
-  const [endsAt, setEndsAt] = useState('');
-  const [allDay, setAllDay] = useState(false);
-  const [visibility, setVisibility] = useState<'public' | 'neighbors' | 'private'>('neighbors');
+function inputValue(value?: string | null): string {
+  return value ? value.replace(' ', 'T').slice(0, 16) : '';
+}
+
+function dateOnly(value: string): string {
+  return value.slice(0, 10);
+}
+
+function dateTimeFromDate(value: string): string {
+  return value.length === 10 ? `${value}T09:00` : value;
+}
+
+export function NewCalendarEntryForm({ initialDate, entry, onCreated, onCancel }: Props) {
+  const [title, setTitle] = useState(entry?.title ?? '');
+  const [type, setType] = useState<CalendarEntry['type']>(entry?.type ?? 'appointment');
+  const [startsAt, setStartsAt] = useState(() => inputValue(entry?.startsAt) || localDateTimeValue(initialDate));
+  const [endsAt, setEndsAt] = useState(() => inputValue(entry?.endsAt));
+  const [allDay, setAllDay] = useState(entry?.allDay ?? false);
+  const [visibility, setVisibility] = useState<'public' | 'neighbors' | 'private'>(entry?.visibility ?? 'neighbors');
   const [message, setMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  function handleAllDayChange(checked: boolean) {
+    setAllDay(checked);
+    setStartsAt((value) => (checked ? dateOnly(value) : dateTimeFromDate(value)));
+    setEndsAt((value) => (value ? (checked ? dateOnly(value) : dateTimeFromDate(value)) : ''));
+  }
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -37,17 +57,19 @@ export function NewCalendarEntryForm({ initialDate, onCreated }: Props) {
 
     setIsSubmitting(true);
     try {
-      await createCalendarEntry({
+      const payload = {
         type,
         title: title.trim(),
         startsAt,
         endsAt: endsAt || null,
         allDay,
         visibility
-      });
+      };
+      if (entry) await updateCalendarEntry(entry.id, payload);
+      else await createCalendarEntry(payload);
       setTitle('');
       setEndsAt('');
-      setMessage('Termin angelegt.');
+      setMessage(entry ? 'Termin aktualisiert.' : 'Termin angelegt.');
       onCreated();
     } catch (err) {
       setMessage(err instanceof Error ? err.message : 'Termin konnte nicht angelegt werden.');
@@ -78,12 +100,17 @@ export function NewCalendarEntryForm({ initialDate, onCreated }: Props) {
         <Input type={allDay ? 'date' : 'datetime-local'} value={endsAt} onChange={(event) => setEndsAt(event.target.value)} />
       </div>
       <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--md-space-2)', fontSize: 'var(--md-font-size-sm)' }}>
-        <input type="checkbox" checked={allDay} onChange={(event) => setAllDay(event.target.checked)} />
+        <input type="checkbox" checked={allDay} onChange={(event) => handleAllDayChange(event.target.checked)} />
         Ganztägig
       </label>
       <Button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? 'Speichert...' : 'Termin speichern'}
+        {isSubmitting ? 'Speichert...' : entry ? 'Termin aktualisieren' : 'Termin speichern'}
       </Button>
+      {onCancel && (
+        <Button type="button" variant="ghost" onClick={onCancel} disabled={isSubmitting}>
+          Abbrechen
+        </Button>
+      )}
       {message && (
         <p style={{ margin: 0, color: message.includes('nicht') || message.includes('Pflicht') ? 'var(--md-color-error)' : 'var(--md-color-on-surface-variant)' }}>
           {message}

@@ -5,8 +5,11 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import listPlugin from '@fullcalendar/list';
 import interactionPlugin from '@fullcalendar/interaction';
 import deLocale from '@fullcalendar/core/locales/de';
+import { ActionDialog } from '../molecules/ActionDialog';
+import { ConfirmDialog } from '../molecules/ConfirmDialog';
 import { CalendarEntryDetail } from '../molecules/CalendarEntryDetail';
 import { NewCalendarEntryForm } from './NewCalendarEntryForm';
+import { deleteCalendarEntry } from '../../api/calendarApi';
 import { CALENDAR_TYPE_META, CALENDAR_TYPE_OPTIONS } from '../../utils/calendarTypeMeta';
 import type { CalendarEntry } from '../../types/calendarEntry';
 import type { CSSProperties } from 'react';
@@ -21,6 +24,9 @@ type Filter = CalendarEntry['type'];
 export function CalendarBoard({ entries, onChanged }: Props) {
   const [filters, setFilters] = useState<Set<Filter>>(() => new Set(CALENDAR_TYPE_OPTIONS.map(([type]) => type)));
   const [isCreating, setIsCreating] = useState(false);
+  const [editingEntry, setEditingEntry] = useState<CalendarEntry | null>(null);
+  const [deletingEntry, setDeletingEntry] = useState<CalendarEntry | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string | undefined>();
   const [selectedEntryId, setSelectedEntryId] = useState<number | null>(null);
   const selectedEntry = useMemo(() => entries.find((entry) => entry.id === selectedEntryId) ?? null, [entries, selectedEntryId]);
@@ -58,6 +64,19 @@ export function CalendarBoard({ entries, onChanged }: Props) {
     setFilters(new Set(CALENDAR_TYPE_OPTIONS.map(([type]) => type)));
   }
 
+  async function confirmDelete() {
+    if (!deletingEntry) return;
+    setIsDeleting(true);
+    try {
+      await deleteCalendarEntry(deletingEntry.id);
+      setDeletingEntry(null);
+      setSelectedEntryId(null);
+      onChanged();
+    } finally {
+      setIsDeleting(false);
+    }
+  }
+
   return (
     <div className="calendar-board">
       <div className="calendar-toolbar">
@@ -78,20 +97,26 @@ export function CalendarBoard({ entries, onChanged }: Props) {
             </button>
           ))}
         </div>
-        <button type="button" className="calendar-create-button" onClick={() => setIsCreating((current) => !current)}>
+        <button
+          type="button"
+          className="calendar-create-button"
+          onClick={() => {
+            setSelectedEntryId(null);
+            setEditingEntry(null);
+            setIsCreating(true);
+          }}
+        >
           + Termin
         </button>
       </div>
-      {isCreating && (
-        <NewCalendarEntryForm
-          initialDate={selectedDate}
-          onCreated={() => {
-            setIsCreating(false);
-            onChanged();
-          }}
+      {selectedEntry && !editingEntry && (
+        <CalendarEntryDetail
+          entry={selectedEntry}
+          onClose={() => setSelectedEntryId(null)}
+          onEdit={() => setEditingEntry(selectedEntry)}
+          onDelete={() => setDeletingEntry(selectedEntry)}
         />
       )}
-      {selectedEntry && <CalendarEntryDetail entry={selectedEntry} onClose={() => setSelectedEntryId(null)} />}
       <FullCalendar
         plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
         locale={deLocale}
@@ -122,7 +147,48 @@ export function CalendarBoard({ entries, onChanged }: Props) {
         eventClick={(info) => {
           setSelectedEntryId(Number(info.event.id));
           setIsCreating(false);
+          setEditingEntry(null);
         }}
+      />
+      <ActionDialog
+        open={isCreating}
+        title="Termin erstellen"
+        onClose={() => setIsCreating(false)}
+      >
+        <NewCalendarEntryForm
+          initialDate={selectedDate}
+          onCreated={() => {
+            setIsCreating(false);
+            onChanged();
+          }}
+          onCancel={() => setIsCreating(false)}
+        />
+      </ActionDialog>
+      <ActionDialog
+        open={Boolean(editingEntry)}
+        title="Termin bearbeiten"
+        onClose={() => setEditingEntry(null)}
+      >
+        {editingEntry && (
+          <NewCalendarEntryForm
+            entry={editingEntry}
+            onCreated={() => {
+              setEditingEntry(null);
+              setSelectedEntryId(null);
+              onChanged();
+            }}
+            onCancel={() => setEditingEntry(null)}
+          />
+        )}
+      </ActionDialog>
+      <ConfirmDialog
+        open={Boolean(deletingEntry)}
+        title="Termin löschen?"
+        description={deletingEntry ? `Soll "${deletingEntry.title}" wirklich gelöscht werden?` : ''}
+        confirmLabel="Löschen"
+        loading={isDeleting}
+        onCancel={() => setDeletingEntry(null)}
+        onConfirm={confirmDelete}
       />
     </div>
   );

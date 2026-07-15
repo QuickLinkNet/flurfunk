@@ -79,6 +79,8 @@ $router->post('/feed', [new FeedController(), 'store']);
 
 $router->get('/calendar', [new CalendarController(), 'index']);
 $router->post('/calendar', [new CalendarController(), 'store']);
+$router->put('/calendar/{id}', [new CalendarController(), 'update']);
+$router->delete('/calendar/{id}', [new CalendarController(), 'destroy']);
 
 $router->get('/events', [new EventController(), 'index']);
 $router->post('/events', [new EventController(), 'store']);
