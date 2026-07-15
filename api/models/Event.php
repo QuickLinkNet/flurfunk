@@ -24,11 +24,13 @@ final class Event
              JOIN households h ON h.id = e.creator_household_id
              LEFT JOIN event_responses er ON er.event_id = e.id
              WHERE e.visibility IN ($placeholders)
+               AND ((e.ends_at IS NULL AND e.starts_at >= ?) OR (e.ends_at IS NOT NULL AND e.ends_at >= ?))
              GROUP BY e.id
              ORDER BY e.starts_at ASC
              LIMIT ?"
         );
-        $stmt->execute([...$allowed, $limit]);
+        $now = gmdate('Y-m-d\TH:i:s\Z');
+        $stmt->execute([...$allowed, $now, $now, $limit]);
         return $stmt->fetchAll();
     }
 

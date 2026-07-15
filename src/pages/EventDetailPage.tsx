@@ -11,7 +11,7 @@ import { Heading } from '../components/atoms/Heading';
 import { Button } from '../components/atoms/Button';
 import { deleteEvent, fetchEvent, submitRsvp } from '../api/eventsApi';
 import { EVENT_TYPE_META } from '../utils/eventTypeMeta';
-import { formatDateTimeLabel } from '../utils/date';
+import { formatDateRangeLabel } from '../utils/date';
 import { useAuth } from '../hooks/useAuth';
 import type { EventDetail, RsvpResponse } from '../types/event';
 
@@ -109,7 +109,7 @@ export function EventDetailPage() {
     <DashboardTemplate header={header}>
       <section>
         <p style={{ fontSize: 'var(--md-font-size-base)', color: 'var(--md-color-on-surface-variant)', margin: 0 }}>
-          {meta.emoji} {meta.label} · {formatDateTimeLabel(detail.event.startsAt)}
+          {meta.emoji} {meta.label} · {formatDateRangeLabel(detail.event.startsAt, detail.event.endsAt)}
           {detail.event.location ? ` · ${detail.event.location}` : ''}
         </p>
         {detail.event.description && (

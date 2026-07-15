@@ -32,3 +32,24 @@ export function formatDateTimeLabel(iso: string): string {
     minute: '2-digit'
   });
 }
+
+export function formatDateRangeLabel(startsAt: string, endsAt?: string | null): string {
+  if (!endsAt) return formatDateTimeLabel(startsAt);
+
+  const start = new Date(startsAt);
+  const end = new Date(endsAt);
+  const sameDay = start.toDateString() === end.toDateString();
+  if (sameDay) {
+    const startLabel = start.toLocaleDateString('de-DE', {
+      weekday: 'short',
+      day: '2-digit',
+      month: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+    const endLabel = end.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+    return `${startLabel} bis ${endLabel}`;
+  }
+
+  return `${formatDateTimeLabel(startsAt)} bis ${formatDateTimeLabel(endsAt)}`;
+}

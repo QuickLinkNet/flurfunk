@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { IconBadge } from '../atoms/IconBadge';
 import { EVENT_TYPE_META } from '../../utils/eventTypeMeta';
-import { formatDateTimeLabel } from '../../utils/date';
+import { formatDateRangeLabel } from '../../utils/date';
 import type { StreetEvent } from '../../types/event';
 
 interface Props {
@@ -37,7 +37,7 @@ export function EventCard({ event }: Props) {
             color: 'var(--md-color-on-surface-variant)'
           }}
         >
-          {meta.label} · {formatDateTimeLabel(event.startsAt)}
+          {meta.label} · {formatDateRangeLabel(event.startsAt, event.endsAt)}
           {event.location ? ` · ${event.location}` : ''}
         </p>
         <p
