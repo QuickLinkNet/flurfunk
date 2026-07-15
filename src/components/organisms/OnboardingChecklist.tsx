@@ -63,9 +63,11 @@ export function OnboardingChecklist({ onStatusClick, onDismiss, currentStep = 'h
         {required ? (
           <Link className="onboarding-primary-link" to="/start">Einrichtung fortsetzen</Link>
         ) : (
-          <Button type="button" onClick={onStatusClick}>Status setzen</Button>
+          <>
+            <Button type="button" onClick={onStatusClick}>Status setzen</Button>
+            <Link to="/einstellungen">Push & Privatsphäre</Link>
+          </>
         )}
-        <Link to={required ? '/start' : '/einstellungen'}>{required ? 'Start öffnen' : 'Push & Privatsphäre'}</Link>
       </div>
     </section>
   );
