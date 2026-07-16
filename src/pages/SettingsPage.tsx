@@ -6,6 +6,7 @@ import { Heading } from '../components/atoms/Heading';
 import { PushNotificationSettings } from '../components/organisms/PushNotificationSettings';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../hooks/useTheme';
+import { PAGE_HEADERS } from '../content/pageHeaders';
 import type { Theme } from '../context/ThemeContext';
 
 const THEME_LABELS: Record<Theme, string> = {
@@ -25,7 +26,7 @@ export function SettingsPage() {
   }
 
   return (
-    <DashboardTemplate header={<Heading level={1}>Einstellungen</Heading>}>
+    <DashboardTemplate pageTitle={PAGE_HEADERS.settings.title} pageSubtitle={PAGE_HEADERS.settings.subtitle}>
       <section>
         <Heading level={2}>Darstellung</Heading>
         <Select value={theme} onChange={(e) => setTheme(e.target.value as Theme)} style={{ maxWidth: 220 }}>

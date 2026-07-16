@@ -1,7 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/atoms/Button';
-import { Heading } from '../components/atoms/Heading';
 import { OnboardingPanel } from '../components/molecules/OnboardingPanel';
 import { OnboardingStepper } from '../components/molecules/OnboardingStepper';
 import type { HouseholdDetailsFormHandle } from '../components/molecules/HouseholdDetailsForm';
@@ -11,6 +10,7 @@ import { PetsManager } from '../components/organisms/PetsManager';
 import { PushNotificationSettings } from '../components/organisms/PushNotificationSettings';
 import { VisibilitySettingsForm } from '../components/organisms/VisibilitySettingsForm';
 import { DashboardTemplate } from '../components/templates/DashboardTemplate';
+import { PAGE_HEADERS } from '../content/pageHeaders';
 import { useAuth } from '../hooks/useAuth';
 import { useFeatureFlags } from '../hooks/useFeatureFlags';
 import type { OnboardingStep } from '../types/onboarding';
@@ -123,16 +123,12 @@ export function OnboardingPage() {
     <DashboardTemplate
       shellClassName="onboarding-shell"
       contentClassName="onboarding-template"
-      header={
-        <div className="onboarding-hero">
-          <div>
-            <Heading level={1}>Willkommen bei Flurfunk</Heading>
-            <p>Richtet euren Haushalt kurz ein. Ihr könnt alles später ändern.</p>
-          </div>
-          <Button type="button" variant="ghost" onClick={finish} disabled={isFinishing}>
-            Überspringen
-          </Button>
-        </div>
+      pageTitle={PAGE_HEADERS.onboarding.title}
+      pageSubtitle={PAGE_HEADERS.onboarding.subtitle}
+      headerAside={
+        <Button type="button" variant="ghost" onClick={finish} disabled={isFinishing}>
+          Überspringen
+        </Button>
       }
     >
       <section className="onboarding-workspace">

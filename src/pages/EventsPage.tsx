@@ -4,6 +4,7 @@ import { EventList } from '../components/organisms/EventList';
 import { NewEventForm } from '../components/organisms/NewEventForm';
 import { Heading } from '../components/atoms/Heading';
 import { fetchEvents } from '../api/eventsApi';
+import { PAGE_HEADERS } from '../content/pageHeaders';
 import type { StreetEvent } from '../types/event';
 
 export function EventsPage() {
@@ -16,7 +17,7 @@ export function EventsPage() {
   useEffect(() => reload(), [reload]);
 
   return (
-    <DashboardTemplate header={<Heading level={1}>Events</Heading>}>
+    <DashboardTemplate pageTitle={PAGE_HEADERS.events.title} pageSubtitle={PAGE_HEADERS.events.subtitle}>
       <section>
         <Heading level={2}>Neues Event</Heading>
         <NewEventForm onCreated={reload} />

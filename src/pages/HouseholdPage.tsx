@@ -6,6 +6,7 @@ import { HouseholdStatusForm } from '../components/organisms/HouseholdStatusForm
 import { MyHouseholdDetailsForm } from '../components/organisms/MyHouseholdDetailsForm';
 import { VisibilitySettingsForm } from '../components/organisms/VisibilitySettingsForm';
 import { Heading } from '../components/atoms/Heading';
+import { PAGE_HEADERS } from '../content/pageHeaders';
 import { useAuth } from '../hooks/useAuth';
 import { useFeatureFlags } from '../hooks/useFeatureFlags';
 
@@ -16,7 +17,7 @@ export function HouseholdPage() {
   const { isEnabled } = useFeatureFlags();
 
   return (
-    <DashboardTemplate header={<Heading level={1}>Mein Haushalt</Heading>}>
+    <DashboardTemplate pageTitle={PAGE_HEADERS.household.title} pageSubtitle={PAGE_HEADERS.household.subtitle}>
       <section>
         <Heading level={2}>Haushalt</Heading>
         <MyHouseholdDetailsForm />

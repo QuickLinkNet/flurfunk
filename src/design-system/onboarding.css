@@ -8,10 +8,6 @@
   box-shadow: 0 18px 40px rgba(63, 45, 26, 0.12);
 }
 
-.onboarding-template .app-page-header {
-  padding: var(--md-space-5) var(--md-space-5) 0;
-}
-
 .onboarding-template .app-page-main {
   padding: 0 var(--md-space-5) var(--md-space-5);
 }
@@ -22,44 +18,12 @@
     url('/apps/neighborhood/brand/auth-background-mobile.png') center bottom / 100% auto no-repeat;
 }
 
-.onboarding-hero {
-  display: grid;
-  gap: var(--md-space-3);
-  position: relative;
-  min-height: 230px;
-  align-items: start;
-  padding: var(--md-space-4) 0 96px;
-  background:
-    linear-gradient(90deg, rgba(248, 242, 231, 0.94) 0%, rgba(248, 242, 231, 0.7) 34%, rgba(248, 242, 231, 0.08) 70%, rgba(248, 242, 231, 0.18) 100%),
-    linear-gradient(180deg, rgba(248, 242, 231, 0) 0%, rgba(248, 242, 231, 0.62) 100%),
-    url('/apps/neighborhood/brand/auth-background-wide.png') right top / 112% auto no-repeat;
-}
-
-.onboarding-hero > * {
-  position: relative;
-  z-index: 1;
-}
-
-.onboarding-hero > button {
+.onboarding-template .app-page-hero-aside button {
   justify-self: end;
   border-color: rgba(216, 204, 186, 0.96) !important;
   background: rgba(255, 253, 252, 0.92) !important;
   color: var(--md-color-primary) !important;
   box-shadow: 0 10px 24px rgba(63, 45, 26, 0.12);
-}
-
-.onboarding-hero h1 {
-  margin: 0;
-  --md-heading-font-size: clamp(2.4rem, 4vw, 3.8rem);
-  --md-heading-font-weight: var(--md-font-weight-bold);
-  color: var(--md-color-brand-green);
-  line-height: 1.05;
-}
-
-.onboarding-hero p {
-  margin: var(--md-space-2) 0 0;
-  color: var(--md-color-on-surface-variant);
-  font-size: var(--md-font-size-lg);
 }
 
 .onboarding-workspace {
@@ -291,11 +255,6 @@
 }
 
 @media (min-width: 768px) {
-  .onboarding-hero {
-    grid-template-columns: minmax(0, 1fr) auto;
-    min-height: 250px;
-  }
-
   .onboarding-stepper {
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: var(--md-space-3);
@@ -341,27 +300,11 @@
 }
 
 @media (max-width: 767px) {
-  .onboarding-template .app-page-header {
-    padding: var(--md-space-4) var(--md-space-3) 0;
-  }
-
   .onboarding-template .app-page-main {
     padding: 0 var(--md-space-3) calc(76px + var(--md-space-4));
   }
 
-  .onboarding-hero {
-    min-height: 300px;
-    padding: var(--md-space-2) 0 170px;
-    background:
-      linear-gradient(180deg, rgba(248, 242, 231, 0.96) 0%, rgba(248, 242, 231, 0.72) 44%, rgba(248, 242, 231, 0.18) 100%),
-      url('/apps/neighborhood/brand/auth-background-mobile.png') center bottom / 100% auto no-repeat;
-  }
-
-  .onboarding-hero h1 {
-    --md-heading-font-size: clamp(2rem, 9vw, 3rem);
-  }
-
-  .onboarding-hero > button {
+  .onboarding-template .app-page-hero-aside button {
     justify-self: start;
   }
 

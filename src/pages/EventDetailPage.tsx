@@ -81,7 +81,7 @@ export function EventDetailPage() {
 
   if (!detail) {
     return (
-      <DashboardTemplate header={<Heading level={1}>Event</Heading>}>
+      <DashboardTemplate pageTitle="Event" pageSubtitle="Details werden geladen.">
         <p style={{ fontSize: 'var(--md-font-size-base)', color: 'var(--md-color-on-surface-variant)' }}>Lädt …</p>
       </DashboardTemplate>
     );
@@ -89,35 +89,27 @@ export function EventDetailPage() {
 
   const meta = EVENT_TYPE_META[detail.event.type];
 
-  const header = (
-    <div className="event-detail-header">
-      <Heading level={1}>{detail.event.title}</Heading>
-      {detail.event.canManage && (
-        <div className="event-detail-actions">
-          <Button type="button" variant="ghost" onClick={() => setIsEditing(true)}>
-            Bearbeiten
-          </Button>
-          <Button type="button" variant="ghost" onClick={() => setConfirmDeleteOpen(true)}>
-            Löschen
-          </Button>
-        </div>
-      )}
+  const eventMeta = `${meta.emoji} ${meta.label} · ${formatDateRangeLabel(detail.event.startsAt, detail.event.endsAt)}${detail.event.location ? ` · ${detail.event.location}` : ''}`;
+  const headerAside = detail.event.canManage ? (
+    <div className="event-detail-actions">
+      <Button type="button" variant="ghost" onClick={() => setIsEditing(true)}>
+        Bearbeiten
+      </Button>
+      <Button type="button" variant="ghost" onClick={() => setConfirmDeleteOpen(true)}>
+        Löschen
+      </Button>
     </div>
-  );
+  ) : null;
 
   return (
-    <DashboardTemplate header={header}>
-      <section>
-        <p style={{ fontSize: 'var(--md-font-size-base)', color: 'var(--md-color-on-surface-variant)', margin: 0 }}>
-          {meta.emoji} {meta.label} · {formatDateRangeLabel(detail.event.startsAt, detail.event.endsAt)}
-          {detail.event.location ? ` · ${detail.event.location}` : ''}
-        </p>
-        {detail.event.description && (
-          <p style={{ fontSize: 'var(--md-font-size-base)', marginTop: 'var(--md-space-2)' }}>
+    <DashboardTemplate pageTitle={detail.event.title} pageSubtitle={eventMeta} headerAside={headerAside}>
+      {detail.event.description && (
+        <section>
+          <p style={{ fontSize: 'var(--md-font-size-base)', margin: 0 }}>
             {detail.event.description}
           </p>
-        )}
-      </section>
+        </section>
+      )}
       <section>
         <Heading level={2}>Deine Rückmeldung</Heading>
         <RSVPButtonGroup value={response} onChange={handleRsvp} disabled={isSubmitting} />

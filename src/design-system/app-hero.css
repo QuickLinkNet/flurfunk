@@ -1,0 +1,55 @@
+.app-content-with-hero .app-page-main { margin-top: calc(var(--md-space-5) * -1); }
+
+.app-page-hero {
+  --md-heading-font-size: clamp(30px, 8vw, 44px);
+  --md-heading-font-weight: var(--md-font-weight-bold);
+  display: grid;
+  gap: var(--md-space-3);
+  min-height: 230px;
+  align-content: start;
+  padding: var(--md-space-4) var(--md-space-4) var(--md-space-6);
+  background:
+    linear-gradient(180deg, rgba(246, 238, 224, 0.9), rgba(246, 238, 224, 0.54)),
+    url('/apps/neighborhood/brand/auth-background-wide.png') center bottom / min(1120px, 170vw) auto no-repeat;
+}
+
+.app-page-title-block {
+  display: grid;
+  gap: var(--md-space-1);
+}
+
+.app-page-eyebrow,
+.app-page-subtitle {
+  margin: 0;
+  color: var(--md-color-on-surface-variant);
+  font-size: var(--md-font-size-base);
+}
+
+.app-page-title,
+.app-page-hero h1 {
+  margin: 0;
+  color: var(--md-color-brand-green);
+  font-size: clamp(30px, 8vw, 44px);
+  line-height: 1.05;
+}
+
+.app-page-hero-aside {
+  position: relative;
+  display: grid;
+  align-content: start;
+}
+
+@media (min-width: 1024px) {
+  .app-content-with-hero .app-page-main { margin-top: -64px; }
+
+  .app-page-hero {
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+    align-items: start;
+    min-height: 260px;
+    padding: var(--md-space-5) var(--md-space-5) 96px;
+    background:
+      linear-gradient(90deg, rgba(246, 238, 224, 0.96) 0%, rgba(246, 238, 224, 0.74) 24%, rgba(246, 238, 224, 0.22) 52%, rgba(246, 238, 224, 0.36) 100%),
+      linear-gradient(180deg, rgba(246, 238, 224, 0.18), rgba(246, 238, 224, 0.82)),
+      url('/apps/neighborhood/brand/auth-background-wide.png') center 42% / cover no-repeat;
+  }
+}

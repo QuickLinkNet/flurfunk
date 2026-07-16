@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Heading } from '../components/atoms/Heading';
 import { ConfirmDialog } from '../components/molecules/ConfirmDialog';
 import { AdminSearchBar } from '../components/molecules/AdminSearchBar';
 import { AdminSection } from '../components/molecules/AdminSection';
@@ -20,6 +19,7 @@ import {
   deleteAdminHousehold,
   updateAdminUserRole
 } from '../api/adminApi';
+import { PAGE_HEADERS } from '../content/pageHeaders';
 import { useAdminData } from '../hooks/useAdminData';
 import { useAdminDeleteDialog } from '../hooks/useAdminDeleteDialog';
 import { useAdminSearch } from '../hooks/useAdminSearch';
@@ -60,7 +60,7 @@ export function AdminPage() {
   );
 
   return (
-    <DashboardTemplate header={<Heading level={1}>Verwaltung</Heading>}>
+    <DashboardTemplate pageTitle={PAGE_HEADERS.admin.title} pageSubtitle={PAGE_HEADERS.admin.subtitle}>
       <AdminSearchBar value={search} onChange={setSearch} />
       <AdminTabs activeTab={activeTab} onChange={setActiveTab} />
 

@@ -7,6 +7,7 @@ import { DateMiniCard } from '../components/molecules/DateMiniCard';
 import { PersonStatusStrip } from '../components/molecules/PersonStatusStrip';
 import { QuickActionGrid, type QuickActionId } from '../components/molecules/QuickActionGrid';
 import { WastePickupRow } from '../components/molecules/WastePickupRow';
+import { AppPageHeader } from '../components/organisms/AppPageHeader';
 import { AppSidebar } from '../components/organisms/AppSidebar';
 import { BottomNavigation } from '../components/organisms/BottomNavigation';
 import { HouseholdStatusForm } from '../components/organisms/HouseholdStatusForm';
@@ -91,21 +92,21 @@ export function DashboardPage() {
       <AppSidebar />
 
       <div className="app-content">
-        <header className="dashboard-topbar">
-          <div>
-            <p className="dashboard-eyebrow">Guten Morgen, {user?.displayName ?? 'Nachbar:in'}!</p>
-            <h1 className="dashboard-title">{dashboard?.streetName ?? 'Flurfunk'}</h1>
-          </div>
-          <div className="dashboard-search-wrap">
-            <input
-              className="dashboard-search"
-              placeholder="Suche..."
-              aria-label="Dashboard durchsuchen"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-            />
-          </div>
-        </header>
+        <AppPageHeader
+          eyebrow={`Guten Morgen, ${user?.displayName ?? 'Nachbar:in'}!`}
+          title={dashboard?.streetName ?? 'Flurfunk'}
+          aside={
+            <div className="dashboard-search-wrap">
+              <input
+                className="dashboard-search"
+                placeholder="Suche..."
+                aria-label="Dashboard durchsuchen"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+              />
+            </div>
+          }
+        />
 
         <main className="dashboard-layout">
           <div className="dashboard-main">

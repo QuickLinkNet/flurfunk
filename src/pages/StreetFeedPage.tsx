@@ -5,6 +5,7 @@ import { NewFeedItemForm } from '../components/organisms/NewFeedItemForm';
 import { Heading } from '../components/atoms/Heading';
 import { Select } from '../components/atoms/Select';
 import { fetchFeed } from '../api/feedApi';
+import { PAGE_HEADERS } from '../content/pageHeaders';
 import { FEED_TYPE_OPTIONS } from '../utils/feedTypeMeta';
 import type { FeedItem, FeedItemType } from '../types/feedItem';
 
@@ -26,7 +27,7 @@ export function StreetFeedPage() {
   );
 
   return (
-    <DashboardTemplate header={<Heading level={1}>Straße</Heading>}>
+    <DashboardTemplate pageTitle={PAGE_HEADERS.street.title} pageSubtitle={PAGE_HEADERS.street.subtitle}>
       <section>
         <Heading level={2}>Kurzmeldung</Heading>
         <NewFeedItemForm onCreated={reload} />

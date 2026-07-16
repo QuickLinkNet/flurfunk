@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { DashboardTemplate } from '../components/templates/DashboardTemplate';
 import { CalendarBoard } from '../components/organisms/CalendarBoard';
-import { Heading } from '../components/atoms/Heading';
 import { fetchCalendarEntries } from '../api/calendarApi';
+import { PAGE_HEADERS } from '../content/pageHeaders';
 import { startOfMonth, endOfMonth, addMonths, toISODate } from '../utils/date';
 import type { CalendarEntry } from '../types/calendarEntry';
 
@@ -19,7 +19,7 @@ export function CalendarPage() {
   useEffect(() => reload(), [reload]);
 
   return (
-    <DashboardTemplate header={<Heading level={1}>Kalender</Heading>}>
+    <DashboardTemplate pageTitle={PAGE_HEADERS.calendar.title} pageSubtitle={PAGE_HEADERS.calendar.subtitle}>
       <CalendarBoard entries={entries} onChanged={reload} />
     </DashboardTemplate>
   );
