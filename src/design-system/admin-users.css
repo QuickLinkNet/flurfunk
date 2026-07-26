@@ -1,0 +1,82 @@
+.admin-user-list {
+  display: grid;
+  gap: var(--md-space-3);
+}
+
+.admin-user-card {
+  display: grid;
+  gap: var(--md-space-3);
+  padding: var(--md-space-3);
+  border: 1px solid var(--md-color-border);
+  border-radius: var(--md-radius-card);
+  background: var(--md-color-surface);
+  box-shadow: var(--md-shadow-card);
+}
+
+.admin-user-card[data-warning='true'] {
+  border-color: color-mix(in srgb, var(--md-color-primary) 34%, var(--md-color-border));
+}
+
+.admin-user-main {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--md-space-2);
+  align-items: start;
+  min-width: 0;
+}
+
+.admin-user-main p,
+.admin-user-message {
+  margin: 0;
+  color: var(--md-color-on-surface-variant);
+  font-size: var(--md-font-size-sm);
+  overflow-wrap: anywhere;
+}
+
+.admin-user-title,
+.admin-user-status,
+.admin-user-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--md-space-2);
+  align-items: center;
+}
+
+.admin-user-title {
+  margin-bottom: var(--md-space-1);
+}
+
+.admin-user-title strong {
+  color: var(--md-color-brand-green);
+  font-size: var(--md-font-size-base);
+}
+
+.admin-user-actions {
+  align-items: stretch;
+}
+
+.admin-user-actions > button,
+.admin-user-actions > select {
+  flex: 1 1 150px;
+}
+
+.admin-user-message[data-error='true'] {
+  color: var(--md-color-error);
+}
+
+@media (min-width: 900px) {
+  .admin-user-card {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+
+  .admin-user-status,
+  .admin-user-message {
+    grid-column: 1 / -1;
+  }
+
+  .admin-user-actions {
+    justify-content: end;
+    min-width: 430px;
+  }
+}

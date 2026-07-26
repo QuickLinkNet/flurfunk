@@ -33,14 +33,16 @@ export function PushNotificationSettings() {
   const [isBusy, setIsBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
-  async function refreshStatus() {
+  async function refreshStatus(showFeedback = false) {
     try {
       if (!isPushSupported()) {
         setStatus('unsupported');
+        if (showFeedback) setMessage(statusText('unsupported'));
         return;
       }
       if (permissionState() === 'denied') {
         setStatus('blocked');
+        if (showFeedback) setMessage(statusText('blocked'));
         return;
       }
 
@@ -49,9 +51,9 @@ export function PushNotificationSettings() {
         fetchPushStatus().catch(() => ({ subscribed: false }))
       ]);
 
-      if (subscription && serverStatus.subscribed) setStatus('on');
-      else if (subscription) setStatus('local-only');
-      else setStatus('off');
+      const nextStatus = subscription && serverStatus.subscribed ? 'on' : subscription ? 'local-only' : 'off';
+      setStatus(nextStatus);
+      if (showFeedback) setMessage(statusText(nextStatus));
     } catch (err) {
       setStatus('off');
       setMessage(err instanceof Error ? err.message : 'Push-Status konnte nicht geprüft werden.');
@@ -113,7 +115,7 @@ export function PushNotificationSettings() {
       </div>
 
       <div className="md-card-actions">
-        <Button type="button" variant="ghost" onClick={refreshStatus} disabled={isBusy || status === 'loading'}>
+        <Button type="button" variant="ghost" onClick={() => refreshStatus(true)} disabled={isBusy || status === 'loading'}>
           Status prüfen
         </Button>
         <Button type="button" variant="ghost" onClick={handleTest} disabled={isBusy || status !== 'on'}>

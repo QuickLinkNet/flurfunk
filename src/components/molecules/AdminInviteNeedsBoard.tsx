@@ -75,12 +75,12 @@ function collectNeedGroups(households: AdminHousehold[]): NeedGroup[] {
       filter: 'push'
     },
     {
-      title: 'Startklar',
-      description: 'Registrierung, Onboarding und Push sind erledigt.',
+      title: 'Onboarding fertig',
+      description: 'Registrierung und Startschritte sind erledigt.',
       items: activeInvites
-        .filter(({ invite }) => invite.usedByUser?.onboardingCompletedAt && invite.usedByUser.pushSubscribed)
+        .filter(({ invite }) => invite.usedByUser?.onboardingCompletedAt)
         .map(({ household, invite }) => toNeedItem(invite, household)),
-      actionLabel: 'Startklare anzeigen',
+      actionLabel: 'Fertige anzeigen',
       filter: 'ready'
     }
   ];

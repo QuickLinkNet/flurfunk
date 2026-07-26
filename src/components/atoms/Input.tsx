@@ -10,8 +10,9 @@ export function Input(props: InputHTMLAttributes<HTMLInputElement>) {
         padding: 'var(--md-space-3) var(--md-space-4)',
         borderRadius: 'var(--md-radius-control)',
         border: '1px solid var(--md-color-border)',
+        fontFamily: 'inherit',
         fontSize: 'var(--md-font-size-md)',
-        background: 'rgba(255, 253, 252, 0.82)',
+        background: 'var(--md-color-surface)',
         color: 'var(--md-color-on-surface)',
         outlineColor: 'var(--md-color-primary)',
         ...props.style

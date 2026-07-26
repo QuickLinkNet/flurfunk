@@ -14,6 +14,29 @@ export function fetchCurrentUser() {
   return apiRequest<User>('/auth/me');
 }
 
+export function updateProfile(displayName: string, avatarUrl?: string | null) {
+  return apiRequest<User>('/auth/me/profile', { method: 'PUT', body: JSON.stringify({ displayName, avatarUrl }) });
+}
+
+export function updatePassword(currentPassword: string, newPassword: string) {
+  return apiRequest<User>('/auth/me/password', { method: 'PUT', body: JSON.stringify({ currentPassword, newPassword }) });
+}
+
+export function updateDigestPreference(weeklyDigestEnabled: boolean) {
+  return apiRequest<User>('/auth/me/digest-preference', {
+    method: 'PUT',
+    body: JSON.stringify({ weeklyDigestEnabled })
+  });
+}
+
+export function deleteMe() {
+  return apiRequest<null>('/auth/me', { method: 'DELETE' });
+}
+
+export function exportMe() {
+  return apiRequest<Record<string, unknown>>('/auth/me/export');
+}
+
 export function completeOnboarding() {
   return apiRequest<User>('/auth/onboarding/complete', { method: 'POST' });
 }

@@ -30,9 +30,9 @@ export function CalendarBoard({ entries, onChanged }: Props) {
   const [deletingEntry, setDeletingEntry] = useState<CalendarEntry | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string | undefined>();
-  const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
-  const selectedEntry = useMemo(() => entries.find((entry) => String(entry.id) === selectedEntryId) ?? null, [entries, selectedEntryId]);
+  const [selectedEntry, setSelectedEntry] = useState<CalendarEntry | null>(null);
   const visibleEntryCount = entries.filter((entry) => filters.has(entry.type)).length;
+  const seriesCount = entries.filter((entry) => filters.has(entry.type) && entry.recurrenceRule !== 'none').length;
   const allFiltersActive = filters.size === CALENDAR_TYPE_OPTIONS.length;
   const hasActiveFilters = filters.size > 0;
   const initialView = typeof window !== 'undefined' && window.innerWidth < 720 ? 'listWeek' : 'dayGridMonth';
@@ -44,14 +44,14 @@ export function CalendarBoard({ entries, onChanged }: Props) {
         .map((entry) => {
           const meta = CALENDAR_TYPE_META[entry.type];
           return {
-            id: String(entry.id),
-            title: entry.title,
+            id: `${entry.source ?? 'calendar'}-${entry.id}-${entry.startsAt}`,
+            title: entry.recurrenceRule !== 'none' ? `↻ ${entry.title}` : entry.title,
             start: entry.startsAt,
             end: entry.endsAt ?? undefined,
             allDay: entry.allDay,
             backgroundColor: meta.color,
             borderColor: meta.color,
-            extendedProps: { type: entry.type, label: meta.label }
+            extendedProps: { type: entry.type, label: meta.label, entry }
           };
         }),
     [entries, filters]
@@ -80,11 +80,15 @@ export function CalendarBoard({ entries, onChanged }: Props) {
     try {
       await deleteCalendarEntry(Number(deletingEntry.id));
       setDeletingEntry(null);
-      setSelectedEntryId(null);
+      setSelectedEntry(null);
       onChanged();
     } finally {
       setIsDeleting(false);
     }
+  }
+
+  function isSeries(entry: CalendarEntry): boolean {
+    return entry.recurrenceRule !== 'none';
   }
 
   return (
@@ -92,8 +96,8 @@ export function CalendarBoard({ entries, onChanged }: Props) {
       <div className="calendar-toolbar">
         <div className="calendar-filter-panel">
           <div className="calendar-filter-summary">
-            <strong>{visibleEntryCount}</strong>
-            <span>{visibleEntryCount === 1 ? 'Termin sichtbar' : 'Termine sichtbar'}</span>
+            <span><strong>{visibleEntryCount}</strong> sichtbar</span>
+            <span><strong>{seriesCount}</strong> Serien</span>
             <button type="button" onClick={allFiltersActive ? clearFilters : setAllFilters}>
               {allFiltersActive ? 'Alle aus' : 'Alle an'}
             </button>
@@ -120,7 +124,7 @@ export function CalendarBoard({ entries, onChanged }: Props) {
           type="button"
           className="calendar-create-button"
           onClick={() => {
-            setSelectedEntryId(null);
+            setSelectedEntry(null);
             setEditingEntry(null);
             setIsCreating(true);
           }}
@@ -128,15 +132,26 @@ export function CalendarBoard({ entries, onChanged }: Props) {
           + Termin
         </button>
       </div>
+
       {!hasActiveFilters && <p className="calendar-empty-filter">Alle Kategorien sind ausgeblendet.</p>}
-      {selectedEntry && !editingEntry && (
-        <CalendarEntryDetail
-          entry={selectedEntry}
-          onClose={() => setSelectedEntryId(null)}
-          onEdit={() => setEditingEntry(selectedEntry)}
-          onDelete={() => setDeletingEntry(selectedEntry)}
-        />
+      {hasActiveFilters && visibleEntryCount === 0 && (
+        <p className="calendar-empty-filter">Keine Termine in den aktiven Kategorien. Erstelle einen Termin oder aktiviere weitere Filter.</p>
       )}
+
+      <ActionDialog open={Boolean(selectedEntry && !editingEntry)} title="Termindetails" onClose={() => setSelectedEntry(null)}>
+        {selectedEntry && (
+          <CalendarEntryDetail
+            entry={selectedEntry}
+            onClose={() => setSelectedEntry(null)}
+            onEdit={() => setEditingEntry(selectedEntry)}
+            onDelete={() => {
+              setDeletingEntry(selectedEntry);
+              setSelectedEntry(null);
+            }}
+          />
+        )}
+      </ActionDialog>
+
       <FullCalendar
         plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
         locale={deLocale}
@@ -170,25 +185,22 @@ export function CalendarBoard({ entries, onChanged }: Props) {
         selectable
         dateClick={(info) => {
           setSelectedDate(info.dateStr);
-          setSelectedEntryId(null);
+          setSelectedEntry(null);
           setIsCreating(true);
         }}
         eventClick={(info) => {
-          const entry = entries.find((item) => String(item.id) === info.event.id);
+          const entry = info.event.extendedProps.entry as CalendarEntry | undefined;
           if (entry?.source === 'event' && entry.eventId) {
             navigate(`/events/${entry.eventId}`);
             return;
           }
-          setSelectedEntryId(info.event.id);
+          setSelectedEntry(entry ?? null);
           setIsCreating(false);
           setEditingEntry(null);
         }}
       />
-      <ActionDialog
-        open={isCreating}
-        title="Termin erstellen"
-        onClose={() => setIsCreating(false)}
-      >
+
+      <ActionDialog open={isCreating} title="Termin erstellen" onClose={() => setIsCreating(false)}>
         <NewCalendarEntryForm
           initialDate={selectedDate}
           onCreated={() => {
@@ -198,9 +210,10 @@ export function CalendarBoard({ entries, onChanged }: Props) {
           onCancel={() => setIsCreating(false)}
         />
       </ActionDialog>
+
       <ActionDialog
         open={Boolean(editingEntry)}
-        title="Termin bearbeiten"
+        title={editingEntry && isSeries(editingEntry) ? 'Serie bearbeiten' : 'Termin bearbeiten'}
         onClose={() => setEditingEntry(null)}
       >
         {editingEntry && (
@@ -208,18 +221,19 @@ export function CalendarBoard({ entries, onChanged }: Props) {
             entry={editingEntry}
             onCreated={() => {
               setEditingEntry(null);
-              setSelectedEntryId(null);
+              setSelectedEntry(null);
               onChanged();
             }}
             onCancel={() => setEditingEntry(null)}
           />
         )}
       </ActionDialog>
+
       <ConfirmDialog
         open={Boolean(deletingEntry)}
-        title="Termin löschen?"
-        description={deletingEntry ? `Soll "${deletingEntry.title}" wirklich gelöscht werden?` : ''}
-        confirmLabel="Löschen"
+        title={deletingEntry && isSeries(deletingEntry) ? 'Serie löschen?' : 'Termin löschen?'}
+        description={deletingEntry ? `Soll "${deletingEntry.title}" wirklich ${isSeries(deletingEntry) ? 'als komplette Serie' : 'gelöscht'} werden?` : ''}
+        confirmLabel={deletingEntry && isSeries(deletingEntry) ? 'Serie löschen' : 'Löschen'}
         loading={isDeleting}
         onCancel={() => setDeletingEntry(null)}
         onConfirm={confirmDelete}

@@ -1,5 +1,16 @@
 import { apiRequest } from './client';
-import type { AdminCalendarEntry, AdminEvent, AdminFeedItem, AdminHousehold, AdminNotice, AdminUser } from '../types/admin';
+import type {
+  AdminCalendarEntry,
+  AdminDigestSendResult,
+  AdminDigestTestResult,
+  AdminEvent,
+  AdminFeedItem,
+  AdminHousehold,
+  AdminNotice,
+  AdminSystemStatus,
+  AdminUser,
+  AdminWeeklyDigest
+} from '../types/admin';
 import type { HouseholdInvitePerson } from '../types/invite';
 import type { PushSendResult } from '../types/push';
 import type { UserRole } from '../types/user';
@@ -11,6 +22,7 @@ export function fetchAdminHouseholds() {
 interface NewHouseholdPerson {
   firstName: string;
   lastName: string;
+  email?: string;
 }
 
 export function createAdminHousehold(name: string, addressLine: string, people: NewHouseholdPerson[]) {
@@ -20,15 +32,19 @@ export function createAdminHousehold(name: string, addressLine: string, people: 
   });
 }
 
-export function addAdminHouseholdInvite(householdId: number, firstName: string, lastName: string) {
+export function addAdminHouseholdInvite(householdId: number, firstName: string, lastName: string, email?: string) {
   return apiRequest<HouseholdInvitePerson>(`/admin/households/${householdId}/invites`, {
     method: 'POST',
-    body: JSON.stringify({ firstName, lastName })
+    body: JSON.stringify({ firstName, lastName, email })
   });
 }
 
 export function revokeAdminInvite(id: number) {
   return apiRequest<null>(`/admin/invites/${id}`, { method: 'DELETE' });
+}
+
+export function sendAdminInviteEmail(id: number) {
+  return apiRequest<HouseholdInvitePerson>(`/admin/invites/${id}/send-email`, { method: 'POST' });
 }
 
 export function updateAdminHousehold(id: number, name: string, addressLine: string, avatarKey: string) {
@@ -48,6 +64,10 @@ export function fetchAdminUsers() {
 
 export function updateAdminUserRole(id: number, role: UserRole) {
   return apiRequest<null>(`/admin/users/${id}/role`, { method: 'PUT', body: JSON.stringify({ role }) });
+}
+
+export function deleteAdminUser(id: number) {
+  return apiRequest<null>(`/admin/users/${id}`, { method: 'DELETE' });
 }
 
 export interface AdminPushTestResult extends PushSendResult {
@@ -95,4 +115,20 @@ export function createAdminNotice(title: string, message: string) {
 
 export function deleteAdminNotice(id: number) {
   return apiRequest<null>(`/admin/notices/${id}`, { method: 'DELETE' });
+}
+
+export function fetchAdminSystemStatus() {
+  return apiRequest<AdminSystemStatus>('/admin/system-status');
+}
+
+export function fetchAdminDigestPreview() {
+  return apiRequest<AdminWeeklyDigest>('/admin/digest/preview');
+}
+
+export function sendAdminDigestTest() {
+  return apiRequest<AdminDigestTestResult>('/admin/digest/test', { method: 'POST' });
+}
+
+export function sendAdminDigestToAll() {
+  return apiRequest<AdminDigestSendResult>('/admin/digest/send-all', { method: 'POST' });
 }

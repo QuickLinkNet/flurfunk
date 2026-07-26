@@ -1,8 +1,13 @@
 import { apiRequest } from './client';
 import type { Household } from '../types/household';
+import type { NeighborHousehold } from '../types/neighbor';
 
 export function fetchVisibleHouseholds() {
   return apiRequest<Household[]>('/households');
+}
+
+export function fetchNeighborHouseholds() {
+  return apiRequest<NeighborHousehold[]>('/households/neighbors');
 }
 
 export function fetchMyHousehold() {

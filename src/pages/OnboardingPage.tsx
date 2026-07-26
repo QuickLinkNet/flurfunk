@@ -5,6 +5,7 @@ import { OnboardingPanel } from '../components/molecules/OnboardingPanel';
 import { OnboardingStepper } from '../components/molecules/OnboardingStepper';
 import type { HouseholdDetailsFormHandle } from '../components/molecules/HouseholdDetailsForm';
 import { ChildrenManager } from '../components/organisms/ChildrenManager';
+import { EmailNotificationSettings } from '../components/organisms/EmailNotificationSettings';
 import { MyHouseholdDetailsForm } from '../components/organisms/MyHouseholdDetailsForm';
 import { PetsManager } from '../components/organisms/PetsManager';
 import { PushNotificationSettings } from '../components/organisms/PushNotificationSettings';
@@ -19,7 +20,7 @@ const STEPS: Array<{ id: OnboardingStep; label: string; description: string }> =
   { id: 'household', label: 'Haushalt', description: 'Grunddaten & Adresse' },
   { id: 'family', label: 'Familie', description: 'Mitglieder hinzufügen' },
   { id: 'privacy', label: 'Privatsphäre', description: 'Einstellungen wählen' },
-  { id: 'push', label: 'Push', description: 'Benachrichtigungen' }
+  { id: 'push', label: 'Hinweise', description: 'Push & E-Mail' }
 ];
 
 function stepIndex(step: OnboardingStep): number {
@@ -60,8 +61,8 @@ export function OnboardingPage() {
       };
     }
     return {
-      title: 'Push aktivieren',
-      description: 'Benachrichtigungen helfen bei wichtigen Hinweisen, Antworten und Terminen.'
+      title: 'Hinweise erhalten',
+      description: 'Push informiert sofort, der Wochenblick fasst die wichtigsten Neuigkeiten per E-Mail zusammen.'
     };
   }, [step]);
 
@@ -105,6 +106,12 @@ export function OnboardingPage() {
     }
   }
 
+  async function continueLater() {
+    const saved = await saveProgress(step);
+    if (!saved) return;
+    navigate('/dashboard', { replace: true });
+  }
+
   async function goToStep(nextStep: OnboardingStep) {
     const saved = await saveProgress(nextStep);
     if (!saved) return;
@@ -126,8 +133,8 @@ export function OnboardingPage() {
       pageTitle={PAGE_HEADERS.onboarding.title}
       pageSubtitle={PAGE_HEADERS.onboarding.subtitle}
       headerAside={
-        <Button type="button" variant="ghost" onClick={finish} disabled={isFinishing}>
-          Überspringen
+        <Button type="button" variant="ghost" onClick={continueLater} disabled={isSaving || isFinishing}>
+          Später fortsetzen
         </Button>
       }
     >
@@ -146,7 +153,12 @@ export function OnboardingPage() {
             </div>
           )}
           {step === 'privacy' && <VisibilitySettingsForm />}
-          {step === 'push' && <PushNotificationSettings />}
+          {step === 'push' && (
+            <div className="onboarding-stack">
+              <EmailNotificationSettings />
+              <PushNotificationSettings />
+            </div>
+          )}
 
           <div className="onboarding-footer">
             <div className="onboarding-footer-secondary">

@@ -22,10 +22,7 @@ final class CalendarController
         $viewerHouseholdId = $user['household_id'] ?? null;
 
         $calendarEntries = CalendarEntry::findInRange($from, $to, $viewerRole, $viewerHouseholdId !== null ? (int) $viewerHouseholdId : null);
-        $entries = array_map(
-            fn(array $entry) => $this->toPublicEntry($entry, $viewerRole, $viewerHouseholdId !== null ? (int) $viewerHouseholdId : null),
-            $calendarEntries
-        );
+        $entries = $this->expandEntries($calendarEntries, $from, $to, $viewerRole, $viewerHouseholdId !== null ? (int) $viewerHouseholdId : null);
         $events = array_map([$this, 'toCalendarEvent'], Event::findInRange($from, $to, $viewerRole));
 
         $items = array_merge($entries, $events);
@@ -55,7 +52,9 @@ final class CalendarController
             $startsAt,
             $body['endsAt'] ?? null,
             (bool) ($body['allDay'] ?? false),
-            $visibility
+            $visibility,
+            $this->validRecurrenceRule($body['recurrenceRule'] ?? 'none'),
+            $this->normalizeNullableDate($body['recurrenceUntil'] ?? null)
         );
         Response::json(['id' => $id], 201);
     }
@@ -77,7 +76,9 @@ final class CalendarController
             $startsAt,
             $body['endsAt'] ?? null,
             (bool) ($body['allDay'] ?? false),
-            $this->validVisibility($body['visibility'] ?? 'neighbors')
+            $this->validVisibility($body['visibility'] ?? 'neighbors'),
+            $this->validRecurrenceRule($body['recurrenceRule'] ?? 'none'),
+            $this->normalizeNullableDate($body['recurrenceUntil'] ?? null)
         );
         Response::json($this->toPublicEntry(
             CalendarEntry::findById((int) $params['id']),
@@ -118,6 +119,74 @@ final class CalendarController
         return in_array($visibility, CalendarEntry::VISIBILITIES, true) ? $visibility : 'neighbors';
     }
 
+    private function validRecurrenceRule(string $rule): string
+    {
+        return in_array($rule, CalendarEntry::RECURRENCE_RULES, true) ? $rule : 'none';
+    }
+
+    private function normalizeNullableDate(mixed $value): ?string
+    {
+        $normalized = trim((string) ($value ?? ''));
+        return $normalized !== '' ? $normalized : null;
+    }
+
+    private function expandEntries(array $entries, string $from, string $to, string $viewerRole, ?int $viewerHouseholdId): array
+    {
+        $result = [];
+        foreach ($entries as $entry) {
+            $rule = $entry['recurrence_rule'] ?? 'none';
+            if ($rule === 'none') {
+                $result[] = $this->toPublicEntry($entry, $viewerRole, $viewerHouseholdId);
+                continue;
+            }
+            foreach ($this->recurringOccurrences($entry, $from, $to) as $occurrence) {
+                $result[] = $this->toPublicEntry($occurrence, $viewerRole, $viewerHouseholdId);
+            }
+        }
+        return $result;
+    }
+
+    private function recurringOccurrences(array $entry, string $from, string $to): array
+    {
+        $startsAt = new \DateTimeImmutable(str_replace(' ', 'T', $entry['starts_at']));
+        $endsAt = $entry['ends_at'] !== null ? new \DateTimeImmutable(str_replace(' ', 'T', $entry['ends_at'])) : null;
+        $fromDate = new \DateTimeImmutable($from);
+        $toDate = new \DateTimeImmutable($to);
+        $until = $entry['recurrence_until'] !== null ? new \DateTimeImmutable(str_replace(' ', 'T', $entry['recurrence_until'])) : $toDate;
+        if ($until > $toDate) {
+            $until = $toDate;
+        }
+
+        $interval = match ($entry['recurrence_rule']) {
+            'daily' => new \DateInterval('P1D'),
+            'weekly' => new \DateInterval('P1W'),
+            'monthly' => new \DateInterval('P1M'),
+            default => new \DateInterval('P100Y'),
+        };
+
+        $duration = $endsAt !== null ? $startsAt->diff($endsAt) : null;
+        $occurrenceStart = $startsAt;
+        $guard = 0;
+        while ($occurrenceStart < $fromDate && $guard < 500) {
+            $occurrenceStart = $occurrenceStart->add($interval);
+            $guard++;
+        }
+
+        $items = [];
+        while ($occurrenceStart <= $until && $guard < 800) {
+            $occurrenceEnd = $duration !== null ? $occurrenceStart->add($duration) : null;
+            if ($occurrenceStart < $toDate && ($occurrenceEnd === null || $occurrenceEnd >= $fromDate)) {
+                $copy = $entry;
+                $copy['starts_at'] = $occurrenceStart->format('Y-m-d\TH:i:s');
+                $copy['ends_at'] = $occurrenceEnd?->format('Y-m-d\TH:i:s');
+                $items[] = $copy;
+            }
+            $occurrenceStart = $occurrenceStart->add($interval);
+            $guard++;
+        }
+        return $items;
+    }
+
     private function toPublicEntry(?array $e, string $viewerRole, ?int $viewerHouseholdId): array
     {
         if ($e === null) {
@@ -132,6 +201,8 @@ final class CalendarController
             'endsAt' => $e['ends_at'],
             'allDay' => (bool) $e['all_day'],
             'visibility' => $e['visibility'],
+            'recurrenceRule' => $e['recurrence_rule'] ?? 'none',
+            'recurrenceUntil' => $e['recurrence_until'] ?? null,
             'canManage' => $canManage,
             'source' => 'calendar',
             'eventId' => null,
@@ -148,6 +219,8 @@ final class CalendarController
             'endsAt' => $e['ends_at'],
             'allDay' => false,
             'visibility' => $e['visibility'],
+            'recurrenceRule' => 'none',
+            'recurrenceUntil' => null,
             'canManage' => false,
             'source' => 'event',
             'eventId' => (int) $e['id'],

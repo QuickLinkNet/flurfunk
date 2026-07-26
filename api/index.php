@@ -37,6 +37,7 @@ use App\Controllers\DashboardController;
 use App\Controllers\VisibilityController;
 use App\Controllers\EventController;
 use App\Controllers\AdminController;
+use App\Controllers\AdminDigestController;
 use App\Controllers\AdminPushController;
 use App\Controllers\FeatureFlagController;
 use App\Controllers\PushController;
@@ -57,10 +58,16 @@ $router->post('/auth/logout', [new AuthController(), 'logout']);
 $router->post('/auth/onboarding/complete', [new AuthController(), 'completeOnboarding']);
 $router->post('/auth/onboarding/progress', [new AuthController(), 'saveOnboardingProgress']);
 $router->get('/auth/me', [new AuthController(), 'me']);
+$router->get('/auth/me/export', [new AuthController(), 'exportMe']);
+$router->put('/auth/me/profile', [new AuthController(), 'updateProfile']);
+$router->put('/auth/me/password', [new AuthController(), 'updatePassword']);
+$router->put('/auth/me/digest-preference', [new AuthController(), 'updateDigestPreference']);
+$router->delete('/auth/me', [new AuthController(), 'deleteMe']);
 
 $router->get('/dashboard', [new DashboardController(), 'index']);
 
 $router->get('/households', [new HouseholdController(), 'index']);
+$router->get('/households/neighbors', [new HouseholdController(), 'neighbors']);
 $router->get('/households/me', [new HouseholdController(), 'me']);
 $router->put('/households/me', [new HouseholdController(), 'updateMe']);
 
@@ -76,6 +83,9 @@ $router->delete('/pets/{id}', [new PetController(), 'destroy']);
 
 $router->get('/feed', [new FeedController(), 'index']);
 $router->post('/feed', [new FeedController(), 'store']);
+$router->post('/feed/{id}/reaction', [new FeedController(), 'toggleReaction']);
+$router->post('/feed/{id}/comments', [new FeedController(), 'addComment']);
+$router->put('/feed/{id}/status', [new FeedController(), 'updateStatus']);
 
 $router->get('/calendar', [new CalendarController(), 'index']);
 $router->post('/calendar', [new CalendarController(), 'store']);
@@ -106,9 +116,11 @@ $router->post('/admin/households', [new AdminController(), 'createHousehold']);
 $router->put('/admin/households/{id}', [new AdminController(), 'updateHousehold']);
 $router->post('/admin/households/{id}/invites', [new AdminController(), 'addInvite']);
 $router->delete('/admin/households/{id}', [new AdminController(), 'deleteHousehold']);
+$router->post('/admin/invites/{id}/send-email', [new AdminController(), 'sendInviteEmail']);
 $router->delete('/admin/invites/{id}', [new AdminController(), 'revokeInvite']);
 $router->get('/admin/users', [new AdminController(), 'users']);
 $router->put('/admin/users/{id}/role', [new AdminController(), 'updateUserRole']);
+$router->delete('/admin/users/{id}', [new AdminController(), 'deleteUser']);
 $router->post('/admin/users/{id}/push-test', [new AdminPushController(), 'sendUserPushTest']);
 $router->get('/admin/feed', [new AdminController(), 'feed']);
 $router->delete('/admin/feed/{id}', [new AdminController(), 'deleteFeedItem']);
@@ -119,6 +131,11 @@ $router->delete('/admin/calendar/{id}', [new AdminController(), 'deleteCalendarE
 $router->get('/admin/notices', [new AdminController(), 'notices']);
 $router->post('/admin/notices', [new AdminController(), 'createNotice']);
 $router->delete('/admin/notices/{id}', [new AdminController(), 'deleteNotice']);
+$router->get('/admin/system-status', [new AdminController(), 'systemStatus']);
+$router->get('/admin/digest/preview', [new AdminDigestController(), 'preview']);
+$router->post('/admin/digest/test', [new AdminDigestController(), 'sendTest']);
+$router->post('/admin/digest/send-all', [new AdminDigestController(), 'sendAll']);
+$router->get('/cron/weekly-digest', [new AdminDigestController(), 'cronSend']);
 
 try {
     $router->dispatch(Request::method(), Request::path());

@@ -3,35 +3,17 @@ import {
   deleteAdminCalendarEntry,
   deleteAdminEvent,
   deleteAdminFeedItem,
-  deleteAdminNotice
+  deleteAdminNotice,
+  deleteAdminUser
 } from '../api/adminApi';
-import type { AdminCalendarEntry, AdminEvent, AdminFeedItem, AdminNotice } from '../types/admin';
+import type { AdminCalendarEntry, AdminEvent, AdminFeedItem, AdminNotice, AdminUser } from '../types/admin';
 
 type PendingDelete =
-  | {
-      type: 'feed';
-      id: number;
-      title: string;
-      description: string;
-    }
-  | {
-      type: 'event';
-      id: number;
-      title: string;
-      description: string;
-    }
-  | {
-      type: 'calendar';
-      id: number;
-      title: string;
-      description: string;
-    }
-  | {
-      type: 'notice';
-      id: number;
-      title: string;
-      description: string;
-    };
+  | { type: 'feed'; id: number; title: string; description: string }
+  | { type: 'event'; id: number; title: string; description: string }
+  | { type: 'calendar'; id: number; title: string; description: string }
+  | { type: 'notice'; id: number; title: string; description: string }
+  | { type: 'user'; id: number; title: string; description: string };
 
 interface Options {
   onDeleted: () => void;
@@ -40,9 +22,15 @@ interface Options {
 export function useAdminDeleteDialog({ onDeleted }: Options) {
   const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  function openDeleteDialog(next: PendingDelete) {
+    setDeleteError(null);
+    setPendingDelete(next);
+  }
 
   function requestDeleteFeedItem(item: AdminFeedItem) {
-    setPendingDelete({
+    openDeleteDialog({
       type: 'feed',
       id: item.id,
       title: 'Feed-Eintrag löschen?',
@@ -51,7 +39,7 @@ export function useAdminDeleteDialog({ onDeleted }: Options) {
   }
 
   function requestDeleteEvent(event: AdminEvent) {
-    setPendingDelete({
+    openDeleteDialog({
       type: 'event',
       id: event.id,
       title: 'Event löschen?',
@@ -60,7 +48,7 @@ export function useAdminDeleteDialog({ onDeleted }: Options) {
   }
 
   function requestDeleteCalendarEntry(entry: AdminCalendarEntry) {
-    setPendingDelete({
+    openDeleteDialog({
       type: 'calendar',
       id: entry.id,
       title: 'Kalendereintrag löschen?',
@@ -69,7 +57,7 @@ export function useAdminDeleteDialog({ onDeleted }: Options) {
   }
 
   function requestDeleteNotice(notice: AdminNotice) {
-    setPendingDelete({
+    openDeleteDialog({
       type: 'notice',
       id: notice.id,
       title: 'Hinweis löschen?',
@@ -77,10 +65,20 @@ export function useAdminDeleteDialog({ onDeleted }: Options) {
     });
   }
 
+  function requestDeleteUser(user: AdminUser) {
+    openDeleteDialog({
+      type: 'user',
+      id: user.id,
+      title: 'Nutzer löschen?',
+      description: `Der Nutzer "${user.displayName}" (${user.email}) wird dauerhaft entfernt. Kommentare, Reaktionen und Push-Abos werden serverseitig bereinigt.`
+    });
+  }
+
   async function confirmPendingDelete() {
     if (!pendingDelete) return;
 
     setDeleteLoading(true);
+    setDeleteError(null);
     try {
       if (pendingDelete.type === 'feed') {
         await deleteAdminFeedItem(pendingDelete.id);
@@ -88,29 +86,42 @@ export function useAdminDeleteDialog({ onDeleted }: Options) {
         await deleteAdminEvent(pendingDelete.id);
       } else if (pendingDelete.type === 'calendar') {
         await deleteAdminCalendarEntry(pendingDelete.id);
-      } else {
+      } else if (pendingDelete.type === 'notice') {
         await deleteAdminNotice(pendingDelete.id);
+      } else {
+        await deleteAdminUser(pendingDelete.id);
       }
       setPendingDelete(null);
       onDeleted();
+    } catch (error) {
+      setDeleteError(error instanceof Error ? error.message : 'Löschen fehlgeschlagen.');
     } finally {
       setDeleteLoading(false);
     }
   }
 
+  const description = [
+    pendingDelete?.description ?? '',
+    deleteError ? `Fehler: ${deleteError}` : ''
+  ].filter(Boolean).join('\n\n');
+
   return {
     deleteDialogProps: {
       open: pendingDelete !== null,
       title: pendingDelete?.title ?? '',
-      description: pendingDelete?.description ?? '',
+      description,
       confirmLabel: 'Löschen',
       loading: deleteLoading,
-      onCancel: () => setPendingDelete(null),
+      onCancel: () => {
+        setDeleteError(null);
+        setPendingDelete(null);
+      },
       onConfirm: confirmPendingDelete
     },
     requestDeleteCalendarEntry,
     requestDeleteEvent,
     requestDeleteFeedItem,
-    requestDeleteNotice
+    requestDeleteNotice,
+    requestDeleteUser
   };
 }

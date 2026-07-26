@@ -7,16 +7,18 @@ const ACTIONS: Array<{ id: QuickActionId; label: string; description: string; ic
   { id: 'status', label: 'Status ändern', description: 'Zuhause, unterwegs oder im Urlaub', icon: '🏠', to: '/haushalt/mein' },
   { id: 'feed', label: 'Kurzmeldung', description: 'Nachricht an die Nachbarschaft', icon: '💬', to: '/strasse' },
   { id: 'event', label: 'Event planen', description: 'Gemeinsame Zeit organisieren', icon: '📅', to: '/events' },
-  { id: 'help', label: 'Hilfe suchen', description: 'Unterstützung anfragen', icon: '🙋', to: '/strasse' }
+  { id: 'help', label: 'Hilfe suchen', description: 'Unterstützung anfragen', icon: '🙋', to: '/hilfe' }
 ];
 
 interface Props {
   onAction?: (action: QuickActionId) => void;
   activeAction?: QuickActionId | null;
+  hiddenActions?: QuickActionId[];
 }
 
-export function QuickActionGrid({ onAction, activeAction }: Props) {
+export function QuickActionGrid({ onAction, activeAction, hiddenActions = [] }: Props) {
   const navigate = useNavigate();
+  const actions = ACTIONS.filter((action) => !hiddenActions.includes(action.id));
 
   function handleAction(action: (typeof ACTIONS)[number]) {
     if (onAction) {
@@ -28,7 +30,7 @@ export function QuickActionGrid({ onAction, activeAction }: Props) {
 
   return (
     <div className="dashboard-action-grid">
-      {ACTIONS.map((action) => (
+      {actions.map((action) => (
         <button
           key={action.id}
           type="button"

@@ -73,7 +73,31 @@ final class Household
 
     public static function delete(int $id): void
     {
-        $stmt = Database::pdo()->prepare('DELETE FROM households WHERE id = ?');
-        $stmt->execute([$id]);
+        $pdo = Database::pdo();
+
+        $pdo->beginTransaction();
+        try {
+            $pdo->prepare('DELETE FROM feed_reactions WHERE user_id IN (SELECT id FROM users WHERE household_id = ?)')->execute([$id]);
+            $pdo->prepare('UPDATE users SET household_id = NULL WHERE household_id = ?')->execute([$id]);
+            $pdo->prepare('DELETE FROM household_invites WHERE household_id = ?')->execute([$id]);
+            $pdo->prepare('DELETE FROM children WHERE household_id = ?')->execute([$id]);
+            $pdo->prepare('DELETE FROM pets WHERE household_id = ?')->execute([$id]);
+            $pdo->prepare('DELETE FROM household_visibility_settings WHERE household_id = ?')->execute([$id]);
+            $pdo->prepare('DELETE FROM feed_comments WHERE feed_item_id IN (SELECT id FROM feed_items WHERE household_id = ?)')->execute([$id]);
+            $pdo->prepare('DELETE FROM feed_reactions WHERE feed_item_id IN (SELECT id FROM feed_items WHERE household_id = ?)')->execute([$id]);
+            $pdo->prepare('DELETE FROM feed_comments WHERE household_id = ?')->execute([$id]);
+            $pdo->prepare('DELETE FROM feed_items WHERE household_id = ?')->execute([$id]);
+            $pdo->prepare('DELETE FROM event_responses WHERE household_id = ?')->execute([$id]);
+            $pdo->prepare('DELETE FROM event_responses WHERE event_id IN (SELECT id FROM events WHERE creator_household_id = ?)')->execute([$id]);
+            $pdo->prepare('DELETE FROM events WHERE creator_household_id = ?')->execute([$id]);
+            $pdo->prepare('DELETE FROM calendar_entries WHERE household_id = ?')->execute([$id]);
+            $pdo->prepare('DELETE FROM households WHERE id = ?')->execute([$id]);
+            $pdo->commit();
+        } catch (\Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        }
     }
 }

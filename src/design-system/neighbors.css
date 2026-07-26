@@ -1,0 +1,277 @@
+.neighbors-panel {
+  display: grid;
+  gap: var(--md-space-3);
+}
+
+.neighbors-toolbar {
+  display: grid;
+  gap: var(--md-space-2);
+}
+
+.neighbors-filterbar {
+  display: flex;
+  gap: var(--md-space-2);
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.neighbors-filterbar button {
+  min-height: 40px;
+  padding: 0 var(--md-space-3);
+  border: 1px solid var(--md-color-border);
+  border-radius: 999px;
+  background: var(--md-color-surface);
+  color: var(--md-color-on-surface);
+  font-weight: var(--md-font-weight-medium);
+  white-space: nowrap;
+}
+
+.neighbors-filterbar button[data-active='true'] {
+  border-color: var(--md-color-primary);
+  background: var(--md-color-primary);
+  color: #fff;
+}
+
+.neighbors-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--md-space-2);
+  padding: 0 var(--md-space-1);
+  color: var(--md-color-on-surface-variant);
+}
+
+.neighbors-summary span {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  min-height: 30px;
+  padding: 0 var(--md-space-2);
+  border: 1px solid var(--md-color-border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--md-color-surface) 88%, transparent);
+}
+
+.neighbors-summary strong {
+  color: var(--md-color-brand-green);
+  font-size: var(--md-font-size-md);
+}
+
+.neighbors-grid {
+  display: grid;
+  gap: var(--md-space-3);
+}
+
+.neighbor-card {
+  display: grid;
+  gap: var(--md-space-3);
+  padding: var(--md-space-3);
+  border: 1px solid var(--md-color-border);
+  border-radius: var(--md-radius-card);
+  background: color-mix(in srgb, var(--md-color-surface) 96%, transparent);
+  box-shadow: var(--md-shadow-card);
+}
+
+.neighbor-card-main,
+.neighbor-card-status,
+.neighbor-card-action {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--md-space-2);
+}
+
+.neighbor-card-avatar {
+  position: relative;
+  width: 64px;
+  height: 64px;
+}
+
+.neighbor-card-status-dot {
+  position: absolute;
+  right: 3px;
+  bottom: 5px;
+  width: 13px;
+  height: 13px;
+  border: 3px solid var(--md-color-surface);
+  border-radius: 50%;
+  background: var(--md-color-secondary);
+}
+
+.neighbor-card[data-status='vacation'] .neighbor-card-status-dot {
+  background: var(--md-color-primary);
+}
+
+.neighbor-card[data-status='away'] .neighbor-card-status-dot {
+  background: var(--md-color-info);
+}
+
+.neighbor-card[data-status='help'] .neighbor-card-status-dot {
+  background: var(--md-color-error);
+}
+
+.neighbor-card[data-status='private'] .neighbor-card-status-dot {
+  background: var(--md-color-on-surface-variant);
+}
+
+.neighbor-card-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--md-space-2);
+}
+
+.neighbor-card h2,
+.neighbor-card p {
+  margin: 0;
+}
+
+.neighbor-card h2 {
+  font-size: var(--md-font-size-lg);
+}
+
+.neighbor-card-title-row span,
+.neighbor-card-status strong {
+  color: var(--md-color-brand-green);
+}
+
+.neighbor-card-title-row span {
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--md-color-secondary-container);
+  font-size: var(--md-font-size-xs);
+  font-weight: var(--md-font-weight-bold);
+}
+
+.neighbor-card p,
+.neighbor-card small,
+.neighbor-card-action {
+  color: var(--md-color-on-surface-variant);
+}
+
+.neighbor-card-status {
+  min-height: 72px;
+  padding: var(--md-space-2);
+  border: 1px solid var(--md-color-border);
+  border-radius: 14px;
+  background: var(--md-color-surface-variant);
+}
+
+.neighbor-card-status .feature-icon,
+.neighbor-card-status > span:first-child {
+  align-self: start;
+}
+
+.neighbor-card-privacy {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--md-space-1);
+}
+
+.neighbor-card-privacy span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 var(--md-space-2);
+  border-radius: 999px;
+  background: var(--md-color-surface-variant);
+  color: var(--md-color-on-surface-variant);
+  font-size: var(--md-font-size-xs);
+  font-weight: var(--md-font-weight-medium);
+}
+
+.neighbor-card-sections {
+  display: grid;
+  gap: var(--md-space-2);
+}
+
+.neighbor-card-sections section {
+  display: grid;
+  gap: var(--md-space-1);
+  padding: var(--md-space-2);
+  border-top: 1px solid var(--md-color-border);
+}
+
+.neighbor-card-sections h3,
+.neighbor-card-sections p,
+.neighbor-card-sections ul {
+  margin: 0;
+}
+
+.neighbor-card-sections h3 {
+  color: var(--md-color-brand-green);
+  font-size: var(--md-font-size-sm);
+}
+
+.neighbor-card-sections p,
+.neighbor-card-sections span {
+  color: var(--md-color-on-surface-variant);
+}
+
+.neighbor-card-sections ul {
+  display: grid;
+  gap: var(--md-space-1);
+  padding: 0;
+  list-style: none;
+}
+
+.neighbor-card-sections li {
+  display: grid;
+  gap: 2px;
+}
+
+.neighbor-card-sections a {
+  color: var(--md-color-on-surface);
+  font-weight: var(--md-font-weight-bold);
+  text-decoration: none;
+}
+
+.neighbor-card-sections a:hover {
+  color: var(--md-color-primary);
+}
+
+.neighbor-card-emoji {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--md-color-primary-container);
+  font-size: 24px;
+}
+
+.neighbor-card-action {
+  min-height: 48px;
+  text-decoration: none;
+  font-weight: var(--md-font-weight-medium);
+}
+
+.neighbors-empty {
+  margin: 0;
+  padding: var(--md-space-4);
+  border: 1px solid var(--md-color-border);
+  border-radius: var(--md-radius-card);
+  background: var(--md-color-surface);
+  color: var(--md-color-on-surface-variant);
+}
+
+@media (min-width: 720px) {
+  .neighbors-toolbar {
+    grid-template-columns: minmax(280px, 520px) minmax(0, 1fr);
+    align-items: center;
+  }
+
+  .neighbors-filterbar {
+    justify-content: flex-end;
+  }
+
+  .neighbors-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1120px) {
+  .neighbors-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

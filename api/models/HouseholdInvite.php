@@ -12,7 +12,7 @@ final class HouseholdInvite
     private const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // ohne 0/O/1/I/l
     private const CODE_LENGTH = 8;
 
-    public static function create(int $householdId, string $firstName, string $lastName): array
+    public static function create(int $householdId, string $firstName, string $lastName, ?string $email = null): array
     {
         $pdo = Database::pdo();
         // Kollision bei 33^8 möglichen Codes praktisch ausgeschlossen, Retry
@@ -20,18 +20,21 @@ final class HouseholdInvite
         for ($attempt = 0; $attempt < 5; $attempt++) {
             $code = self::generateCode();
             $stmt = $pdo->prepare(
-                'INSERT OR IGNORE INTO household_invites (household_id, code, first_name, last_name, created_at)
-                 VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)'
+                'INSERT OR IGNORE INTO household_invites (household_id, code, first_name, last_name, email, created_at)
+                 VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)'
             );
-            $stmt->execute([$householdId, $code, $firstName, $lastName]);
+            $stmt->execute([$householdId, $code, $firstName, $lastName, $email]);
             if ($stmt->rowCount() > 0) {
-                return self::findById((int) $pdo->lastInsertId());
+                $invite = self::findById((int) $pdo->lastInsertId());
+                if ($invite !== null) {
+                    return $invite;
+                }
             }
         }
         throw new \RuntimeException('Konnte keinen eindeutigen Einladungscode generieren.');
     }
 
-    public static function findById(int $id): array
+    public static function findById(int $id): ?array
     {
         $stmt = Database::pdo()->prepare(
             'SELECT hi.*, u.id AS used_user_id, u.email AS used_user_email, u.display_name AS used_user_display_name,
@@ -42,12 +45,12 @@ final class HouseholdInvite
              WHERE hi.id = ?'
         );
         $stmt->execute([$id]);
-        return $stmt->fetch();
+        return $stmt->fetch() ?: null;
     }
 
     public static function findByCode(string $code): ?array
     {
-        $code = strtoupper(trim($code));
+        $code = strtoupper(preg_replace('/\s+/', '', $code));
         $stmt = Database::pdo()->prepare('SELECT * FROM household_invites WHERE code = ? LIMIT 1');
         $stmt->execute([$code]);
         return $stmt->fetch() ?: null;
@@ -68,12 +71,15 @@ final class HouseholdInvite
         return $stmt->fetchAll();
     }
 
-    public static function markUsed(int $inviteId, int $userId): void
+    public static function markUsed(int $inviteId, int $userId): bool
     {
         $stmt = Database::pdo()->prepare(
-            'UPDATE household_invites SET used_at = CURRENT_TIMESTAMP, used_by_user_id = ? WHERE id = ?'
+            'UPDATE household_invites
+             SET used_at = CURRENT_TIMESTAMP, used_by_user_id = ?
+             WHERE id = ? AND used_at IS NULL AND revoked_at IS NULL'
         );
         $stmt->execute([$userId, $inviteId]);
+        return $stmt->rowCount() === 1;
     }
 
     public static function revoke(int $inviteId): void
@@ -82,6 +88,19 @@ final class HouseholdInvite
             'UPDATE household_invites SET revoked_at = CURRENT_TIMESTAMP WHERE id = ? AND used_at IS NULL'
         );
         $stmt->execute([$inviteId]);
+    }
+
+    public static function markEmailSent(int $inviteId): array
+    {
+        $stmt = Database::pdo()->prepare(
+            'UPDATE household_invites
+             SET email_sent_at = COALESCE(email_sent_at, CURRENT_TIMESTAMP),
+                 email_last_sent_at = CURRENT_TIMESTAMP,
+                 email_send_count = COALESCE(email_send_count, 0) + 1
+             WHERE id = ?'
+        );
+        $stmt->execute([$inviteId]);
+        return self::findById($inviteId) ?? throw new \RuntimeException('Einladung nicht gefunden.');
     }
 
     private static function generateCode(): string

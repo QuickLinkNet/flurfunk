@@ -14,7 +14,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ThemeProvider>
       <FeatureFlagsProvider>
-        <BrowserRouter basename="/apps/neighborhood">
+        <BrowserRouter basename="/apps/neighborhood" future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
           <AuthProvider>
             <App />
           </AuthProvider>

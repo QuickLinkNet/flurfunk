@@ -13,8 +13,7 @@ const TINT_BACKGROUND: Record<IconTint, string> = {
   error: 'var(--md-color-error-container)'
 };
 
-// Farbiges Icon-Badge (Kreis-Hintergrund + Emoji), ersetzt reines StatusEmoji
-// überall dort, wo Karten pro Kategorie eine Farbe zeigen sollen.
+// Farbiges Icon-Badge für Feed-Kategorien.
 export function IconBadge({ emoji, tint = 'primary', size = 40 }: Props) {
   return (
     <span

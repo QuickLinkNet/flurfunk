@@ -1,18 +1,20 @@
 import { useMemo, useState } from 'react';
 import { Button } from '../atoms/Button';
 import { StatusPill } from '../atoms/StatusPill';
+import { sendAdminInviteEmail } from '../../api/adminApi';
 import type { HouseholdInvitePerson } from '../../types/invite';
 
 interface Props {
   invite: HouseholdInvitePerson;
+  onEmailSent?: (invite: HouseholdInvitePerson) => void;
   onRevoke?: (id: number) => void;
 }
 
-function inviteUrl(code: string): string {
+export function inviteUrl(code: string): string {
   return `${window.location.origin}/apps/neighborhood/registrieren/${code}`;
 }
 
-function inviteMessage(invite: HouseholdInvitePerson, link: string): string {
+export function inviteMessage(invite: HouseholdInvitePerson, link: string): string {
   return [
     `Hallo ${invite.firstName},`,
     '',
@@ -24,76 +26,137 @@ function inviteMessage(invite: HouseholdInvitePerson, link: string): string {
   ].join('\n');
 }
 
-export function InviteCodeRow({ invite, onRevoke }: Props) {
-  const [copied, setCopied] = useState<string | null>(null);
-  const [copyError, setCopyError] = useState<string | null>(null);
+function mailtoUrl(invite: HouseholdInvitePerson, message: string): string {
+  const subject = encodeURIComponent('Einladung zu Flurfunk');
+  const body = encodeURIComponent(message);
+  return `mailto:${invite.email}?subject=${subject}&body=${body}`;
+}
+
+function formatInviteDate(value?: string | null): string | null {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+
+  return new Intl.DateTimeFormat('de-DE', {
+    day: '2-digit',
+    month: '2-digit',
+    year: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  }).format(date);
+}
+
+function inviteState(invite: HouseholdInvitePerson) {
+  if (invite.usedAt) return { label: 'eingelöst', tone: 'success' as const };
+  if (invite.revokedAt) return { label: 'widerrufen', tone: 'neutral' as const };
+  if (invite.emailLastSentAt) return { label: 'versendet', tone: 'success' as const };
+  return { label: 'offen', tone: 'neutral' as const };
+}
+
+export function InviteCodeRow({ invite, onEmailSent, onRevoke }: Props) {
+  const [notice, setNotice] = useState<string | null>(null);
+  const [isError, setIsError] = useState(false);
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
   const link = useMemo(() => inviteUrl(invite.code), [invite.code]);
   const message = useMemo(() => inviteMessage(invite, link), [invite, link]);
+  const mailto = useMemo(() => invite.email ? mailtoUrl(invite, message) : null, [invite, message]);
   const isUsed = Boolean(invite.usedAt);
   const isRevoked = Boolean(invite.revokedAt);
   const isInactive = isUsed || isRevoked;
+  const state = inviteState(invite);
+  const createdAtLabel = formatInviteDate(invite.createdAt);
+  const lastSentAtLabel = formatInviteDate(invite.emailLastSentAt);
 
   async function copy(value: string, label: string) {
-    setCopyError(null);
+    setIsError(false);
     try {
       await navigator.clipboard.writeText(value);
-      setCopied(label);
-      window.setTimeout(() => setCopied(null), 1800);
+      setNotice(`${label} kopiert.`);
+      window.setTimeout(() => setNotice(null), 1800);
     } catch {
-      setCopied(null);
-      setCopyError('Kopieren fehlgeschlagen.');
+      setIsError(true);
+      setNotice('Kopieren fehlgeschlagen.');
+    }
+  }
+
+  async function sendEmail() {
+    setIsError(false);
+    setIsSendingEmail(true);
+    try {
+      const updatedInvite = await sendAdminInviteEmail(invite.id);
+      setNotice('E-Mail versendet.');
+      window.setTimeout(() => setNotice(null), 2200);
+      onEmailSent?.(updatedInvite);
+    } catch (err) {
+      setIsError(true);
+      setNotice(err instanceof Error ? err.message : 'E-Mail konnte nicht versendet werden.');
+    } finally {
+      setIsSendingEmail(false);
     }
   }
 
   return (
-    <div
-      className="md-invite-row"
-      style={{
-        padding: 'var(--md-space-3)',
-        borderRadius: 'var(--md-radius-control)',
-        border: '1px solid var(--md-color-border)',
-        background: isInactive ? 'var(--md-color-surface-variant)' : 'var(--md-color-surface)',
-        opacity: isInactive ? 0.78 : 1
-      }}
-    >
-      <div style={{ minWidth: 0 }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--md-space-2)', alignItems: 'center' }}>
-          <strong style={{ fontSize: 'var(--md-font-size-base)' }}>
-            {invite.firstName} {invite.lastName}
-          </strong>
-          <StatusPill label={isUsed ? 'eingelöst' : isRevoked ? 'widerrufen' : 'offen'} tone={isUsed ? 'success' : 'neutral'} />
+    <div className="admin-invite-row" data-inactive={isInactive}>
+      <div className="admin-invite-row-main">
+        <div className="admin-invite-row-title">
+          <strong>{invite.firstName} {invite.lastName}</strong>
+          <StatusPill label={state.label} tone={state.tone} />
+          {invite.email ? <StatusPill label="E-Mail hinterlegt" tone="neutral" /> : <StatusPill label="ohne E-Mail" tone="neutral" />}
         </div>
-        <code
-          style={{
-            display: 'block',
-            marginTop: 'var(--md-space-2)',
-            fontSize: 'var(--md-font-size-lg)',
-            fontWeight: 'var(--md-font-weight-bold)',
-            letterSpacing: 0,
-            wordBreak: 'break-word'
-          }}
-        >
-          {invite.code}
-        </code>
-        <p style={{ margin: 'var(--md-space-1) 0 0', fontSize: 'var(--md-font-size-xs)', color: 'var(--md-color-on-surface-variant)', wordBreak: 'break-word' }}>
-          {isUsed ? 'Dieser Code wurde bereits verwendet.' : isRevoked ? 'Dieser Code wurde widerrufen.' : link}
-        </p>
-        {(copied || copyError) && (
-          <p style={{ margin: 'var(--md-space-1) 0 0', fontSize: 'var(--md-font-size-sm)', color: copyError ? 'var(--md-color-error)' : 'var(--md-color-on-surface-variant)' }}>
-            {copyError ?? `${copied} kopiert.`}
-          </p>
-        )}
+
+        <code>{invite.code}</code>
+        <p>{isUsed ? 'Dieser Code wurde bereits verwendet.' : isRevoked ? 'Dieser Code wurde widerrufen.' : link}</p>
+
+        <dl className="admin-invite-row-meta">
+          {invite.email && (
+            <div>
+              <dt>E-Mail</dt>
+              <dd>{invite.email}</dd>
+            </div>
+          )}
+          {createdAtLabel && (
+            <div>
+              <dt>Erstellt</dt>
+              <dd>{createdAtLabel}</dd>
+            </div>
+          )}
+          {lastSentAtLabel && (
+            <div>
+              <dt>Zuletzt gesendet</dt>
+              <dd>{lastSentAtLabel}{invite.emailSendCount > 1 ? ` (${invite.emailSendCount}x)` : ''}</dd>
+            </div>
+          )}
+          {invite.usedByUser && (
+            <div>
+              <dt>Genutzt von</dt>
+              <dd>{invite.usedByUser.displayName} · {invite.usedByUser.email}</dd>
+            </div>
+          )}
+        </dl>
+
+        {notice && <p className="admin-invite-row-message" data-error={isError}>{notice}</p>}
       </div>
-      <div className="md-card-actions">
+
+      <div className="admin-invite-row-actions">
         <Button type="button" variant="ghost" onClick={() => copy(invite.code, 'Code')} disabled={isInactive}>
-          Code
+          Code kopieren
         </Button>
         <Button type="button" variant="ghost" onClick={() => copy(link, 'Link')} disabled={isInactive}>
-          Link
+          Link kopieren
         </Button>
-        <Button type="button" variant="ghost" onClick={() => copy(message, 'Einladung')} disabled={isInactive}>
-          Einladung
+        <Button type="button" variant="ghost" onClick={() => copy(message, 'Einladungstext')} disabled={isInactive}>
+          Text kopieren
         </Button>
+        {invite.email && (
+          <Button type="button" variant="ghost" onClick={sendEmail} disabled={isInactive || isSendingEmail}>
+            {isSendingEmail ? 'Sendet...' : invite.emailLastSentAt ? 'Erneut senden' : 'E-Mail senden'}
+          </Button>
+        )}
+        {mailto && (
+          <Button type="button" variant="ghost" onClick={() => { window.location.href = mailto; }} disabled={isInactive || isSendingEmail}>
+            Mailprogramm
+          </Button>
+        )}
         {onRevoke && (
           <Button type="button" variant="ghost" onClick={() => onRevoke(invite.id)} disabled={isInactive}>
             Widerrufen

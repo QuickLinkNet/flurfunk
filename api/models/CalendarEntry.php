@@ -8,6 +8,7 @@ final class CalendarEntry
 {
     public const TYPES = ['vacation', 'birthday', 'event', 'visit', 'street_action', 'holiday', 'trash', 'appointment'];
     public const VISIBILITIES = ['public', 'neighbors', 'private'];
+    public const RECURRENCE_RULES = ['none', 'daily', 'weekly', 'monthly'];
 
     public static function findInRange(string $from, string $to, ?string $viewerRole, ?int $viewerHouseholdId): array
     {
@@ -23,10 +24,15 @@ final class CalendarEntry
         }
         $params[] = $to;
         $params[] = $from;
+        $params[] = $to;
+        $params[] = $from;
         $stmt = Database::pdo()->prepare(
             "SELECT * FROM calendar_entries
              WHERE (visibility IN ($placeholders)$ownerClause)
-               AND starts_at < ? AND (ends_at IS NULL OR ends_at >= ?)
+               AND (
+                 (starts_at < ? AND (ends_at IS NULL OR ends_at >= ?))
+                 OR (recurrence_rule != 'none' AND starts_at <= ? AND (recurrence_until IS NULL OR recurrence_until >= ?))
+               )
              ORDER BY starts_at"
         );
         $stmt->execute($params);
@@ -40,13 +46,15 @@ final class CalendarEntry
         string $startsAt,
         ?string $endsAt,
         bool $allDay,
-        string $visibility
+        string $visibility,
+        string $recurrenceRule = 'none',
+        ?string $recurrenceUntil = null
     ): int {
         $stmt = Database::pdo()->prepare(
-            'INSERT INTO calendar_entries (type, household_id, title, starts_at, ends_at, all_day, visibility)
-             VALUES (?, ?, ?, ?, ?, ?, ?)'
+            'INSERT INTO calendar_entries (type, household_id, title, starts_at, ends_at, all_day, visibility, recurrence_rule, recurrence_until)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
         );
-        $stmt->execute([$type, $householdId, $title, $startsAt, $endsAt, $allDay ? 1 : 0, $visibility]);
+        $stmt->execute([$type, $householdId, $title, $startsAt, $endsAt, $allDay ? 1 : 0, $visibility, $recurrenceRule, $recurrenceUntil]);
         return (int) Database::pdo()->lastInsertId();
     }
 
@@ -64,14 +72,16 @@ final class CalendarEntry
         string $startsAt,
         ?string $endsAt,
         bool $allDay,
-        string $visibility
+        string $visibility,
+        string $recurrenceRule = 'none',
+        ?string $recurrenceUntil = null
     ): void {
         $stmt = Database::pdo()->prepare(
             'UPDATE calendar_entries
-             SET type = ?, title = ?, starts_at = ?, ends_at = ?, all_day = ?, visibility = ?
+             SET type = ?, title = ?, starts_at = ?, ends_at = ?, all_day = ?, visibility = ?, recurrence_rule = ?, recurrence_until = ?
              WHERE id = ?'
         );
-        $stmt->execute([$type, $title, $startsAt, $endsAt, $allDay ? 1 : 0, $visibility, $id]);
+        $stmt->execute([$type, $title, $startsAt, $endsAt, $allDay ? 1 : 0, $visibility, $recurrenceRule, $recurrenceUntil, $id]);
     }
 
     // Admin-Ansicht: alle Kalendereinträge unabhängig von Sichtbarkeit/Zeitraum.

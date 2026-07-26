@@ -8,6 +8,19 @@ export interface FeedItem {
   type: FeedItemType;
   message: string | null;
   visibility: 'public' | 'neighbors' | 'private';
+  status: 'open' | 'done';
+  canManage: boolean;
   createdAt: string;
   expiresAt: string | null;
+  reactionCount: number;
+  reactedByMe: boolean;
+  comments: FeedComment[];
+}
+
+export interface FeedComment {
+  id: number;
+  householdName: string | null;
+  authorName: string;
+  message: string;
+  createdAt: string;
 }

@@ -20,7 +20,12 @@ export interface HouseholdInvitePerson {
   code: string;
   firstName: string;
   lastName: string;
+  email: string | null;
+  emailSentAt: string | null;
+  emailLastSentAt: string | null;
+  emailSendCount: number;
   usedAt: string | null;
   revokedAt: string | null;
+  createdAt: string;
   usedByUser: InviteUsedByUser | null;
 }

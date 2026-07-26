@@ -3,7 +3,9 @@ import { Button } from '../components/atoms/Button';
 import { DashboardTemplate } from '../components/templates/DashboardTemplate';
 import { Select } from '../components/atoms/Select';
 import { Heading } from '../components/atoms/Heading';
+import { EmailNotificationSettings } from '../components/organisms/EmailNotificationSettings';
 import { PushNotificationSettings } from '../components/organisms/PushNotificationSettings';
+import { ProfileSettings } from '../components/organisms/ProfileSettings';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../hooks/useTheme';
 import { PAGE_HEADERS } from '../content/pageHeaders';
@@ -16,7 +18,7 @@ const THEME_LABELS: Record<Theme, string> = {
 };
 
 export function SettingsPage() {
-  const { user, logout } = useAuth();
+  const { logout } = useAuth();
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
 
@@ -39,13 +41,12 @@ export function SettingsPage() {
       </section>
       <section>
         <Heading level={2}>Benachrichtigungen</Heading>
+        <EmailNotificationSettings />
         <PushNotificationSettings />
       </section>
       <section>
         <Heading level={2}>Account</Heading>
-        <p style={{ fontSize: 'var(--md-font-size-base)', color: 'var(--md-color-on-surface-variant)' }}>
-          {user?.displayName} · {user?.email}
-        </p>
+        <ProfileSettings />
         <Button type="button" variant="ghost" onClick={handleLogout}>
           Abmelden
         </Button>

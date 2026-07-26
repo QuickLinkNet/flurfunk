@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Core\Auth;
 use App\Core\Database;
 use App\Core\Response;
+use App\Models\CalendarEntry;
 use App\Models\DashboardNotice;
 use App\Models\User;
 use PDO;
@@ -32,8 +33,8 @@ final class DashboardController
             'todayEvents' => $this->todayEvents(),
             'quickUpdates' => $this->quickUpdates($user['role'] ?? 'guest'),
             'childrenToday' => $this->childrenToday((int) ($user['household_id'] ?? 0)),
-            'upcomingDates' => $this->upcomingDates(),
-            'wastePickups' => $this->wastePickups(),
+            'upcomingDates' => $this->upcomingDates($user['role'] ?? 'guest', $user['household_id'] !== null ? (int) $user['household_id'] : null),
+            'wastePickups' => $this->wastePickups($user['role'] ?? 'guest', $user['household_id'] !== null ? (int) $user['household_id'] : null),
             'vacations' => $this->vacations(),
             'notice' => $this->notice(),
         ]);
@@ -119,28 +120,20 @@ final class DashboardController
         ], $stmt->fetchAll());
     }
 
-    private function upcomingDates(): array
+    private function upcomingDates(string $role, ?int $householdId): array
     {
-        $stmt = $this->pdo->prepare(
-            'SELECT * FROM calendar_entries
-             WHERE type != "trash" AND starts_at >= CURRENT_TIMESTAMP
-             ORDER BY starts_at ASC
-             LIMIT 4'
-        );
-        $stmt->execute();
-        return array_map([$this, 'calendarRow'], $stmt->fetchAll());
+        return array_slice(array_values(array_filter(
+            $this->expandedCalendarRows($role, $householdId),
+            fn(array $entry) => $entry['type'] !== 'trash'
+        )), 0, 4);
     }
 
-    private function wastePickups(): array
+    private function wastePickups(string $role, ?int $householdId): array
     {
-        $stmt = $this->pdo->prepare(
-            'SELECT * FROM calendar_entries
-             WHERE type = "trash" AND starts_at >= CURRENT_TIMESTAMP
-             ORDER BY starts_at ASC
-             LIMIT 4'
-        );
-        $stmt->execute();
-        return array_map([$this, 'calendarRow'], $stmt->fetchAll());
+        return array_slice(array_values(array_filter(
+            $this->expandedCalendarRows($role, $householdId),
+            fn(array $entry) => $entry['type'] === 'trash'
+        )), 0, 4);
     }
 
     private function vacations(): array
@@ -171,8 +164,8 @@ final class DashboardController
         }
 
         return [
-            'title' => 'Kanalreinigung am 24.05.',
-            'message' => 'Bitte Parkplätze freihalten.',
+            'title' => 'Kein aktueller Hinweis',
+            'message' => 'Sobald es etwas Wichtiges gibt, erscheint es hier.',
         ];
     }
 
@@ -197,7 +190,68 @@ final class DashboardController
             'startsAt' => $e['starts_at'],
             'endsAt' => $e['ends_at'],
             'allDay' => (bool) $e['all_day'],
+            'visibility' => $e['visibility'] ?? 'neighbors',
+            'recurrenceRule' => $e['recurrence_rule'] ?? 'none',
+            'recurrenceUntil' => $e['recurrence_until'] ?? null,
+            'canManage' => false,
+            'source' => 'calendar',
+            'eventId' => null,
         ];
+    }
+
+    private function expandedCalendarRows(string $role, ?int $householdId): array
+    {
+        $from = gmdate('Y-m-d\TH:i:s\Z');
+        $to = gmdate('Y-m-d\TH:i:s\Z', strtotime('+90 days'));
+        $rows = [];
+        foreach (CalendarEntry::findInRange($from, $to, $role, $householdId) as $entry) {
+            if (($entry['recurrence_rule'] ?? 'none') === 'none') {
+                $rows[] = $this->calendarRow($entry);
+                continue;
+            }
+            foreach ($this->recurringCalendarRows($entry, $from, $to) as $occurrence) {
+                $rows[] = $this->calendarRow($occurrence);
+            }
+        }
+        usort($rows, fn(array $a, array $b) => strcmp($a['startsAt'], $b['startsAt']));
+        return $rows;
+    }
+
+    private function recurringCalendarRows(array $entry, string $from, string $to): array
+    {
+        $startsAt = new \DateTimeImmutable(str_replace(' ', 'T', $entry['starts_at']));
+        $endsAt = $entry['ends_at'] !== null ? new \DateTimeImmutable(str_replace(' ', 'T', $entry['ends_at'])) : null;
+        $fromDate = new \DateTimeImmutable($from);
+        $toDate = new \DateTimeImmutable($to);
+        $until = $entry['recurrence_until'] !== null ? new \DateTimeImmutable(str_replace(' ', 'T', $entry['recurrence_until'])) : $toDate;
+        if ($until > $toDate) {
+            $until = $toDate;
+        }
+        $interval = match ($entry['recurrence_rule']) {
+            'daily' => new \DateInterval('P1D'),
+            'weekly' => new \DateInterval('P1W'),
+            'monthly' => new \DateInterval('P1M'),
+            default => new \DateInterval('P100Y'),
+        };
+        $duration = $endsAt !== null ? $startsAt->diff($endsAt) : null;
+        $occurrenceStart = $startsAt;
+        $guard = 0;
+        while ($occurrenceStart < $fromDate && $guard < 500) {
+            $occurrenceStart = $occurrenceStart->add($interval);
+            $guard++;
+        }
+
+        $items = [];
+        while ($occurrenceStart <= $until && $guard < 800) {
+            $occurrenceEnd = $duration !== null ? $occurrenceStart->add($duration) : null;
+            $copy = $entry;
+            $copy['starts_at'] = $occurrenceStart->format('Y-m-d\TH:i:s');
+            $copy['ends_at'] = $occurrenceEnd?->format('Y-m-d\TH:i:s');
+            $items[] = $copy;
+            $occurrenceStart = $occurrenceStart->add($interval);
+            $guard++;
+        }
+        return $items;
     }
 
     private function feedBadge(string $type): string

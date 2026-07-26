@@ -15,6 +15,10 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<User>;
   register: (input: RegisterInput) => Promise<void>;
   logout: () => Promise<void>;
+  updateProfile: (displayName: string, avatarUrl?: string | null) => Promise<User>;
+  updatePassword: (currentPassword: string, newPassword: string) => Promise<User>;
+  updateDigestPreference: (enabled: boolean) => Promise<User>;
+  deleteMe: () => Promise<void>;
   completeOnboarding: () => Promise<void>;
   saveOnboardingProgress: (step: OnboardingStep) => Promise<void>;
 }
@@ -49,6 +53,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }
 
+  async function updateProfile(displayName: string, avatarUrl?: string | null) {
+    const updatedUser = await authApi.updateProfile(displayName, avatarUrl);
+    setUser(updatedUser);
+    return updatedUser;
+  }
+
+  async function updatePassword(currentPassword: string, newPassword: string) {
+    const updatedUser = await authApi.updatePassword(currentPassword, newPassword);
+    setUser(updatedUser);
+    return updatedUser;
+  }
+
+  async function updateDigestPreference(enabled: boolean) {
+    const updatedUser = await authApi.updateDigestPreference(enabled);
+    setUser(updatedUser);
+    return updatedUser;
+  }
+
+  async function deleteMe() {
+    await authApi.deleteMe();
+    setUser(null);
+  }
+
   async function completeOnboarding() {
     setUser(await authApi.completeOnboarding());
   }
@@ -58,7 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, register, logout, completeOnboarding, saveOnboardingProgress }}>
+    <AuthContext.Provider value={{ user, isLoading, login, register, logout, updateProfile, updatePassword, updateDigestPreference, deleteMe, completeOnboarding, saveOnboardingProgress }}>
       {children}
     </AuthContext.Provider>
   );

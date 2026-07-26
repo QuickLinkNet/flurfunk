@@ -1,9 +1,11 @@
 import { useState } from 'react';
+import { Button } from '../atoms/Button';
 import { StatusPill } from '../atoms/StatusPill';
 import { AdminEmptyState } from '../molecules/AdminEmptyState';
 import { AdminInviteNeedsBoard } from '../molecules/AdminInviteNeedsBoard';
 import { AdminInviteRolloutRow, inviteFollowUpMessage } from '../molecules/AdminInviteRolloutRow';
 import { ConfirmDialog } from '../molecules/ConfirmDialog';
+import { inviteMessage, inviteUrl } from '../molecules/InviteCodeRow';
 import { revokeAdminInvite, sendAdminUserPushTest } from '../../api/adminApi';
 import type { AdminHousehold } from '../../types/admin';
 import type { InviteRolloutFilter } from '../../types/adminInviteRollout';
@@ -25,7 +27,7 @@ const FILTERS: Array<{ id: InviteRolloutFilter; label: string }> = [
   { id: 'used', label: 'Eingelöst' },
   { id: 'onboarding', label: 'Onboarding offen' },
   { id: 'push', label: 'Push offen' },
-  { id: 'ready', label: 'Startklar' },
+  { id: 'ready', label: 'Onboarding fertig' },
   { id: 'revoked', label: 'Widerrufen' }
 ];
 
@@ -36,11 +38,11 @@ function inviteStatus(invite: HouseholdInvitePerson): InviteRolloutFilter {
 }
 
 function isInviteReady(invite: HouseholdInvitePerson): boolean {
-  return Boolean(invite.usedByUser?.onboardingCompletedAt && invite.usedByUser.pushSubscribed);
+  return Boolean(invite.usedByUser?.onboardingCompletedAt);
 }
 
 function isInviteSetupOpen(invite: HouseholdInvitePerson): boolean {
-  return Boolean(invite.usedByUser && !isInviteReady(invite));
+  return Boolean(invite.usedByUser && !invite.usedByUser.onboardingCompletedAt);
 }
 
 function matchesFilter(invite: HouseholdInvitePerson, filter: InviteRolloutFilter): boolean {
@@ -57,6 +59,7 @@ export function AdminInviteRollout({ households, onChanged }: Props) {
   const [isRevoking, setIsRevoking] = useState(false);
   const [busyPushUserId, setBusyPushUserId] = useState<number | null>(null);
   const [actionMessage, setActionMessage] = useState<Record<number, string>>({});
+  const [rolloutMessage, setRolloutMessage] = useState<string | null>(null);
   const allInvites = households.flatMap((household) => household.invites);
   const openCount = allInvites.filter((invite) => inviteStatus(invite) === 'open').length;
   const usedCount = allInvites.filter((invite) => inviteStatus(invite) === 'used').length;
@@ -69,6 +72,9 @@ export function AdminInviteRollout({ households, onChanged }: Props) {
       invites: household.invites.filter((invite) => matchesFilter(invite, filter))
     }))
     .filter((entry) => entry.invites.length > 0);
+  const visibleOpenInvites = householdsWithFilteredInvites
+    .flatMap((entry) => entry.invites)
+    .filter((invite) => !invite.usedAt && !invite.revokedAt);
 
   function requestRevoke(invite: HouseholdInvitePerson) {
     setPendingRevoke({
@@ -121,6 +127,20 @@ export function AdminInviteRollout({ households, onChanged }: Props) {
     }
   }
 
+  async function copyVisibleOpenInvites() {
+    if (visibleOpenInvites.length === 0) return;
+
+    const text = visibleOpenInvites
+      .map((invite) => inviteMessage(invite, inviteUrl(invite.code)))
+      .join('\n\n---\n\n');
+    try {
+      await navigator.clipboard.writeText(text);
+      setRolloutMessage(`${visibleOpenInvites.length} Einladung${visibleOpenInvites.length === 1 ? '' : 'en'} kopiert.`);
+    } catch {
+      setRolloutMessage('Kopieren fehlgeschlagen.');
+    }
+  }
+
   if (allInvites.length === 0) {
     return <AdminEmptyState>Noch keine Einladungen vorhanden.</AdminEmptyState>;
   }
@@ -150,19 +170,25 @@ export function AdminInviteRollout({ households, onChanged }: Props) {
         </div>
         <div>
           <strong>{readyCount}</strong>
-          <span>startklar</span>
+          <span>Onboarding fertig</span>
         </div>
       </div>
 
       <AdminInviteNeedsBoard households={households} onShowStatus={setFilter} />
 
-      <div className="admin-tabs" style={{ paddingBottom: 0 }}>
-        {FILTERS.map((item) => (
-          <button key={item.id} type="button" data-active={filter === item.id} onClick={() => setFilter(item.id)}>
-            {item.label}
-          </button>
-        ))}
+      <div className="admin-rollout-toolbar">
+        <div className="admin-tabs" style={{ paddingBottom: 0 }}>
+          {FILTERS.map((item) => (
+            <button key={item.id} type="button" data-active={filter === item.id} onClick={() => setFilter(item.id)}>
+              {item.label}
+            </button>
+          ))}
+        </div>
+        <Button type="button" variant="ghost" onClick={copyVisibleOpenInvites} disabled={visibleOpenInvites.length === 0}>
+          Sichtbare offene Einladungen kopieren
+        </Button>
       </div>
+      {rolloutMessage && <p className="admin-rollout-message">{rolloutMessage}</p>}
 
       {householdsWithFilteredInvites.length > 0 ? (
         <div className="admin-list-stack">
@@ -183,6 +209,7 @@ export function AdminInviteRollout({ households, onChanged }: Props) {
                     actionMessage={actionMessage[invite.id]}
                     isPushBusy={busyPushUserId === invite.usedByUser?.id}
                     onCopyFollowUp={copyFollowUp}
+                    onEmailSent={() => onChanged()}
                     onPushTest={sendPushTest}
                     onRevoke={requestRevoke}
                   />

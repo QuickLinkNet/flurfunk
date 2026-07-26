@@ -12,19 +12,24 @@ final class FeedItem
         'tool_available', 'help_needed', 'street_closed', 'babysitter_needed',
     ];
 
-    public static function findVisible(?string $viewerRole, int $limit = 30): array
+    public static function findVisible(?string $viewerRole, ?int $viewerUserId, int $limit = 30): array
     {
         $allowed = $viewerRole === 'guest' ? ['public'] : ['public', 'neighbors'];
         $placeholders = implode(',', array_fill(0, count($allowed), '?'));
         $stmt = Database::pdo()->prepare(
-            "SELECT f.*, h.name AS household_name FROM feed_items f
+            "SELECT f.*, h.name AS household_name,
+                COUNT(DISTINCT fr.id) AS reaction_count,
+                MAX(CASE WHEN fr.user_id = ? THEN 1 ELSE 0 END) AS reacted_by_me
+             FROM feed_items f
              JOIN households h ON h.id = f.household_id
+             LEFT JOIN feed_reactions fr ON fr.feed_item_id = f.id
              WHERE f.visibility IN ($placeholders)
                AND (f.expires_at IS NULL OR f.expires_at > CURRENT_TIMESTAMP)
+             GROUP BY f.id
              ORDER BY f.created_at DESC
              LIMIT ?"
         );
-        $stmt->execute([...$allowed, $limit]);
+        $stmt->execute([$viewerUserId ?? 0, ...$allowed, $limit]);
         return $stmt->fetchAll();
     }
 
@@ -58,7 +63,88 @@ final class FeedItem
 
     public static function delete(int $id): void
     {
-        $stmt = Database::pdo()->prepare('DELETE FROM feed_items WHERE id = ?');
-        $stmt->execute([$id]);
+        $pdo = Database::pdo();
+        $pdo->beginTransaction();
+        try {
+            $pdo->prepare('DELETE FROM feed_comments WHERE feed_item_id = ?')->execute([$id]);
+            $pdo->prepare('DELETE FROM feed_reactions WHERE feed_item_id = ?')->execute([$id]);
+            $pdo->prepare('DELETE FROM feed_items WHERE id = ?')->execute([$id]);
+            $pdo->commit();
+        } catch (\Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+    public static function findVisibleById(int $id, ?string $viewerRole): ?array
+    {
+        $allowed = $viewerRole === 'guest' ? ['public'] : ['public', 'neighbors'];
+        $placeholders = implode(',', array_fill(0, count($allowed), '?'));
+        $stmt = Database::pdo()->prepare(
+            "SELECT f.* FROM feed_items f
+             WHERE f.id = ?
+               AND f.visibility IN ($placeholders)
+               AND (f.expires_at IS NULL OR f.expires_at > CURRENT_TIMESTAMP)
+             LIMIT 1"
+        );
+        $stmt->execute([$id, ...$allowed]);
+        return $stmt->fetch() ?: null;
+    }
+
+    public static function updateStatus(int $id, string $status): void
+    {
+        $stmt = Database::pdo()->prepare('UPDATE feed_items SET status = ? WHERE id = ?');
+        $stmt->execute([$status, $id]);
+    }
+
+    public static function commentsForItem(int $feedItemId): array
+    {
+        $stmt = Database::pdo()->prepare(
+            'SELECT fc.*, h.name AS household_name, u.display_name AS author_name
+             FROM feed_comments fc
+             JOIN users u ON u.id = fc.user_id
+             LEFT JOIN households h ON h.id = fc.household_id
+             WHERE fc.feed_item_id = ?
+             ORDER BY fc.created_at ASC
+             LIMIT 50'
+        );
+        $stmt->execute([$feedItemId]);
+        return $stmt->fetchAll();
+    }
+
+    public static function toggleReaction(int $feedItemId, int $userId): bool
+    {
+        $pdo = Database::pdo();
+        $existing = $pdo->prepare('SELECT id FROM feed_reactions WHERE feed_item_id = ? AND user_id = ? LIMIT 1');
+        $existing->execute([$feedItemId, $userId]);
+        $reactionId = $existing->fetchColumn();
+        if ($reactionId !== false) {
+            $delete = $pdo->prepare('DELETE FROM feed_reactions WHERE id = ?');
+            $delete->execute([(int) $reactionId]);
+            return false;
+        }
+
+        $insert = $pdo->prepare('INSERT INTO feed_reactions (feed_item_id, user_id) VALUES (?, ?)');
+        $insert->execute([$feedItemId, $userId]);
+        return true;
+    }
+
+    public static function reactionCount(int $feedItemId): int
+    {
+        $stmt = Database::pdo()->prepare('SELECT COUNT(*) FROM feed_reactions WHERE feed_item_id = ?');
+        $stmt->execute([$feedItemId]);
+        return (int) $stmt->fetchColumn();
+    }
+
+    public static function addComment(int $feedItemId, int $userId, ?int $householdId, string $message): int
+    {
+        $stmt = Database::pdo()->prepare(
+            'INSERT INTO feed_comments (feed_item_id, user_id, household_id, message, created_at)
+             VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)'
+        );
+        $stmt->execute([$feedItemId, $userId, $householdId, $message]);
+        return (int) Database::pdo()->lastInsertId();
     }
 }

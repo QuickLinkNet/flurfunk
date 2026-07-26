@@ -1,6 +1,6 @@
 export type Visibility = 'public' | 'neighbors' | 'private';
 
-// Clientseitige Hilfsfunktion nur für UI-Hinweise – die echte
+// Clientseitige Hilfsfunktion nur für UI-Hinweise - die echte
 // Durchsetzung passiert immer serverseitig (siehe PRD Kapitel 5).
 export function visibilityLabel(v: Visibility): string {
   switch (v) {

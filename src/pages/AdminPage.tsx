@@ -5,6 +5,7 @@ import { AdminSection } from '../components/molecules/AdminSection';
 import { AdminTabs } from '../components/molecules/AdminTabs';
 import { AdminCalendarList } from '../components/organisms/AdminCalendarList';
 import { AdminCreateHouseholdForm } from '../components/organisms/AdminCreateHouseholdForm';
+import { AdminDigestPanel } from '../components/organisms/AdminDigestPanel';
 import { AdminEventList } from '../components/organisms/AdminEventList';
 import { AdminFeatureFlagsForm } from '../components/organisms/AdminFeatureFlagsForm';
 import { AdminFeedList } from '../components/organisms/AdminFeedList';
@@ -12,6 +13,7 @@ import { AdminHouseholdList } from '../components/organisms/AdminHouseholdList';
 import { AdminInviteRollout } from '../components/organisms/AdminInviteRollout';
 import { AdminNoticePanel } from '../components/organisms/AdminNoticePanel';
 import { AdminOverview } from '../components/organisms/AdminOverview';
+import { AdminSystemStatusPanel } from '../components/organisms/AdminSystemStatusPanel';
 import { AdminUserList } from '../components/organisms/AdminUserList';
 import { AdminWastePickupForm } from '../components/organisms/AdminWastePickupForm';
 import { DashboardTemplate } from '../components/templates/DashboardTemplate';
@@ -36,7 +38,8 @@ export function AdminPage() {
     requestDeleteCalendarEntry,
     requestDeleteEvent,
     requestDeleteFeedItem,
-    requestDeleteNotice
+    requestDeleteNotice,
+    requestDeleteUser
   } = useAdminDeleteDialog({ onDeleted: reload });
 
   async function handleDeleteHousehold(id: number) {
@@ -91,7 +94,7 @@ export function AdminPage() {
 
       {activeTab === 'users' && (
         <AdminSection title={`Nutzer (${filteredUsers.length}/${users.length})`}>
-          <AdminUserList users={filteredUsers} onRoleChange={handleRoleChange} onPushTestComplete={reload} />
+          <AdminUserList users={filteredUsers} onRoleChange={handleRoleChange} onDelete={requestDeleteUser} onPushTestComplete={reload} />
         </AdminSection>
       )}
 
@@ -126,9 +129,23 @@ export function AdminPage() {
       )}
 
       {activeTab === 'system' && (
-        <AdminSection title="Features">
-          <AdminFeatureFlagsForm />
-        </AdminSection>
+        <>
+          <AdminSection
+            title="Systemstatus"
+            description="Schneller Check für Rollout, Migrationen, PWA, Push und aktivierte Features."
+          >
+            <AdminSystemStatusPanel />
+          </AdminSection>
+          <AdminSection
+            title="Wöchentlicher Digest"
+            description="Vorschau für den Wochenblick. Erst manuell testbar, später per Cron automatisierbar."
+          >
+            <AdminDigestPanel />
+          </AdminSection>
+          <AdminSection title="Features">
+            <AdminFeatureFlagsForm />
+          </AdminSection>
+        </>
       )}
       <ConfirmDialog {...deleteDialogProps} />
     </DashboardTemplate>

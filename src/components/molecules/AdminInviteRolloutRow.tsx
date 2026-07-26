@@ -1,6 +1,6 @@
 import { Button } from '../atoms/Button';
 import { StatusPill } from '../atoms/StatusPill';
-import { InviteCodeRow } from './InviteCodeRow';
+import { InviteCodeRow, inviteUrl } from './InviteCodeRow';
 import type { HouseholdInvitePerson } from '../../types/invite';
 import { onboardingFollowUpLabel, onboardingStatusLabel } from '../../utils/onboardingStatus';
 
@@ -9,12 +9,9 @@ interface Props {
   actionMessage?: string;
   isPushBusy: boolean;
   onCopyFollowUp: (invite: HouseholdInvitePerson) => void;
+  onEmailSent: (invite: HouseholdInvitePerson) => void;
   onPushTest: (invite: HouseholdInvitePerson) => void;
   onRevoke: (invite: HouseholdInvitePerson) => void;
-}
-
-function inviteUrl(code: string): string {
-  return `${window.location.origin}/apps/neighborhood/registrieren/${code}`;
 }
 
 export function missingInviteSteps(invite: HouseholdInvitePerson): string[] {
@@ -69,15 +66,12 @@ export function inviteFollowUpMessage(invite: HouseholdInvitePerson): string {
   ].join('\n');
 }
 
-function isInviteReady(invite: HouseholdInvitePerson): boolean {
-  return Boolean(invite.usedByUser?.onboardingCompletedAt && invite.usedByUser.pushSubscribed);
-}
-
 export function AdminInviteRolloutRow({
   invite,
   actionMessage,
   isPushBusy,
   onCopyFollowUp,
+  onEmailSent,
   onPushTest,
   onRevoke
 }: Props) {
@@ -85,7 +79,7 @@ export function AdminInviteRolloutRow({
 
   return (
     <div className="admin-rollout-invite">
-      <InviteCodeRow invite={invite} onRevoke={() => onRevoke(invite)} />
+      <InviteCodeRow invite={invite} onEmailSent={onEmailSent} onRevoke={() => onRevoke(invite)} />
       {!invite.revokedAt && steps.length > 0 && (
         <div className="admin-rollout-next-steps">
           <strong>Fehlt noch:</strong>
@@ -112,14 +106,14 @@ export function AdminInviteRolloutRow({
           <StatusPill label="Nutzer nicht mehr vorhanden" />
         </div>
       )}
-      {!invite.revokedAt && !isInviteReady(invite) && (
+      {!invite.revokedAt && steps.length > 0 && (
         <div className="admin-rollout-actions">
           <Button type="button" variant="ghost" onClick={() => onCopyFollowUp(invite)}>
             Nachfassen kopieren
           </Button>
           {invite.usedByUser && (
             <Button type="button" variant="ghost" onClick={() => onPushTest(invite)} disabled={isPushBusy}>
-              {isPushBusy ? 'Sendet ...' : 'Push-Test senden'}
+              {isPushBusy ? 'Sendet...' : 'Push-Test senden'}
             </Button>
           )}
         </div>

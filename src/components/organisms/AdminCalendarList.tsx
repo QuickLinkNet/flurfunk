@@ -1,13 +1,27 @@
-import { AdminDeleteButton } from '../molecules/AdminDeleteButton';
+import { StatusPill } from '../atoms/StatusPill';
+import { AdminContentCard } from '../molecules/AdminContentCard';
 import { AdminEmptyState } from '../molecules/AdminEmptyState';
-import { AdminListStack } from '../molecules/AdminListStack';
-import { CardRow } from '../molecules/CardRow';
-import { formatDateTimeLabel } from '../../utils/date';
+import { CALENDAR_TYPE_META } from '../../utils/calendarTypeMeta';
+import { formatDateRangeLabel } from '../../utils/date';
+import { recurrenceSummary } from '../../utils/recurrenceLabels';
 import type { AdminCalendarEntry } from '../../types/admin';
+import type { CalendarEntry } from '../../types/calendarEntry';
 
 interface Props {
   entries: AdminCalendarEntry[];
   onDelete: (entry: AdminCalendarEntry) => void;
+}
+
+function normalizeDate(value: string): string {
+  return value.replace(' ', 'T');
+}
+
+function calendarTypeLabel(type: string): string {
+  if (type in CALENDAR_TYPE_META) {
+    return CALENDAR_TYPE_META[type as CalendarEntry['type']].label;
+  }
+
+  return type;
 }
 
 export function AdminCalendarList({ entries, onDelete }: Props) {
@@ -16,17 +30,25 @@ export function AdminCalendarList({ entries, onDelete }: Props) {
   }
 
   return (
-    <AdminListStack>
+    <div className="admin-content-list">
       {entries.map((entry) => (
-        <CardRow key={entry.id} action={<AdminDeleteButton onClick={() => onDelete(entry)} />}>
-          <p style={{ margin: 0, fontSize: 'var(--md-font-size-base)', fontWeight: 'var(--md-font-weight-medium)' }}>
-            {entry.title}
-          </p>
-          <p style={{ margin: 'var(--md-space-1) 0 0', fontSize: 'var(--md-font-size-sm)', color: 'var(--md-color-on-surface-variant)' }}>
-            {entry.type} · {formatDateTimeLabel(entry.startsAt)}
-          </p>
-        </CardRow>
+        <AdminContentCard
+          key={entry.id}
+          title={entry.title}
+          onDelete={() => onDelete(entry)}
+          meta={
+            <>
+              <StatusPill label={calendarTypeLabel(entry.type)} />
+              {entry.recurrenceRule !== 'none' && <StatusPill label="Serie" tone="success" />}
+            </>
+          }
+        >
+          <p>{formatDateRangeLabel(normalizeDate(entry.startsAt), entry.endsAt ? normalizeDate(entry.endsAt) : null)}</p>
+          {entry.recurrenceRule !== 'none' && (
+            <p>{recurrenceSummary(entry.recurrenceRule, entry.recurrenceUntil)}</p>
+          )}
+        </AdminContentCard>
       ))}
-    </AdminListStack>
+    </div>
   );
 }

@@ -19,8 +19,8 @@ const steps = [
   },
   {
     icon: 'bell' as const,
-    title: 'Push aktivieren',
-    text: 'Wichtige Hinweise und Antworten kommen direkt auf dieses Gerät.'
+    title: 'Hinweise aktivieren',
+    text: 'Push meldet Wichtiges sofort, der Wochenblick fasst die Woche per E-Mail zusammen.'
   },
   {
     icon: 'shield' as const,
@@ -65,7 +65,7 @@ export function OnboardingChecklist({ onStatusClick, onDismiss, currentStep = 'h
         ) : (
           <>
             <Button type="button" onClick={onStatusClick}>Status setzen</Button>
-            <Link to="/einstellungen">Push & Privatsphäre</Link>
+            <Link to="/einstellungen">Hinweise & Privatsphäre</Link>
           </>
         )}
       </div>

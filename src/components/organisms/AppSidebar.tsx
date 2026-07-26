@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import { BrandMark } from '../atoms/BrandMark';
 import { FeatureIcon } from '../atoms/FeatureIcon';
+import { UserAvatar } from '../atoms/UserAvatar';
 import { useAuth } from '../../hooks/useAuth';
 import { useFeatureFlags } from '../../hooks/useFeatureFlags';
 import { appNavItems } from '../../navigation/appNavigation';
@@ -29,7 +30,7 @@ export function AppSidebar() {
         ))}
       </nav>
       <div className="app-sidebar-profile">
-        <span>{user?.displayName?.slice(0, 1).toUpperCase() ?? 'F'}</span>
+        <UserAvatar avatarUrl={user?.avatarUrl} fallback={user?.displayName ?? 'Flurfunk'} />
         <div>
           <strong>{user?.displayName ?? 'Flurfunk'}</strong>
           <small>{user?.role === 'admin' ? 'Verwaltung' : 'Nachbarschaft'}</small>

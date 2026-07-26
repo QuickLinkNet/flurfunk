@@ -13,6 +13,8 @@ export interface NewCalendarEntry {
   endsAt?: string | null;
   allDay: boolean;
   visibility: 'public' | 'neighbors' | 'private';
+  recurrenceRule?: CalendarEntry['recurrenceRule'];
+  recurrenceUntil?: string | null;
 }
 
 export function createCalendarEntry(entry: NewCalendarEntry) {

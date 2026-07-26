@@ -6,6 +6,8 @@ export interface CalendarEntry {
   endsAt: string | null;
   allDay: boolean;
   visibility: 'public' | 'neighbors' | 'private';
+  recurrenceRule: 'none' | 'daily' | 'weekly' | 'monthly';
+  recurrenceUntil: string | null;
   canManage: boolean;
   source?: 'calendar' | 'event';
   eventId?: number | null;

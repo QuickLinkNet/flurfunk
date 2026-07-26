@@ -8,13 +8,14 @@ import type { HouseholdInvitePerson } from '../../types/invite';
 interface Person {
   firstName: string;
   lastName: string;
+  email: string;
 }
 
 interface Props {
   onCreated: () => void;
 }
 
-const EMPTY_PERSON: Person = { firstName: '', lastName: '' };
+const EMPTY_PERSON: Person = { firstName: '', lastName: '', email: '' };
 
 export function AdminCreateHouseholdForm({ onCreated }: Props) {
   const [name, setName] = useState('');
@@ -25,7 +26,7 @@ export function AdminCreateHouseholdForm({ onCreated }: Props) {
   const [createdInvites, setCreatedInvites] = useState<HouseholdInvitePerson[] | null>(null);
 
   function updatePerson(index: number, patch: Partial<Person>) {
-    setPeople((prev) => prev.map((p, i) => (i === index ? { ...p, ...patch } : p)));
+    setPeople((prev) => prev.map((person, i) => (i === index ? { ...person, ...patch } : person)));
   }
 
   function addPersonRow() {
@@ -38,7 +39,13 @@ export function AdminCreateHouseholdForm({ onCreated }: Props) {
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    const validPeople = people.filter((p) => p.firstName.trim() && p.lastName.trim());
+    const validPeople = people
+      .filter((person) => person.firstName.trim() && person.lastName.trim())
+      .map((person) => ({
+        firstName: person.firstName.trim(),
+        lastName: person.lastName.trim(),
+        email: person.email.trim() || undefined
+      }));
     setError(null);
     if (!name.trim() || !addressLine.trim() || validPeople.length === 0) {
       setError('Bitte Haushalt, Adresse und mindestens eine Person ausfüllen.');
@@ -61,27 +68,48 @@ export function AdminCreateHouseholdForm({ onCreated }: Props) {
   }
 
   return (
-    <div className="md-stack">
-      <form onSubmit={handleSubmit} className="md-stack">
-        <div className="md-form-grid">
-          <Input placeholder="Haushaltsname (z. B. Familie Schneider)" value={name} onChange={(event) => setName(event.target.value)} />
-          <Input placeholder="Adresse" value={addressLine} onChange={(event) => setAddressLine(event.target.value)} />
+    <div className="admin-create-household">
+      <form onSubmit={handleSubmit} className="admin-create-household-form">
+        <div className="admin-invite-form-grid">
+          <label>
+            <span>Haushaltsname</span>
+            <Input placeholder="z. B. Familie Schneider" value={name} onChange={(event) => setName(event.target.value)} />
+          </label>
+          <label>
+            <span>Adresse</span>
+            <Input placeholder="Straße und Hausnummer" value={addressLine} onChange={(event) => setAddressLine(event.target.value)} />
+          </label>
         </div>
 
-        <div className="md-stack" style={{ gap: 'var(--md-space-2)' }}>
+        <div className="admin-create-people">
           {people.map((person, index) => (
-            <div key={index} className="md-action-row">
-              <div className="md-form-grid">
-                <Input
-                  placeholder="Vorname"
-                  value={person.firstName}
-                  onChange={(event) => updatePerson(index, { firstName: event.target.value })}
-                />
-                <Input
-                  placeholder="Nachname"
-                  value={person.lastName}
-                  onChange={(event) => updatePerson(index, { lastName: event.target.value })}
-                />
+            <div key={index} className="admin-create-person-row">
+              <div className="admin-invite-form-grid">
+                <label>
+                  <span>Vorname</span>
+                  <Input
+                    placeholder="Vorname"
+                    value={person.firstName}
+                    onChange={(event) => updatePerson(index, { firstName: event.target.value })}
+                  />
+                </label>
+                <label>
+                  <span>Nachname</span>
+                  <Input
+                    placeholder="Nachname"
+                    value={person.lastName}
+                    onChange={(event) => updatePerson(index, { lastName: event.target.value })}
+                  />
+                </label>
+                <label>
+                  <span>E-Mail optional</span>
+                  <Input
+                    type="email"
+                    placeholder="person@example.com"
+                    value={person.email}
+                    onChange={(event) => updatePerson(index, { email: event.target.value })}
+                  />
+                </label>
               </div>
               {people.length > 1 && (
                 <Button type="button" variant="ghost" onClick={() => removePersonRow(index)}>
@@ -92,7 +120,7 @@ export function AdminCreateHouseholdForm({ onCreated }: Props) {
           ))}
         </div>
 
-        {error && <p style={{ margin: 0, color: 'var(--md-color-error)', fontSize: 'var(--md-font-size-sm)' }}>{error}</p>}
+        {error && <p className="admin-form-message" data-error>{error}</p>}
 
         <div className="md-card-actions">
           <Button type="button" variant="ghost" onClick={addPersonRow}>
@@ -105,17 +133,9 @@ export function AdminCreateHouseholdForm({ onCreated }: Props) {
       </form>
 
       {createdInvites && (
-        <section
-          style={{
-            padding: 'var(--md-space-3)',
-            borderRadius: 'var(--md-radius-control)',
-            background: 'var(--md-color-secondary-container)'
-          }}
-        >
-          <p style={{ margin: '0 0 var(--md-space-2)', fontSize: 'var(--md-font-size-sm)', fontWeight: 'var(--md-font-weight-medium)' }}>
-            Neue Codes zum Verschicken
-          </p>
-          <div className="md-stack" style={{ gap: 'var(--md-space-2)' }}>
+        <section className="admin-created-invites">
+          <p>Neue Codes zum Verschicken</p>
+          <div className="admin-invite-list">
             {createdInvites.map((invite) => (
               <InviteCodeRow key={invite.id} invite={invite} />
             ))}

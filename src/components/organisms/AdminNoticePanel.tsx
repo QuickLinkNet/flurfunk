@@ -1,9 +1,10 @@
 import { useState, type FormEvent } from 'react';
 import { Button } from '../atoms/Button';
 import { Input } from '../atoms/Input';
-import { AdminDeleteButton } from '../molecules/AdminDeleteButton';
-import { AdminListStack } from '../molecules/AdminListStack';
-import { CardRow } from '../molecules/CardRow';
+import { StatusPill } from '../atoms/StatusPill';
+import { Textarea } from '../atoms/Textarea';
+import { AdminContentCard } from '../molecules/AdminContentCard';
+import { AdminEmptyState } from '../molecules/AdminEmptyState';
 import { createAdminNotice } from '../../api/adminApi';
 import { formatDateTimeLabel } from '../../utils/date';
 import type { AdminNotice } from '../../types/admin';
@@ -12,6 +13,10 @@ interface Props {
   notices: AdminNotice[];
   onCreated: () => void;
   onDelete: (id: number) => void;
+}
+
+function normalizeDate(value: string): string {
+  return value.replace(' ', 'T');
 }
 
 export function AdminNoticePanel({ notices, onCreated, onDelete }: Props) {
@@ -42,43 +47,57 @@ export function AdminNoticePanel({ notices, onCreated, onDelete }: Props) {
     }
   }
 
+  const isError = Boolean(feedback && (feedback.includes('Pflicht') || feedback.includes('nicht')));
+
   return (
     <div className="md-stack">
-      <form onSubmit={handleSubmit} className="md-stack">
-        <Input placeholder="Titel" value={title} onChange={(event) => setTitle(event.target.value)} />
-        <textarea
-          placeholder="Nachricht"
-          value={message}
-          onChange={(event) => setMessage(event.target.value)}
-          rows={3}
-          style={{
-            width: '100%',
-            padding: 'var(--md-space-3) var(--md-space-4)',
-            border: '1px solid var(--md-color-border)',
-            borderRadius: 'var(--md-radius-control)',
-            background: 'rgba(255, 253, 252, 0.82)',
-            color: 'var(--md-color-on-surface)',
-            font: 'inherit',
-            resize: 'vertical'
-          }}
-        />
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Speichert...' : 'Hinweis anlegen'}
-        </Button>
-        {feedback && <p style={{ margin: 0, color: feedback.includes('Pflicht') || feedback.includes('nicht') ? 'var(--md-color-error)' : 'var(--md-color-on-surface-variant)' }}>{feedback}</p>}
+      <form onSubmit={handleSubmit} className="admin-notice-form">
+        <label>
+          Titel
+          <Input placeholder="z. B. Kanalreinigung am Freitag" value={title} onChange={(event) => setTitle(event.target.value)} />
+        </label>
+        <label>
+          Nachricht
+          <Textarea
+            placeholder="Kurzer Hinweis für die Straße"
+            value={message}
+            onChange={(event) => setMessage(event.target.value)}
+            rows={3}
+          />
+        </label>
+        <div className="admin-notice-form-actions">
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Speichert...' : 'Hinweis anlegen'}
+          </Button>
+          {feedback && (
+            <p className="admin-content-message" data-tone={isError ? 'error' : 'default'}>
+              {feedback}
+            </p>
+          )}
+        </div>
       </form>
 
-      <AdminListStack>
-        {notices.map((notice) => (
-          <CardRow key={notice.id} action={<AdminDeleteButton onClick={() => onDelete(notice.id)} />}>
-            <p style={{ margin: 0, fontWeight: 'var(--md-font-weight-medium)' }}>{notice.title}</p>
-            <p style={{ margin: 'var(--md-space-1) 0 0', color: 'var(--md-color-on-surface-variant)' }}>{notice.message}</p>
-            <p style={{ margin: 'var(--md-space-1) 0 0', color: 'var(--md-color-on-surface-variant)', fontSize: 'var(--md-font-size-sm)' }}>
-              {notice.isActive ? 'Aktiv' : 'Inaktiv'} · {formatDateTimeLabel(notice.createdAt)}
-            </p>
-          </CardRow>
-        ))}
-      </AdminListStack>
+      {notices.length === 0 ? (
+        <AdminEmptyState>Noch keine Hinweise vorhanden.</AdminEmptyState>
+      ) : (
+        <div className="admin-content-list">
+          {notices.map((notice) => (
+            <AdminContentCard
+              key={notice.id}
+              title={notice.title}
+              onDelete={() => onDelete(notice.id)}
+              meta={
+                <>
+                  <StatusPill label={notice.isActive ? 'Aktiv' : 'Inaktiv'} tone={notice.isActive ? 'success' : 'neutral'} />
+                  <StatusPill label={formatDateTimeLabel(normalizeDate(notice.createdAt))} />
+                </>
+              }
+            >
+              <p>{notice.message}</p>
+            </AdminContentCard>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

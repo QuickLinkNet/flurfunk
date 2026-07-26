@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ActionDialog } from '../components/molecules/ActionDialog';
 import { DashboardCard } from '../components/molecules/DashboardCard';
 import { DashboardListRow } from '../components/molecules/DashboardListRow';
@@ -16,6 +16,7 @@ import { NewFeedItemForm } from '../components/organisms/NewFeedItemForm';
 import { OnboardingChecklist } from '../components/organisms/OnboardingChecklist';
 import { fetchDashboard } from '../api/dashboardApi';
 import { useAuth } from '../hooks/useAuth';
+import { useFeatureFlags } from '../hooks/useFeatureFlags';
 import { CHILD_LOCATION_LABELS } from '../types/child';
 import type { DashboardData } from '../types/dashboard';
 
@@ -48,6 +49,8 @@ function actionTitle(action: DialogAction | null): string {
 
 export function DashboardPage() {
   const { user } = useAuth();
+  const { isEnabled } = useFeatureFlags();
+  const navigate = useNavigate();
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [dialogAction, setDialogAction] = useState<DialogAction | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(() => localStorage.getItem(ONBOARDING_DISMISSED_KEY) !== '1');
@@ -72,8 +75,14 @@ export function DashboardPage() {
   const vacations = dashboard?.vacations.filter((vacation) => matchesSearch(query, vacation.name)) ?? [];
   const wastePickups = dashboard?.wastePickups.filter((entry) => matchesSearch(query, entry.title)) ?? [];
   const onboardingIncomplete = Boolean(user && !user.onboardingCompletedAt);
+  const feedEnabled = isEnabled('feed');
+  const hiddenQuickActions: QuickActionId[] = feedEnabled ? [] : ['feed', 'help'];
 
   function handleQuickAction(action: QuickActionId) {
+    if (action === 'help') {
+      navigate('/hilfe');
+      return;
+    }
     setDialogAction((current) => (current === action ? null : action));
   }
 
@@ -110,13 +119,13 @@ export function DashboardPage() {
 
         <main className="dashboard-layout">
           <div className="dashboard-main">
-            <DashboardCard title="Wer ist zuhause?" action={<Link to="/haushalt/mein">Alle anzeigen</Link>}>
+            <DashboardCard title="Wer ist zuhause?" action={<Link to="/nachbarn">Alle anzeigen</Link>}>
               <PersonStatusStrip households={householdsStatus} />
               {dashboard && householdsStatus.length === 0 && <EmptyRow title={query ? 'Keine passenden Haushalte.' : 'Noch keine Haushalte sichtbar.'} />}
             </DashboardCard>
 
             <DashboardCard title="Schnellaktionen">
-              <QuickActionGrid activeAction={dialogAction} onAction={handleQuickAction} />
+              <QuickActionGrid activeAction={dialogAction} onAction={handleQuickAction} hiddenActions={hiddenQuickActions} />
             </DashboardCard>
 
             {(onboardingIncomplete || showOnboarding) && (
@@ -129,7 +138,7 @@ export function DashboardPage() {
             )}
 
             <div className="dashboard-split-grid">
-              <DashboardCard title="Straßen-Updates" action={<Link to="/strasse">Alle anzeigen</Link>}>
+              <DashboardCard title="Straßen-Updates" action={feedEnabled ? <Link to="/strasse">Alle anzeigen</Link> : undefined}>
                 {quickUpdates.map((item) => (
                   <DashboardListRow key={item.id} icon="update" title={item.message ?? item.type} meta={`von ${item.householdName}`} badge={item.badge} to="/strasse" />
                 ))}
@@ -182,7 +191,7 @@ export function DashboardPage() {
               <div className="dashboard-notice">
                 <strong>{dashboard?.notice.title ?? 'Kein Hinweis'}</strong>
                 <p>{dashboard?.notice.message ?? 'Aktuell gibt es keinen Straßenhinweis.'}</p>
-                <Link className="dashboard-notice-button" to="/strasse">Mehr Informationen</Link>
+                {feedEnabled && <Link className="dashboard-notice-button" to="/strasse">Mehr Informationen</Link>}
               </div>
             </DashboardCard>
           </aside>

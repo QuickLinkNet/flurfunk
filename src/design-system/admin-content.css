@@ -1,0 +1,103 @@
+.admin-content-list {
+  display: grid;
+  gap: var(--md-space-3);
+}
+
+.admin-content-card {
+  display: grid;
+  gap: var(--md-space-3);
+  padding: var(--md-space-4);
+  border: 1px solid var(--md-color-border);
+  border-radius: var(--md-radius-card);
+  background: var(--md-color-surface);
+  box-shadow: var(--md-shadow-sm);
+}
+
+.admin-content-card-main,
+.admin-content-card-header,
+.admin-content-card-body {
+  min-width: 0;
+}
+
+.admin-content-card-header {
+  display: grid;
+  gap: var(--md-space-2);
+}
+
+.admin-content-card h3,
+.admin-content-card p {
+  margin: 0;
+}
+
+.admin-content-card h3 {
+  color: var(--md-color-on-surface);
+  font-size: var(--md-font-size-base);
+  font-weight: var(--md-font-weight-bold);
+}
+
+.admin-content-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--md-space-2);
+  align-items: center;
+}
+
+.admin-content-card-body {
+  display: grid;
+  gap: var(--md-space-1);
+  margin-top: var(--md-space-2);
+  color: var(--md-color-on-surface-variant);
+  font-size: var(--md-font-size-sm);
+  overflow-wrap: anywhere;
+}
+
+.admin-content-card-actions {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.admin-notice-form {
+  display: grid;
+  gap: var(--md-space-3);
+  padding: var(--md-space-4);
+  border: 1px solid var(--md-color-border);
+  border-radius: var(--md-radius-card);
+  background: var(--md-color-surface);
+  box-shadow: var(--md-shadow-sm);
+}
+
+.admin-notice-form label {
+  display: grid;
+  gap: var(--md-space-2);
+  color: var(--md-color-on-surface);
+  font-size: var(--md-font-size-sm);
+  font-weight: var(--md-font-weight-medium);
+}
+
+.admin-notice-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--md-space-3);
+  align-items: center;
+}
+
+.admin-content-message {
+  margin: 0;
+  color: var(--md-color-on-surface-variant);
+  font-size: var(--md-font-size-sm);
+}
+
+.admin-content-message[data-tone='error'] {
+  color: var(--md-color-error);
+}
+
+@media (min-width: 768px) {
+  .admin-content-card {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+  }
+
+  .admin-content-card-actions {
+    justify-content: flex-end;
+  }
+}

@@ -3,10 +3,13 @@
 namespace App\Controllers;
 
 use App\Core\Auth;
+use App\Core\Database;
 use App\Core\Request;
 use App\Core\Response;
+use App\Models\Child;
 use App\Models\Household;
 use App\Models\User;
+use App\Models\VisibilitySetting;
 
 final class HouseholdController
 {
@@ -27,6 +30,22 @@ final class HouseholdController
         }
         $household = Household::findById((int) $user['household_id']);
         Response::json($this->toPublicHousehold($household));
+    }
+
+    public function neighbors(): void
+    {
+        $userId = Auth::requireLogin();
+        $user = User::findById($userId);
+        if ($user === null) {
+            Response::error('Nicht angemeldet.', 401);
+        }
+
+        $viewerHouseholdId = $user['household_id'] !== null ? (int) $user['household_id'] : null;
+        $households = Household::findAll();
+        Response::json(array_map(
+            fn(array $household) => $this->toNeighborHousehold($household, $viewerHouseholdId),
+            $households
+        ));
     }
 
     public function updateMe(array $params): void
@@ -74,5 +93,90 @@ final class HouseholdController
             'statusNote' => $h['status_note'],
             'statusUpdatedAt' => $h['status_updated_at'],
         ];
+    }
+
+    private function toNeighborHousehold(array $h, ?int $viewerHouseholdId): array
+    {
+        $householdId = (int) $h['id'];
+        $isOwnHousehold = $viewerHouseholdId !== null && $viewerHouseholdId === $householdId;
+        $visibility = VisibilitySetting::findForHousehold($householdId);
+
+        return [
+            'id' => $householdId,
+            'name' => $h['name'],
+            'addressLine' => $h['address_line'],
+            'avatarKey' => $h['avatar_key'] ?? 'home',
+            'isOwnHousehold' => $isOwnHousehold,
+            'statusVisible' => $this->isFieldVisible($visibility['status'], $isOwnHousehold),
+            'vacationVisible' => $this->isFieldVisible($visibility['vacation'], $isOwnHousehold),
+            'childrenVisible' => $this->isFieldVisible($visibility['children_location'], $isOwnHousehold),
+            'eventsVisible' => $this->isFieldVisible($visibility['events'], $isOwnHousehold),
+            'status' => $this->isFieldVisible($visibility['status'], $isOwnHousehold) ? [
+                'emoji' => $h['status_emoji'],
+                'label' => $h['status_label'],
+                'note' => $h['status_note'],
+                'updatedAt' => $h['status_updated_at'],
+            ] : null,
+            'vacation' => $this->vacationInfo($h, $visibility['vacation'], $isOwnHousehold),
+            'children' => $this->isFieldVisible($visibility['children_location'], $isOwnHousehold)
+                ? array_map([$this, 'toNeighborChild'], Child::findByHousehold($householdId))
+                : [],
+            'events' => $this->isFieldVisible($visibility['events'], $isOwnHousehold)
+                ? $this->upcomingEventsForHousehold($householdId)
+                : [],
+        ];
+    }
+
+    private function isFieldVisible(string $visibility, bool $isOwnHousehold): bool
+    {
+        return $isOwnHousehold || in_array($visibility, ['public', 'neighbors'], true);
+    }
+
+    private function vacationInfo(array $h, string $visibility, bool $isOwnHousehold): ?array
+    {
+        if (!$this->isFieldVisible($visibility, $isOwnHousehold)) {
+            return null;
+        }
+        $text = strtolower((string) $h['status_label'] . ' ' . (string) ($h['status_note'] ?? ''));
+        if (!str_contains($text, 'urlaub')) {
+            return null;
+        }
+        return [
+            'label' => $h['status_label'],
+            'note' => $h['status_note'],
+        ];
+    }
+
+    private function toNeighborChild(array $child): array
+    {
+        return [
+            'id' => (int) $child['id'],
+            'name' => $child['name'],
+            'currentLocation' => $child['current_location'],
+            'locationNote' => $child['location_note'],
+            'updatedAt' => $child['updated_at'],
+        ];
+    }
+
+    private function upcomingEventsForHousehold(int $householdId): array
+    {
+        $stmt = Database::pdo()->prepare(
+            'SELECT id, title, location, starts_at, ends_at
+             FROM events
+             WHERE creator_household_id = ?
+               AND visibility IN ("public", "neighbors")
+               AND ((ends_at IS NULL AND starts_at >= ?) OR (ends_at IS NOT NULL AND ends_at >= ?))
+             ORDER BY starts_at ASC
+             LIMIT 3'
+        );
+        $now = gmdate('Y-m-d\TH:i:s\Z');
+        $stmt->execute([$householdId, $now, $now]);
+        return array_map(fn(array $event) => [
+            'id' => (int) $event['id'],
+            'title' => $event['title'],
+            'location' => $event['location'],
+            'startsAt' => $event['starts_at'],
+            'endsAt' => $event['ends_at'],
+        ], $stmt->fetchAll());
     }
 }

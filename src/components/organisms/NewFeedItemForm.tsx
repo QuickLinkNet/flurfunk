@@ -5,17 +5,23 @@ import { Button } from '../atoms/Button';
 import { FeedExpirySelect, feedExpiryDate, type FeedExpiryOption } from '../molecules/FeedExpirySelect';
 import { FeedTypeSelect } from '../molecules/FeedTypeSelect';
 import { createFeedItem } from '../../api/feedApi';
-import { FEED_TYPE_META } from '../../utils/feedTypeMeta';
+import { FEED_CATEGORY_META, FEED_CATEGORY_OPTIONS, FEED_TYPE_META, type FeedCategory } from '../../utils/feedTypeMeta';
 import type { FeedItemType } from '../../types/feedItem';
 
 interface Props {
   onCreated: () => void;
   initialType?: FeedItemType;
+  allowedTypes?: FeedItemType[];
 }
 
-export function NewFeedItemForm({ onCreated, initialType = 'help_needed' }: Props) {
+function categoryForType(type: FeedItemType): FeedCategory {
+  return FEED_CATEGORY_OPTIONS.find(([value, meta]) => value !== 'all' && meta.types.includes(type))?.[0] ?? 'help';
+}
+
+export function NewFeedItemForm({ onCreated, initialType = 'help_needed', allowedTypes }: Props) {
   const [type, setType] = useState<FeedItemType>(initialType);
-  const [message, setMessage] = useState(FEED_TYPE_META[initialType].template);
+  const [category, setCategory] = useState<FeedCategory>(categoryForType(initialType));
+  const [message, setMessage] = useState('');
   const [visibility, setVisibility] = useState<'neighbors' | 'public'>('neighbors');
   const [expires, setExpires] = useState<FeedExpiryOption>('week');
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -23,10 +29,21 @@ export function NewFeedItemForm({ onCreated, initialType = 'help_needed' }: Prop
 
   function handleTypeChange(nextType: FeedItemType) {
     setType(nextType);
-    if (!message.trim()) {
-      setMessage(FEED_TYPE_META[nextType].template);
+  }
+
+  function handleCategoryChange(nextCategory: FeedCategory) {
+    const nextTypes = FEED_CATEGORY_META[nextCategory].types.filter((item) => !allowedTypes || allowedTypes.includes(item));
+    setCategory(nextCategory);
+    if (nextTypes.length > 0 && !nextTypes.includes(type)) {
+      setType(nextTypes[0]);
     }
   }
+
+  const categoryTypes = FEED_CATEGORY_META[category].types.filter((item) => !allowedTypes || allowedTypes.includes(item));
+  const selectableTypes = categoryTypes.length > 0 ? categoryTypes : allowedTypes;
+  const categoryOptions = FEED_CATEGORY_OPTIONS.filter(
+    ([value, meta]) => value !== 'all' && meta.types.some((item) => !allowedTypes || allowedTypes.includes(item))
+  );
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -53,9 +70,23 @@ export function NewFeedItemForm({ onCreated, initialType = 'help_needed' }: Prop
 
   return (
     <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 'var(--md-space-3)' }}>
-      <FeedTypeSelect value={type} onChange={handleTypeChange} />
+      <div className="feed-category-picker" role="radiogroup" aria-label="Kategorie wählen">
+        {categoryOptions.map(([value, meta]) => (
+          <button
+            key={value}
+            type="button"
+            role="radio"
+            aria-checked={category === value}
+            data-active={category === value}
+            onClick={() => handleCategoryChange(value)}
+          >
+            {meta.label}
+          </button>
+        ))}
+      </div>
+      <FeedTypeSelect value={type} onChange={handleTypeChange} allowedTypes={selectableTypes} />
       <Input
-        placeholder="Kurze Nachricht"
+        placeholder={FEED_TYPE_META[type].template}
         value={message}
         onChange={(event) => setMessage(event.target.value)}
         maxLength={280}

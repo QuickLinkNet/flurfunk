@@ -8,4 +8,9 @@ return [
         'path' => __DIR__ . '/data/database.sqlite',
     ],
     'session_name' => 'nachbarn_session',
+    'cron' => [
+        // Optional: FLURFUNK_CRON_TOKEN serverseitig setzen und dann
+        // /api/cron/weekly-digest?token=... per Web-Cron aufrufen.
+        'token' => getenv('FLURFUNK_CRON_TOKEN') ?: '',
+    ],
 ];

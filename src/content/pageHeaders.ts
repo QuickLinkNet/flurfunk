@@ -21,6 +21,14 @@ export const PAGE_HEADERS = {
     title: 'Mein Haushalt',
     subtitle: 'Profil, Status, Familie und Sichtbarkeit für deine Straße.'
   },
+  help: {
+    title: 'Schwarzes Brett',
+    subtitle: 'Suchen, anbieten, verleihen und kleine Hilfe in deiner Nachbarschaft organisieren.'
+  },
+  neighbors: {
+    title: 'Nachbarn',
+    subtitle: 'Wer sichtbar ist, welchen Status die Haushalte setzen und wie du sie schnell wiedererkennst.'
+  },
   onboarding: {
     title: 'Willkommen bei Flurfunk',
     subtitle: 'Richtet euren Haushalt kurz ein. Ihr könnt alles später ändern.'

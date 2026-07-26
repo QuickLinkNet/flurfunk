@@ -1,5 +1,5 @@
 import { apiRequest } from './client';
-import type { FeedItem, FeedItemType } from '../types/feedItem';
+import type { FeedComment, FeedItem, FeedItemType } from '../types/feedItem';
 import type { PushSendResult } from '../types/push';
 
 export function fetchFeed() {
@@ -15,4 +15,19 @@ interface NewFeedItem {
 
 export function createFeedItem(item: NewFeedItem) {
   return apiRequest<{ id: number; push: PushSendResult | null }>('/feed', { method: 'POST', body: JSON.stringify(item) });
+}
+
+export function toggleFeedReaction(id: number) {
+  return apiRequest<{ reactedByMe: boolean; reactionCount: number }>(`/feed/${id}/reaction`, { method: 'POST' });
+}
+
+export function addFeedComment(id: number, message: string) {
+  return apiRequest<FeedComment[]>(`/feed/${id}/comments`, { method: 'POST', body: JSON.stringify({ message }) });
+}
+
+export function updateFeedStatus(id: number, status: FeedItem['status']) {
+  return apiRequest<{ status: FeedItem['status'] }>(`/feed/${id}/status`, {
+    method: 'PUT',
+    body: JSON.stringify({ status })
+  });
 }

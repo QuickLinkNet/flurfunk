@@ -3,6 +3,8 @@
 namespace App\Controllers;
 
 use App\Core\Auth;
+use App\Core\Database;
+use App\Core\MailService;
 use App\Core\Request;
 use App\Core\Response;
 use App\Models\CalendarEntry;
@@ -10,12 +12,14 @@ use App\Models\Child;
 use App\Models\DashboardNotice;
 use App\Models\Event;
 use App\Models\FeedItem;
+use App\Models\FeatureFlag;
 use App\Models\Household;
 use App\Models\HouseholdInvite;
 use App\Models\Pet;
 use App\Models\PushSubscription;
 use App\Models\Street;
 use App\Models\User;
+use PDO;
 
 final class AdminController
 {
@@ -71,10 +75,14 @@ final class AdminController
         foreach ($people as $person) {
             $firstName = trim($person['firstName'] ?? '');
             $lastName = trim($person['lastName'] ?? '');
+            $email = trim($person['email'] ?? '');
+            if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                Response::error('Bitte gültige E-Mail-Adressen verwenden.', 422);
+            }
             if ($firstName === '' || $lastName === '') {
                 continue;
             }
-            $invites[] = $this->toPublicInvite(HouseholdInvite::create($householdId, $firstName, $lastName));
+            $invites[] = $this->toPublicInvite(HouseholdInvite::create($householdId, $firstName, $lastName, $email !== '' ? $email : null));
         }
 
         Response::json(['householdId' => $householdId, 'invites' => $invites], 201);
@@ -90,10 +98,14 @@ final class AdminController
         $body = Request::json();
         $firstName = trim($body['firstName'] ?? '');
         $lastName = trim($body['lastName'] ?? '');
+        $email = trim($body['email'] ?? '');
         if ($firstName === '' || $lastName === '') {
             Response::error('Vor- und Nachname sind Pflicht.', 422);
         }
-        $invite = HouseholdInvite::create($householdId, $firstName, $lastName);
+        if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            Response::error('Bitte eine gültige E-Mail-Adresse verwenden.', 422);
+        }
+        $invite = HouseholdInvite::create($householdId, $firstName, $lastName, $email !== '' ? $email : null);
         Response::json($this->toPublicInvite($invite), 201);
     }
 
@@ -102,6 +114,28 @@ final class AdminController
         $this->requireAdmin();
         HouseholdInvite::revoke((int) $params['id']);
         Response::json(null);
+    }
+
+    public function sendInviteEmail(array $params): void
+    {
+        $this->requireAdmin();
+        $invite = HouseholdInvite::findById((int) $params['id']);
+        if (!$invite) {
+            Response::error('Einladung nicht gefunden.', 404);
+        }
+        if (($invite['used_at'] ?? null) !== null || ($invite['revoked_at'] ?? null) !== null) {
+            Response::error('Diese Einladung ist nicht mehr aktiv.', 422);
+        }
+        if (trim((string) ($invite['email'] ?? '')) === '') {
+            Response::error('Für diese Einladung ist keine E-Mail-Adresse hinterlegt.', 422);
+        }
+
+        $household = Household::findById((int) $invite['household_id']);
+        if (!MailService::sendInvitation($invite, $household)) {
+            Response::error('E-Mail konnte vom Server nicht versendet werden.', 500);
+        }
+
+        Response::json($this->toPublicInvite(HouseholdInvite::markEmailSent((int) $invite['id'])));
     }
 
     public function updateHousehold(array $params): void
@@ -157,6 +191,20 @@ final class AdminController
         Response::json(null);
     }
 
+    public function deleteUser(array $params): void
+    {
+        $adminId = $this->requireAdmin();
+        $userId = (int) $params['id'];
+        if ($userId === $adminId) {
+            Response::error('Du kannst deinen eigenen Nutzer nicht löschen.', 422);
+        }
+        if (User::findById($userId) === null) {
+            Response::error('Nutzer nicht gefunden.', 404);
+        }
+        User::delete($userId);
+        Response::json(null);
+    }
+
     public function feed(): void
     {
         $this->requireAdmin();
@@ -166,6 +214,7 @@ final class AdminController
             'type' => $f['type'],
             'message' => $f['message'],
             'visibility' => $f['visibility'],
+            'status' => $f['status'] ?? 'open',
             'createdAt' => $f['created_at'],
             'expiresAt' => $f['expires_at'],
         ], FeedItem::findAll());
@@ -214,6 +263,8 @@ final class AdminController
             'title' => $e['title'],
             'startsAt' => $e['starts_at'],
             'endsAt' => $e['ends_at'],
+            'recurrenceRule' => $e['recurrence_rule'] ?? 'none',
+            'recurrenceUntil' => $e['recurrence_until'] ?? null,
         ], CalendarEntry::findAll());
         Response::json($entries);
     }
@@ -250,6 +301,25 @@ final class AdminController
         Response::json(null);
     }
 
+    public function systemStatus(): void
+    {
+        $this->requireAdmin();
+        $street = Street::first();
+        if ($street === null) {
+            Response::error('Keine Straße konfiguriert.', 500);
+        }
+
+        Response::json([
+            'serverTime' => gmdate('c'),
+            'phpVersion' => PHP_VERSION,
+            'database' => $this->databaseStatus(),
+            'migrations' => $this->migrationStatus(),
+            'pwa' => $this->pwaStatus(),
+            'push' => $this->pushStatus(),
+            'featureFlags' => FeatureFlag::findForStreet((int) $street['id']),
+        ]);
+    }
+
     private function requireAdmin(): int
     {
         $userId = Auth::requireLogin();
@@ -284,8 +354,13 @@ final class AdminController
             'code' => $i['code'],
             'firstName' => $i['first_name'],
             'lastName' => $i['last_name'],
+            'email' => $i['email'] ?? null,
+            'emailSentAt' => $i['email_sent_at'] ?? null,
+            'emailLastSentAt' => $i['email_last_sent_at'] ?? null,
+            'emailSendCount' => (int) ($i['email_send_count'] ?? 0),
             'usedAt' => $i['used_at'],
             'revokedAt' => $i['revoked_at'] ?? null,
+            'createdAt' => $i['created_at'],
             'usedByUser' => $usedUserId !== null ? [
                 'id' => (int) $usedUserId,
                 'email' => $i['used_user_email'],
@@ -307,4 +382,88 @@ final class AdminController
             'createdAt' => $n['created_at'],
         ];
     }
+
+    private function databaseStatus(): array
+    {
+        $pdo = Database::pdo();
+
+        return [
+            'driver' => (string) $pdo->getAttribute(PDO::ATTR_DRIVER_NAME),
+            'foreignKeys' => (int) $pdo->query('PRAGMA foreign_keys')->fetchColumn() === 1,
+        ];
+    }
+
+    private function migrationStatus(): array
+    {
+        $pdo = Database::pdo();
+        $files = glob(dirname(__DIR__) . '/migrations/*.sql') ?: [];
+        $filenames = array_map('basename', $files);
+        sort($filenames);
+
+        $stmt = $pdo->query('SELECT filename, applied_at FROM _migrations ORDER BY filename');
+        $appliedRows = $stmt->fetchAll();
+        $appliedFiles = array_map(fn(array $row) => $row['filename'], $appliedRows);
+        $latest = end($appliedRows) ?: null;
+
+        return [
+            'total' => count($filenames),
+            'applied' => count($appliedFiles),
+            'pending' => count(array_diff($filenames, $appliedFiles)),
+            'pendingFiles' => array_values(array_diff($filenames, $appliedFiles)),
+            'latestApplied' => $latest ? [
+                'filename' => $latest['filename'],
+                'appliedAt' => $latest['applied_at'],
+            ] : null,
+        ];
+    }
+
+    private function pwaStatus(): array
+    {
+        $root = dirname(__DIR__, 2);
+        $files = [
+            ['label' => 'Manifest', 'paths' => ['manifest.json', 'dist/manifest.json', 'public/manifest.json']],
+            ['label' => 'Service Worker', 'paths' => ['sw.js', 'dist/sw.js', 'src/sw.ts']],
+            ['label' => 'Icon 192', 'paths' => ['icons/icon-192.png', 'dist/icons/icon-192.png', 'public/icons/icon-192.png']],
+            ['label' => 'Icon 512', 'paths' => ['icons/icon-512.png', 'dist/icons/icon-512.png', 'public/icons/icon-512.png']],
+            ['label' => 'Maskable 192', 'paths' => ['icons/maskable-192.png', 'dist/icons/maskable-192.png', 'public/icons/maskable-192.png']],
+            ['label' => 'Maskable 512', 'paths' => ['icons/maskable-512.png', 'dist/icons/maskable-512.png', 'public/icons/maskable-512.png']],
+        ];
+
+        return array_map(function (array $file) use ($root): array {
+            $existingPath = null;
+            foreach ($file['paths'] as $path) {
+                if (is_file($root . '/' . $path)) {
+                    $existingPath = $path;
+                    break;
+                }
+            }
+
+            return [
+                'label' => $file['label'],
+                'path' => $existingPath ?? $file['paths'][0],
+                'exists' => $existingPath !== null,
+            ];
+        }, $files);
+    }
+
+    private function pushStatus(): array
+    {
+        $vapidKeys = $this->safeCount('vapid_keys');
+
+        return [
+            'subscriptions' => $this->safeCount('push_subscriptions'),
+            'vapidKeys' => $vapidKeys,
+            'vapidConfigured' => $vapidKeys > 0,
+        ];
+    }
+
+    private function safeCount(string $table): int
+    {
+        try {
+            return (int) Database::pdo()->query('SELECT COUNT(*) FROM ' . $table)->fetchColumn();
+        } catch (\Throwable) {
+            return 0;
+        }
+    }
+
 }

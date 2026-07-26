@@ -20,3 +20,39 @@ export const FEED_TYPE_META: Record<FeedItemType, Meta> = {
 };
 
 export const FEED_TYPE_OPTIONS = Object.entries(FEED_TYPE_META) as [FeedItemType, Meta][];
+
+export type FeedCategory = 'all' | 'help' | 'sharing' | 'packages' | 'notices' | 'presence';
+
+interface CategoryMeta {
+  label: string;
+  types: FeedItemType[];
+}
+
+export const FEED_CATEGORY_META: Record<FeedCategory, CategoryMeta> = {
+  all: {
+    label: 'Alles',
+    types: Object.keys(FEED_TYPE_META) as FeedItemType[]
+  },
+  help: {
+    label: 'Hilfe',
+    types: ['help_needed', 'babysitter_needed']
+  },
+  sharing: {
+    label: 'Verleihen',
+    types: ['tool_available']
+  },
+  packages: {
+    label: 'Pakete',
+    types: ['package_received']
+  },
+  notices: {
+    label: 'Hinweise',
+    types: ['street_closed', 'visit_expected']
+  },
+  presence: {
+    label: 'Status',
+    types: ['home', 'vacation']
+  }
+};
+
+export const FEED_CATEGORY_OPTIONS = Object.entries(FEED_CATEGORY_META) as [FeedCategory, CategoryMeta][];

@@ -3,21 +3,30 @@ import type { FeedItem } from '../../types/feedItem';
 
 interface Props {
   items: FeedItem[];
+  onChanged: () => void;
+  emptyTitle?: string;
+  emptyText?: string;
 }
 
-export function FeedList({ items }: Props) {
+export function FeedList({
+  items,
+  onChanged,
+  emptyTitle = 'Keine passenden Meldungen',
+  emptyText = 'Sobald es etwas Neues in der Straße gibt, erscheint es hier.'
+}: Props) {
   if (items.length === 0) {
     return (
-      <p style={{ fontSize: 'var(--md-font-size-base)', color: 'var(--md-color-on-surface-variant)' }}>
-        Keine passenden Meldungen in der Straße.
-      </p>
+      <div className="feed-empty">
+        <strong>{emptyTitle}</strong>
+        <p>{emptyText}</p>
+      </div>
     );
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--md-space-2)' }}>
+    <div className="feed-list">
       {items.map((item) => (
-        <FeedItemCard key={item.id} item={item} />
+        <FeedItemCard key={item.id} item={item} onChanged={onChanged} />
       ))}
     </div>
   );
