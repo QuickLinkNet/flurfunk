@@ -1,5 +1,9 @@
 .admin-section {
   display: grid;
+  /* minmax(0, 1fr): verhindert, dass eine breite Filterzeile o.ä. weiter
+     unten im Tab den ganzen Adminbereich horizontal aufbläht (siehe
+     app-page-main). */
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--md-space-3);
 }
 

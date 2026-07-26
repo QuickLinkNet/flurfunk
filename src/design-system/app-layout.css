@@ -215,6 +215,10 @@ a:focus-visible {
 
 .app-page-main {
   display: grid;
+  /* minmax(0, 1fr) statt implizitem 1fr: sonst darf jedes breite Kind
+     (z. B. eine nicht umbrechende Zeile) die ganze Seite aufblähen und
+     auf Mobile horizontal scrollbar machen. */
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--md-space-4);
   padding: 0 var(--md-space-4) calc(76px + var(--md-space-4));
 }
@@ -296,6 +300,10 @@ a:focus-visible {
   gap: var(--md-space-2);
   overflow-x: auto;
   padding-bottom: var(--md-space-1);
+  /* Wird teils als Kind eines flex/grid-Containers wiederverwendet (z. B.
+     Einladungs-Filter). Ohne min-width: 0 zieht die Button-Reihe den
+     ganzen Elternrahmen in die Breite, statt selbst intern zu scrollen. */
+  min-width: 0;
 }
 
 .admin-search {
