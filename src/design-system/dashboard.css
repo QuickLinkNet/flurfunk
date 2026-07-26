@@ -47,6 +47,14 @@
   display: grid;
   gap: var(--md-space-3);
   margin-top: calc(var(--md-space-5) * -1);
+  width: 100%;
+  /* Ohne Obergrenze zieht sich das Dashboard auf breiten Monitoren über
+     die volle Fensterbreite (rechte Spalte wirkt dann isoliert weit
+     draußen). Hero-Header bleibt unangetastet, nur der Karteninhalt wird
+     begrenzt und zentriert - etwas breiter als app-page-main, weil hier
+     eine zweite Spalte (320px) mitläuft. */
+  max-width: 1200px;
+  margin-inline: auto;
   padding: 0 var(--md-space-4) calc(76px + var(--md-space-4));
 }
 
