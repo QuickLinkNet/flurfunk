@@ -95,10 +95,10 @@
 .calendar-empty-filter {
   margin: 0;
   padding: var(--md-space-3);
-  border: 1px dashed rgba(216, 204, 186, 0.92);
+  border: 1px dashed var(--md-color-border);
   border-radius: var(--md-radius-control);
   color: var(--md-color-on-surface-variant);
-  background: rgba(255, 253, 252, 0.68);
+  background: var(--md-color-surface);
 }
 
 .calendar-detail {
@@ -260,6 +260,13 @@
 .calendar-board .fc .fc-col-header-cell,
 .calendar-board .fc .fc-daygrid-day-number {
   color: var(--md-color-on-surface-variant);
+}
+
+.calendar-board .fc {
+  --fc-page-bg-color: var(--md-color-surface);
+  --fc-neutral-bg-color: var(--md-color-surface-variant);
+  --fc-border-color: var(--md-color-border);
+  --fc-list-event-hover-bg-color: var(--md-color-paper);
 }
 
 .calendar-board .fc .fc-event {

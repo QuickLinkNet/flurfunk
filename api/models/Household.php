@@ -71,14 +71,35 @@ final class Household
         return $stmt->fetchAll();
     }
 
+    // Löscht den Haushalt vollständig. Mitglieder ohne Admin-Rolle werden mitgelöscht
+    // (sonst blieben verwaiste Nutzerkonten ohne Haushalt zurück). Admin-Accounts werden
+    // nur vom Haushalt gelöst, nie automatisch gelöscht, damit ein Haushalt-Löschen nie
+    // versehentlich einen Admin-Zugang entfernen kann.
     public static function delete(int $id): void
     {
         $pdo = Database::pdo();
 
         $pdo->beginTransaction();
         try {
+            $memberStmt = $pdo->prepare("SELECT id FROM users WHERE household_id = ? AND role != 'admin'");
+            $memberStmt->execute([$id]);
+            $memberUserIds = array_map('intval', $memberStmt->fetchAll(\PDO::FETCH_COLUMN));
+
             $pdo->prepare('DELETE FROM feed_reactions WHERE user_id IN (SELECT id FROM users WHERE household_id = ?)')->execute([$id]);
-            $pdo->prepare('UPDATE users SET household_id = NULL WHERE household_id = ?')->execute([$id]);
+            $pdo->prepare("UPDATE users SET household_id = NULL WHERE household_id = ? AND role = 'admin'")->execute([$id]);
+
+            foreach ($memberUserIds as $userId) {
+                $pdo->prepare('DELETE FROM feed_comments WHERE user_id = ?')->execute([$userId]);
+                $pdo->prepare('DELETE FROM event_responses WHERE responded_by_user_id = ?')->execute([$userId]);
+                $pdo->prepare('DELETE FROM notifications WHERE user_id = ?')->execute([$userId]);
+                $pdo->prepare('DELETE FROM push_subscriptions WHERE user_id = ?')->execute([$userId]);
+                $pdo->prepare('UPDATE household_invites SET used_by_user_id = NULL WHERE used_by_user_id = ?')->execute([$userId]);
+            }
+            if ($memberUserIds !== []) {
+                $placeholders = implode(',', array_fill(0, count($memberUserIds), '?'));
+                $pdo->prepare("DELETE FROM users WHERE id IN ($placeholders)")->execute($memberUserIds);
+            }
+
             $pdo->prepare('DELETE FROM household_invites WHERE household_id = ?')->execute([$id]);
             $pdo->prepare('DELETE FROM children WHERE household_id = ?')->execute([$id]);
             $pdo->prepare('DELETE FROM pets WHERE household_id = ?')->execute([$id]);

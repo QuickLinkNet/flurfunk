@@ -57,7 +57,7 @@ export function AdminHouseholdList({ households, onDelete, onInvitesChanged, onH
       type: 'deleteHousehold',
       id,
       title: 'Haushalt löschen?',
-      description: `Der Haushalt "${name}" wird mit Kindern, Haustieren, Feed und Events gelöscht.`,
+      description: `Der Haushalt "${name}" wird mit Kindern, Haustieren, Feed und Events gelöscht. Mitglieder ohne Admin-Rolle werden dabei ebenfalls dauerhaft entfernt. Admin-Accounts bleiben erhalten und werden nur vom Haushalt gelöst.`,
       confirmLabel: 'Löschen'
     });
   }
