@@ -1,5 +1,5 @@
 import { apiRequest } from './client';
-import type { FeedComment, FeedItem, FeedItemType } from '../types/feedItem';
+import type { FeedComment, FeedHelper, FeedItem, FeedItemType } from '../types/feedItem';
 import type { PushSendResult } from '../types/push';
 
 export function fetchFeed() {
@@ -30,4 +30,8 @@ export function updateFeedStatus(id: number, status: FeedItem['status']) {
     method: 'PUT',
     body: JSON.stringify({ status })
   });
+}
+
+export function toggleFeedHelper(id: number) {
+  return apiRequest<{ helpingByMe: boolean; helpers: FeedHelper[] }>(`/feed/${id}/helpers`, { method: 'POST' });
 }

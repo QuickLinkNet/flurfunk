@@ -15,6 +15,8 @@ export interface FeedItem {
   reactionCount: number;
   reactedByMe: boolean;
   comments: FeedComment[];
+  helpers: FeedHelper[];
+  helpingByMe: boolean;
 }
 
 export interface FeedComment {
@@ -22,5 +24,11 @@ export interface FeedComment {
   householdName: string | null;
   authorName: string;
   message: string;
+  createdAt: string;
+}
+
+export interface FeedHelper {
+  id: number;
+  householdName: string | null;
   createdAt: string;
 }

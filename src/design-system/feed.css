@@ -151,6 +151,15 @@
   font-size: var(--md-font-size-sm);
 }
 
+.feed-helpers {
+  margin: 0;
+  padding: var(--md-space-2);
+  border-radius: 12px;
+  background: var(--md-color-primary-container);
+  color: var(--md-color-primary);
+  font-size: var(--md-font-size-sm);
+}
+
 .feed-comment-form {
   display: grid;
   gap: var(--md-space-2);

@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { IconBadge } from '../atoms/IconBadge';
 import { Button } from '../atoms/Button';
 import { Textarea } from '../atoms/Textarea';
-import { addFeedComment, toggleFeedReaction, updateFeedStatus } from '../../api/feedApi';
+import { addFeedComment, toggleFeedHelper, toggleFeedReaction, updateFeedStatus } from '../../api/feedApi';
 import { FEED_TYPE_META } from '../../utils/feedTypeMeta';
 import type { FeedComment, FeedItem, FeedItemType } from '../../types/feedItem';
 
@@ -12,6 +12,7 @@ interface Props {
 }
 
 const STATUS_TYPES: FeedItemType[] = ['help_needed', 'tool_available', 'babysitter_needed', 'package_received'];
+const HELPER_TYPES: FeedItemType[] = ['help_needed', 'babysitter_needed'];
 
 function formatDate(value: string): string {
   const date = new Date(value.replace(' ', 'T'));
@@ -27,6 +28,10 @@ function visibilityLabel(value: FeedItem['visibility']): string {
 
 function supportsStatus(type: FeedItemType): boolean {
   return STATUS_TYPES.includes(type);
+}
+
+function supportsHelpers(type: FeedItemType): boolean {
+  return HELPER_TYPES.includes(type);
 }
 
 function FeedCommentRow({ comment }: { comment: FeedComment }) {
@@ -49,7 +54,9 @@ export function FeedItemCard({ item, onChanged }: Props) {
   const [isReacting, setIsReacting] = useState(false);
   const [isCommenting, setIsCommenting] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [isHelping, setIsHelping] = useState(false);
   const showStatus = supportsStatus(item.type);
+  const showHelpers = supportsHelpers(item.type);
   const commentCountLabel = item.comments.length === 1 ? '1 Kommentar' : `${item.comments.length} Kommentare`;
 
   async function handleReaction() {
@@ -83,6 +90,19 @@ export function FeedItemCard({ item, onChanged }: Props) {
       setMessage(error instanceof Error ? error.message : 'Kommentar konnte nicht gespeichert werden.');
     } finally {
       setIsCommenting(false);
+    }
+  }
+
+  async function handleHelperToggle() {
+    setIsHelping(true);
+    setMessage(null);
+    try {
+      await toggleFeedHelper(item.id);
+      onChanged();
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Hilfe-Zusage konnte nicht gespeichert werden.');
+    } finally {
+      setIsHelping(false);
     }
   }
 
@@ -129,12 +149,23 @@ export function FeedItemCard({ item, onChanged }: Props) {
         <button type="button" data-active={isReplyOpen} onClick={() => setIsReplyOpen((open) => !open)}>
           {commentCountLabel}
         </button>
+        {showHelpers && !item.canManage && (
+          <button type="button" data-active={item.helpingByMe} disabled={isHelping} onClick={handleHelperToggle}>
+            🤝 {item.helpingByMe ? 'Ich helfe' : 'Ich kann helfen'}
+          </button>
+        )}
         {showStatus && item.canManage && (
           <button type="button" disabled={isUpdatingStatus} onClick={handleStatusToggle}>
             {item.status === 'done' ? 'Wieder öffnen' : 'Als erledigt markieren'}
           </button>
         )}
       </div>
+
+      {showHelpers && (item.helpers?.length ?? 0) > 0 && (
+        <p className="feed-helpers">
+          Hilft: {item.helpers.map((helper) => helper.householdName ?? 'Nachbar').join(', ')}
+        </p>
+      )}
 
       {isReplyOpen && (
         <div className="feed-replies">

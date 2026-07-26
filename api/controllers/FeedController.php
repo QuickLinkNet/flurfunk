@@ -102,6 +102,30 @@ final class FeedController
         Response::json(array_map([$this, 'toPublicComment'], FeedItem::commentsForItem($itemId)), 201);
     }
 
+    public function toggleHelper(array $params): void
+    {
+        $userId = Auth::requireLogin();
+        $user = User::findById($userId);
+        if ($user === null) {
+            Response::error('Nicht angemeldet.', 401);
+        }
+
+        $itemId = (int) $params['id'];
+        $item = FeedItem::findVisibleById($itemId, $user['role'] ?? 'guest');
+        if ($item === null) {
+            Response::error('Meldung nicht gefunden.', 404);
+        }
+        if (!in_array($item['type'], ['help_needed', 'babysitter_needed'], true)) {
+            Response::error('Für diese Meldung gibt es keine Hilfe-Zusage.', 422);
+        }
+
+        $helping = FeedItem::toggleHelper($itemId, $userId, $user['household_id'] !== null ? (int) $user['household_id'] : null);
+        Response::json([
+            'helpingByMe' => $helping,
+            'helpers' => array_map([$this, 'toPublicHelper'], FeedItem::helpersForItem($itemId)),
+        ]);
+    }
+
     public function updateStatus(array $params): void
     {
         $userId = Auth::requireLogin();
@@ -146,6 +170,11 @@ final class FeedController
 
     private function toPublicItem(array $item): array
     {
+        $userId = Auth::userId();
+        $helpers = in_array($item['type'], ['help_needed', 'babysitter_needed'], true)
+            ? FeedItem::helpersForItem((int) $item['id'])
+            : [];
+
         return [
             'id' => (int) $item['id'],
             'householdName' => $item['household_name'],
@@ -159,6 +188,8 @@ final class FeedController
             'reactionCount' => (int) ($item['reaction_count'] ?? 0),
             'reactedByMe' => ((int) ($item['reacted_by_me'] ?? 0)) === 1,
             'comments' => array_map([$this, 'toPublicComment'], FeedItem::commentsForItem((int) $item['id'])),
+            'helpers' => array_map([$this, 'toPublicHelper'], $helpers),
+            'helpingByMe' => $userId !== null && in_array($userId, array_map(fn(array $h) => (int) $h['user_id'], $helpers), true),
         ];
     }
 
@@ -170,6 +201,15 @@ final class FeedController
             'authorName' => $comment['author_name'],
             'message' => $comment['message'],
             'createdAt' => $comment['created_at'],
+        ];
+    }
+
+    private function toPublicHelper(array $helper): array
+    {
+        return [
+            'id' => (int) $helper['id'],
+            'householdName' => $helper['household_name'] ?? null,
+            'createdAt' => $helper['created_at'],
         ];
     }
 

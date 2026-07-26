@@ -86,6 +86,7 @@ $router->post('/feed', [new FeedController(), 'store']);
 $router->post('/feed/{id}/reaction', [new FeedController(), 'toggleReaction']);
 $router->post('/feed/{id}/comments', [new FeedController(), 'addComment']);
 $router->put('/feed/{id}/status', [new FeedController(), 'updateStatus']);
+$router->post('/feed/{id}/helpers', [new FeedController(), 'toggleHelper']);
 
 $router->get('/calendar', [new CalendarController(), 'index']);
 $router->post('/calendar', [new CalendarController(), 'store']);

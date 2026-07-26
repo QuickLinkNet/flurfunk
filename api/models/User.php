@@ -100,6 +100,7 @@ final class User
         try {
             $pdo->prepare('DELETE FROM feed_reactions WHERE user_id = ?')->execute([$id]);
             $pdo->prepare('DELETE FROM feed_comments WHERE user_id = ?')->execute([$id]);
+            $pdo->prepare('DELETE FROM feed_helpers WHERE user_id = ?')->execute([$id]);
             $pdo->prepare('DELETE FROM event_responses WHERE responded_by_user_id = ?')->execute([$id]);
             $pdo->prepare('DELETE FROM notifications WHERE user_id = ?')->execute([$id]);
             $pdo->prepare('DELETE FROM push_subscriptions WHERE user_id = ?')->execute([$id]);

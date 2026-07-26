@@ -68,6 +68,7 @@ final class FeedItem
         try {
             $pdo->prepare('DELETE FROM feed_comments WHERE feed_item_id = ?')->execute([$id]);
             $pdo->prepare('DELETE FROM feed_reactions WHERE feed_item_id = ?')->execute([$id]);
+            $pdo->prepare('DELETE FROM feed_helpers WHERE feed_item_id = ?')->execute([$id]);
             $pdo->prepare('DELETE FROM feed_items WHERE id = ?')->execute([$id]);
             $pdo->commit();
         } catch (\Throwable $e) {
@@ -146,5 +147,38 @@ final class FeedItem
         );
         $stmt->execute([$feedItemId, $userId, $householdId, $message]);
         return (int) Database::pdo()->lastInsertId();
+    }
+
+    // "Ich kann helfen"-Zusage für Hilfe-Meldungen. Toggle wie eine Reaktion,
+    // aber mit Haushaltszuordnung, damit der Ersteller sieht, wer konkret hilft.
+    public static function toggleHelper(int $feedItemId, int $userId, ?int $householdId): bool
+    {
+        $pdo = Database::pdo();
+        $existing = $pdo->prepare('SELECT id FROM feed_helpers WHERE feed_item_id = ? AND user_id = ? LIMIT 1');
+        $existing->execute([$feedItemId, $userId]);
+        $helperId = $existing->fetchColumn();
+        if ($helperId !== false) {
+            $delete = $pdo->prepare('DELETE FROM feed_helpers WHERE id = ?');
+            $delete->execute([(int) $helperId]);
+            return false;
+        }
+
+        $insert = $pdo->prepare('INSERT INTO feed_helpers (feed_item_id, user_id, household_id) VALUES (?, ?, ?)');
+        $insert->execute([$feedItemId, $userId, $householdId]);
+        return true;
+    }
+
+    public static function helpersForItem(int $feedItemId): array
+    {
+        $stmt = Database::pdo()->prepare(
+            'SELECT fh.*, h.name AS household_name
+             FROM feed_helpers fh
+             LEFT JOIN households h ON h.id = fh.household_id
+             WHERE fh.feed_item_id = ?
+             ORDER BY fh.created_at ASC
+             LIMIT 50'
+        );
+        $stmt->execute([$feedItemId]);
+        return $stmt->fetchAll();
     }
 }
