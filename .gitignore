@@ -8,3 +8,7 @@ api/data/*.sqlite
 *.log
 .DS_Store
 .claude/settings.local.json
+.idea/
+.vscode/
+input/
+tmp-mobile-*.png
