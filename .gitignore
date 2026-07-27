@@ -4,6 +4,7 @@ dev-dist/
 *.tsbuildinfo
 .env.local
 .env.deploy
+api/cron-token.local.php
 api/data/*.sqlite
 *.log
 .DS_Store
