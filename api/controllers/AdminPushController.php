@@ -17,7 +17,12 @@ final class AdminPushController
             Response::error('Nutzer nicht gefunden.', 404);
         }
 
-        Response::json(PushService::sendTestToUser($userId) + ['userId' => $userId]);
+        $result = PushService::sendTestToUser($userId, [
+            'title' => 'Flurfunk: Admin-Test',
+            'body' => 'Test-Push vom Admin-Bereich.',
+            'url' => '/apps/neighborhood/dashboard',
+        ]);
+        Response::json($result + ['userId' => $userId]);
     }
 
     private function requireAdmin(): int

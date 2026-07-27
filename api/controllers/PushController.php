@@ -53,7 +53,11 @@ final class PushController
     public function test(): void
     {
         $userId = Auth::requireLogin();
-        $result = PushService::sendTestToUser($userId);
+        $result = PushService::sendTestToUser($userId, [
+            'title' => 'Flurfunk: Test',
+            'body' => 'Push-Benachrichtigungen funktionieren 🎉',
+            'url' => '/apps/neighborhood/einstellungen',
+        ]);
         if ($result['total'] === 0) {
             Response::error('Keine aktive Push-Anmeldung gefunden.', 404);
         }

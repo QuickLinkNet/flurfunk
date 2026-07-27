@@ -6,22 +6,22 @@ use App\Models\PushSubscription;
 
 final class PushService
 {
-    public static function sendTestToUser(int $userId): array
+    public static function sendTestToUser(int $userId, ?array $payload = null): array
     {
-        return self::sendToSubscriptions(PushSubscription::findByUser($userId));
+        return self::sendToSubscriptions(PushSubscription::findByUser($userId), $payload);
     }
 
-    public static function sendFeedUpdate(int $authorUserId): array
+    public static function sendFeedUpdate(int $authorUserId, ?array $payload = null): array
     {
-        return self::sendToSubscriptions(PushSubscription::findAllExceptUser($authorUserId));
+        return self::sendToSubscriptions(PushSubscription::findAllExceptUser($authorUserId), $payload);
     }
 
-    public static function sendBroadcast(): array
+    public static function sendBroadcast(?array $payload = null): array
     {
-        return self::sendToSubscriptions(PushSubscription::findAll());
+        return self::sendToSubscriptions(PushSubscription::findAll(), $payload);
     }
 
-    private static function sendToSubscriptions(array $subscriptions): array
+    private static function sendToSubscriptions(array $subscriptions, ?array $payload): array
     {
         if (count($subscriptions) === 0) {
             return [
@@ -38,7 +38,7 @@ final class PushService
         $failed = 0;
         $statuses = [];
         foreach ($subscriptions as $sub) {
-            $status = WebPush::send($sub['endpoint']);
+            $status = WebPush::send($sub, $payload);
             $statuses[] = $status;
             if ($status === 404 || $status === 410) {
                 PushSubscription::deleteByEndpoint($sub['endpoint']);

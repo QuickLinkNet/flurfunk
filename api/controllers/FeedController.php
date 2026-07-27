@@ -7,6 +7,7 @@ use App\Core\PushService;
 use App\Core\Request;
 use App\Core\Response;
 use App\Models\FeedItem;
+use App\Models\Household;
 use App\Models\User;
 
 final class FeedController
@@ -35,10 +36,11 @@ final class FeedController
             : 'neighbors';
 
         $expiresAt = $this->normalizeExpiresAt($body['expiresAt'] ?? null);
+        $message = $this->normalizeMessage($body['message'] ?? null);
         $id = FeedItem::create(
             (int) $user['household_id'],
             $type,
-            $this->normalizeMessage($body['message'] ?? null),
+            $message,
             $visibility,
             $expiresAt
         );
@@ -46,7 +48,13 @@ final class FeedController
         $push = null;
         if ($visibility !== 'private') {
             try {
-                $push = PushService::sendFeedUpdate($userId);
+                $household = Household::findById((int) $user['household_id']);
+                $householdName = $household['name'] ?? 'Ein Nachbar';
+                $push = PushService::sendFeedUpdate($userId, [
+                    'title' => 'Flurfunk: ' . $householdName,
+                    'body' => $message !== null ? $this->truncateMessage($message, 120) : 'Neue Meldung in der Straße.',
+                    'url' => '/apps/neighborhood/strasse',
+                ]);
             } catch (\Throwable $e) {
                 error_log('Feed push failed: ' . $e->getMessage());
             }
@@ -281,6 +289,16 @@ final class FeedController
     {
         $normalized = trim((string) ($message ?? ''));
         return $normalized !== '' ? $normalized : null;
+    }
+
+    private function truncateMessage(string $message, int $maxLength): string
+    {
+        $length = function_exists('mb_strlen') ? mb_strlen($message) : strlen($message);
+        if ($length <= $maxLength) {
+            return $message;
+        }
+        $truncated = function_exists('mb_substr') ? mb_substr($message, 0, $maxLength) : substr($message, 0, $maxLength);
+        return $truncated . '…';
     }
 
     private function normalizeExpiresAt(mixed $expiresAt): ?string

@@ -20,8 +20,13 @@ final class TrashReminderService
         }
 
         $titles = array_values(array_unique(array_map(fn(array $e) => (string) $e['title'], $entries)));
+        $list = implode(', ', $titles);
 
-        $push = PushService::sendBroadcast();
+        $push = PushService::sendBroadcast([
+            'title' => '🗑️ Mülltermin morgen',
+            'body' => $list,
+            'url' => '/apps/neighborhood/dashboard',
+        ]);
 
         $mailSent = 0;
         $recipients = self::mailRecipients();

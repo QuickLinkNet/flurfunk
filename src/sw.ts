@@ -42,16 +42,32 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
-// Bewusst payload-lose Pushes (siehe api/core/WebPush.php): Der Server
-// verschickt keinen verschlüsselten Inhalt, nur ein Weck-Signal. Der Text
-// hier ist deshalb generisch, bis echte Ereignisse unterschiedliche Inhalte
-// brauchen.
+// Server verschickt jetzt echte, verschlüsselte Payloads (siehe
+// api/core/WebPush.php, RFC 8291). Fällt auf generischen Text zurück,
+// falls doch mal ein payload-loser Push ankommt (z. B. altes Verhalten
+// oder fehlende p256dh/auth-Werte).
 self.addEventListener('push', (event) => {
+  let title = 'Flurfunk';
+  let body = 'Neue Aktivität im Flurfunk.';
+  let url = '/apps/neighborhood/';
+
+  if (event.data) {
+    try {
+      const data = event.data.json();
+      title = data.title ?? title;
+      body = data.body ?? body;
+      url = data.url ?? url;
+    } catch {
+      body = event.data.text() || body;
+    }
+  }
+
   event.waitUntil(
-    self.registration.showNotification('Flurfunk', {
-      body: 'Neue Aktivität im Flurfunk.',
+    self.registration.showNotification(title, {
+      body,
       icon: '/apps/neighborhood/icons/icon-192.png',
-      badge: '/apps/neighborhood/icons/icon-192.png'
+      badge: '/apps/neighborhood/icons/icon-192.png',
+      data: { url }
     })
   );
 });
