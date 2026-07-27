@@ -229,6 +229,12 @@
   gap: var(--md-space-2);
   overflow-x: auto;
   padding-bottom: 2px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.dashboard-status-strip::-webkit-scrollbar {
+  display: none;
 }
 
 .dashboard-household-card {
@@ -290,6 +296,12 @@
   gap: var(--md-space-2);
   overflow-x: auto;
   padding-bottom: 2px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.dashboard-date-rail::-webkit-scrollbar {
+  display: none;
 }
 
 .dashboard-date-card {

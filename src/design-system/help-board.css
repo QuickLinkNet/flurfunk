@@ -50,9 +50,8 @@
 
 .help-board-filterbar {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--md-space-2);
-  overflow-x: auto;
-  padding-bottom: 2px;
 }
 
 .help-board-filterbar button {
@@ -62,8 +61,8 @@
   border-radius: 999px;
   background: var(--md-color-surface);
   color: var(--md-color-on-surface);
+  font-size: var(--md-font-size-sm);
   font-weight: var(--md-font-weight-medium);
-  white-space: nowrap;
 }
 
 .help-board-filterbar button[data-active='true'] {

@@ -1,5 +1,6 @@
 button {
   font-family: inherit;
+  font-size: inherit;
   transition: box-shadow 140ms ease, background-color 140ms ease, border-color 140ms ease, color 140ms ease, opacity 140ms ease, filter 140ms ease;
 }
 
