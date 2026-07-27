@@ -1,6 +1,8 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { LoginPage } from '../pages/LoginPage';
 import { RegisterPage } from '../pages/RegisterPage';
+import { ForgotPasswordPage } from '../pages/ForgotPasswordPage';
+import { ResetPasswordPage } from '../pages/ResetPasswordPage';
 import { DashboardPage } from '../pages/DashboardPage';
 import { StreetFeedPage } from '../pages/StreetFeedPage';
 import { HelpBoardPage } from '../pages/HelpBoardPage';
@@ -53,6 +55,8 @@ export function AppRoutes() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/registrieren" element={<RegisterPage />} />
       <Route path="/registrieren/:inviteCode" element={<RegisterPage />} />
+      <Route path="/passwort-vergessen" element={<ForgotPasswordPage />} />
+      <Route path="/passwort-zuruecksetzen/:token" element={<ResetPasswordPage />} />
       <Route
         path="/start"
         element={

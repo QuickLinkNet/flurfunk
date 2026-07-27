@@ -55,6 +55,8 @@ $router->get('/invites/{code}', [new AuthController(), 'invitePreview']);
 $router->post('/auth/register', [new AuthController(), 'register']);
 $router->post('/auth/login', [new AuthController(), 'login']);
 $router->post('/auth/logout', [new AuthController(), 'logout']);
+$router->post('/auth/password-reset/request', [new AuthController(), 'requestPasswordReset']);
+$router->post('/auth/password-reset/confirm', [new AuthController(), 'confirmPasswordReset']);
 $router->post('/auth/onboarding/complete', [new AuthController(), 'completeOnboarding']);
 $router->post('/auth/onboarding/progress', [new AuthController(), 'saveOnboardingProgress']);
 $router->get('/auth/me', [new AuthController(), 'me']);

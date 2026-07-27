@@ -4,10 +4,12 @@ namespace App\Controllers;
 
 use App\Core\Auth;
 use App\Core\Database;
+use App\Core\MailService;
 use App\Core\Request;
 use App\Core\Response;
 use App\Models\Household;
 use App\Models\HouseholdInvite;
+use App\Models\PasswordReset;
 use App\Models\User;
 
 final class AuthController
@@ -96,6 +98,46 @@ final class AuthController
     {
         Auth::logout();
         Response::json(null);
+    }
+
+    public function requestPasswordReset(): void
+    {
+        $body = Request::json();
+        $email = strtolower(trim($body['email'] ?? ''));
+        if ($email === '') {
+            Response::error('Bitte E-Mail-Adresse angeben.', 422);
+        }
+
+        $user = User::findByEmail($email);
+        if ($user !== null) {
+            $token = PasswordReset::create((int) $user['id']);
+            MailService::sendPasswordReset($email, (string) $user['display_name'], $token);
+        }
+
+        // Bewusst immer dieselbe Antwort, egal ob die E-Mail existiert -
+        // sonst liesse sich damit erraten, wer registriert ist.
+        Response::json(['message' => 'Falls diese E-Mail-Adresse registriert ist, haben wir einen Link zum Zurücksetzen geschickt.']);
+    }
+
+    public function confirmPasswordReset(): void
+    {
+        $body = Request::json();
+        $token = trim((string) ($body['token'] ?? ''));
+        $password = (string) ($body['password'] ?? '');
+
+        if ($token === '' || strlen($password) < 8) {
+            Response::error('Bitte einen gültigen Link verwenden und ein Passwort mit mind. 8 Zeichen wählen.', 422);
+        }
+
+        $reset = PasswordReset::findValidByToken($token);
+        if ($reset === null) {
+            Response::error('Dieser Link ist ungültig oder abgelaufen. Bitte fordere einen neuen an.', 422);
+        }
+
+        User::updatePassword((int) $reset['user_id'], password_hash($password, PASSWORD_DEFAULT));
+        PasswordReset::markUsed((int) $reset['id']);
+
+        Response::json(['message' => 'Passwort wurde geändert. Du kannst dich jetzt anmelden.']);
     }
 
     public function completeOnboarding(): void

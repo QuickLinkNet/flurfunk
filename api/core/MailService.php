@@ -31,6 +31,26 @@ final class MailService
         );
     }
 
+    public static function sendPasswordReset(string $email, string $displayName, string $token): bool
+    {
+        $email = trim($email);
+        if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return false;
+        }
+
+        $link = self::passwordResetLink($token);
+        $message = implode("\n", [
+            "Hallo {$displayName},",
+            '',
+            'für dein Flurfunk-Konto wurde ein neues Passwort angefordert.',
+            'Falls du das warst, klicke innerhalb der nächsten Stunde auf diesen Link:',
+            $link,
+            '',
+            'Falls du das nicht warst, kannst du diese E-Mail ignorieren - dein Passwort bleibt unverändert.',
+        ]);
+        return self::sendPlainText($email, 'Flurfunk: Passwort zurücksetzen', $message);
+    }
+
     private static function sendPlainText(string $email, string $subject, string $message): bool
     {
         $headers = [
@@ -45,6 +65,16 @@ final class MailService
 
     private static function inviteLink(string $code): string
     {
+        return self::linkFor('/apps/neighborhood/registrieren/' . rawurlencode($code));
+    }
+
+    private static function passwordResetLink(string $token): string
+    {
+        return self::linkFor('/apps/neighborhood/passwort-zuruecksetzen/' . rawurlencode($token));
+    }
+
+    private static function linkFor(string $path): string
+    {
         $host = $_SERVER['HTTP_HOST'] ?? 'www.red-it.org';
         $isHttps = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
         $scheme = $isHttps ? 'https' : 'http';
@@ -53,7 +83,7 @@ final class MailService
             $scheme = 'https';
         }
 
-        return $scheme . '://' . $host . '/apps/neighborhood/registrieren/' . rawurlencode($code);
+        return $scheme . '://' . $host . $path;
     }
 
     private static function invitationMessage(array $invite, ?array $household, string $link): string

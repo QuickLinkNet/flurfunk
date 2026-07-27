@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../components/atoms/Button';
 import { AuthInputField } from '../components/molecules/AuthInputField';
 import { AuthShell } from '../components/templates/AuthShell';
@@ -43,10 +43,15 @@ export function LoginPage() {
           onChange={(e) => setPassword(e.target.value)}
           required
         />
-        <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--md-space-2)', fontSize: 'var(--md-font-size-sm)', color: 'var(--md-color-on-surface-variant)', cursor: 'pointer' }}>
-          <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
-          Angemeldet bleiben (7 Tage)
-        </label>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 'var(--md-space-2)' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--md-space-2)', fontSize: 'var(--md-font-size-sm)', color: 'var(--md-color-on-surface-variant)', cursor: 'pointer' }}>
+            <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
+            Angemeldet bleiben (7 Tage)
+          </label>
+          <Link to="/passwort-vergessen" style={{ fontSize: 'var(--md-font-size-sm)' }}>
+            Passwort vergessen?
+          </Link>
+        </div>
         {error && <p style={{ color: 'var(--md-color-error)', fontSize: 'var(--md-font-size-base)', margin: 0 }}>{error}</p>}
         <Button type="submit">Anmelden</Button>
       </form>
