@@ -18,9 +18,9 @@
   --md-heading-font-weight: var(--md-font-weight-bold);
   display: grid;
   gap: var(--md-space-3);
-  min-height: 230px;
+  min-height: 150px;
   align-content: start;
-  padding: var(--md-space-4) var(--md-space-4) var(--md-space-6);
+  padding: var(--md-space-4) var(--md-space-4) var(--md-space-5);
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--md-color-surface-variant) 90%, transparent), color-mix(in srgb, var(--md-color-surface-variant) 54%, transparent)),
     url('/apps/neighborhood/brand/auth-background-wide.png') center bottom / min(1120px, 170vw) auto no-repeat;
@@ -62,8 +62,8 @@
   .app-page-hero {
     grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
     align-items: start;
-    min-height: 260px;
-    padding: var(--md-space-5) var(--md-space-5) 96px;
+    min-height: 200px;
+    padding: var(--md-space-5) var(--md-space-5) 56px;
     background:
       linear-gradient(90deg, color-mix(in srgb, var(--md-color-surface-variant) 96%, transparent) 0%, color-mix(in srgb, var(--md-color-surface-variant) 74%, transparent) 24%, color-mix(in srgb, var(--md-color-surface-variant) 22%, transparent) 52%, color-mix(in srgb, var(--md-color-surface-variant) 36%, transparent) 100%),
       linear-gradient(180deg, color-mix(in srgb, var(--md-color-surface-variant) 18%, transparent), color-mix(in srgb, var(--md-color-surface-variant) 82%, transparent)),

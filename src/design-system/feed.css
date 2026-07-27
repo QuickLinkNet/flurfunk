@@ -223,16 +223,9 @@
 
 .feed-category-tabs {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--md-space-2);
   width: 100%;
-  padding-bottom: 2px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.feed-category-tabs::-webkit-scrollbar {
-  display: none;
 }
 
 .feed-category-tabs button {

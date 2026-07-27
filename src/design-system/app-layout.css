@@ -304,19 +304,9 @@ a:focus-visible {
 
 .admin-tabs {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--md-space-2);
-  overflow-x: auto;
-  padding-bottom: var(--md-space-1);
-  /* Wird teils als Kind eines flex/grid-Containers wiederverwendet (z. B.
-     Einladungs-Filter). Ohne min-width: 0 zieht die Button-Reihe den
-     ganzen Elternrahmen in die Breite, statt selbst intern zu scrollen. */
   min-width: 0;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.admin-tabs::-webkit-scrollbar {
-  display: none;
 }
 
 .admin-search {
