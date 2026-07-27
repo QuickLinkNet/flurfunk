@@ -6,11 +6,18 @@ namespace App\Core;
 // auf derselben Domain liegen.
 final class Auth
 {
+    // "Angemeldet bleiben" - Standard ist an, damit Nutzer nach dem ersten
+    // Ausprobieren nicht bei jedem Besuch neu einloggen müssen.
+    private const REMEMBER_LIFETIME_SECONDS = 60 * 60 * 24 * 7;
+
     public static function start(): void
     {
         if (session_status() === PHP_SESSION_NONE) {
             $config = require __DIR__ . '/../config.php';
             session_name($config['session_name']);
+            // Server muss die Session mindestens so lange vorhalten wie das
+            // Cookie gültig sein kann, sonst wirkt "eingeloggt bleiben" nicht.
+            ini_set('session.gc_maxlifetime', (string) self::REMEMBER_LIFETIME_SECONDS);
             session_set_cookie_params([
                 'lifetime' => 0,
                 'path' => '/',
@@ -22,8 +29,15 @@ final class Auth
         }
     }
 
-    public static function login(int $userId): void
+    public static function login(int $userId, bool $remember = true): void
     {
+        session_set_cookie_params([
+            'lifetime' => $remember ? self::REMEMBER_LIFETIME_SECONDS : 0,
+            'path' => '/',
+            'secure' => true,
+            'httponly' => true,
+            'samesite' => Cors::isCrossOriginDevRequest() ? 'None' : 'Lax',
+        ]);
         session_regenerate_id(true);
         $_SESSION['user_id'] = $userId;
     }

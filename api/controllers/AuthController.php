@@ -87,7 +87,8 @@ final class AuthController
             Response::error('E-Mail oder Passwort ist falsch.', 401);
         }
 
-        Auth::login((int) $user['id']);
+        $remember = !array_key_exists('remember', $body) || (bool) $body['remember'];
+        Auth::login((int) $user['id'], $remember);
         Response::json($this->toPublicUser($user));
     }
 

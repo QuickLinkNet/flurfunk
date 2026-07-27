@@ -10,13 +10,14 @@ export function LoginPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [remember, setRemember] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
     try {
-      const loggedInUser = await login(email, password);
+      const loggedInUser = await login(email, password, remember);
       navigate(loggedInUser.onboardingCompletedAt ? '/dashboard' : '/start', { replace: true });
     } catch {
       setError('Login fehlgeschlagen. E-Mail oder Passwort prüfen.');
@@ -42,6 +43,10 @@ export function LoginPage() {
           onChange={(e) => setPassword(e.target.value)}
           required
         />
+        <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--md-space-2)', fontSize: 'var(--md-font-size-sm)', color: 'var(--md-color-on-surface-variant)', cursor: 'pointer' }}>
+          <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
+          Angemeldet bleiben (7 Tage)
+        </label>
         {error && <p style={{ color: 'var(--md-color-error)', fontSize: 'var(--md-font-size-base)', margin: 0 }}>{error}</p>}
         <Button type="submit">Anmelden</Button>
       </form>

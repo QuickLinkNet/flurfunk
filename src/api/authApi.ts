@@ -2,8 +2,8 @@ import { apiRequest } from './client';
 import type { OnboardingStep } from '../types/onboarding';
 import type { User } from '../types/user';
 
-export function login(email: string, password: string) {
-  return apiRequest<User>('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) });
+export function login(email: string, password: string, remember = true) {
+  return apiRequest<User>('/auth/login', { method: 'POST', body: JSON.stringify({ email, password, remember }) });
 }
 
 export function logout() {

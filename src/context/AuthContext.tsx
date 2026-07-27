@@ -12,7 +12,7 @@ interface RegisterInput {
 interface AuthContextValue {
   user: User | null;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<User>;
+  login: (email: string, password: string, remember?: boolean) => Promise<User>;
   register: (input: RegisterInput) => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (displayName: string, avatarUrl?: string | null) => Promise<User>;
@@ -37,8 +37,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .finally(() => setIsLoading(false));
   }, []);
 
-  async function login(email: string, password: string) {
-    const loggedInUser = await authApi.login(email, password);
+  async function login(email: string, password: string, remember = true) {
+    const loggedInUser = await authApi.login(email, password, remember);
     setUser(loggedInUser);
     return loggedInUser;
   }
