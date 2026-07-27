@@ -7,7 +7,7 @@ use App\Core\Database;
 // Jeder Haushalt bestimmt selbst, was sichtbar ist (PRD Kapitel 5).
 final class VisibilitySetting
 {
-    public const FIELDS = ['status', 'vacation', 'children_location', 'events'];
+    public const FIELDS = ['status', 'vacation', 'children_location', 'events', 'contact'];
 
     public static function findForHousehold(int $householdId): array
     {

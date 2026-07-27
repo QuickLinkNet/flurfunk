@@ -3,6 +3,7 @@ import { DashboardTemplate } from '../components/templates/DashboardTemplate';
 import { ChildrenManager } from '../components/organisms/ChildrenManager';
 import { PetsManager } from '../components/organisms/PetsManager';
 import { HouseholdStatusForm } from '../components/organisms/HouseholdStatusForm';
+import { HouseholdContactForm } from '../components/organisms/HouseholdContactForm';
 import { MyHouseholdDetailsForm } from '../components/organisms/MyHouseholdDetailsForm';
 import { VisibilitySettingsForm } from '../components/organisms/VisibilitySettingsForm';
 import { Heading } from '../components/atoms/Heading';
@@ -25,6 +26,10 @@ export function HouseholdPage() {
       <section>
         <Heading level={2}>Status</Heading>
         <HouseholdStatusForm />
+      </section>
+      <section>
+        <Heading level={2}>Kontakt</Heading>
+        <HouseholdContactForm />
       </section>
       {isEnabled('children') && (
         <section>

@@ -78,6 +78,11 @@ final class HouseholdController
             );
         }
 
+        if (array_key_exists('contactNote', $body)) {
+            $contactNote = trim((string) ($body['contactNote'] ?? ''));
+            Household::updateContactNote($householdId, $contactNote !== '' ? $contactNote : null);
+        }
+
         Response::json($this->toPublicHousehold(Household::findById($householdId)));
     }
 
@@ -92,6 +97,7 @@ final class HouseholdController
             'statusLabel' => $h['status_label'],
             'statusNote' => $h['status_note'],
             'statusUpdatedAt' => $h['status_updated_at'],
+            'contactNote' => $h['contact_note'] ?? null,
         ];
     }
 
@@ -111,6 +117,7 @@ final class HouseholdController
             'vacationVisible' => $this->isFieldVisible($visibility['vacation'], $isOwnHousehold),
             'childrenVisible' => $this->isFieldVisible($visibility['children_location'], $isOwnHousehold),
             'eventsVisible' => $this->isFieldVisible($visibility['events'], $isOwnHousehold),
+            'contactVisible' => $this->isFieldVisible($visibility['contact'], $isOwnHousehold),
             'status' => $this->isFieldVisible($visibility['status'], $isOwnHousehold) ? [
                 'emoji' => $h['status_emoji'],
                 'label' => $h['status_label'],
@@ -124,6 +131,9 @@ final class HouseholdController
             'events' => $this->isFieldVisible($visibility['events'], $isOwnHousehold)
                 ? $this->upcomingEventsForHousehold($householdId)
                 : [],
+            'contact' => $this->isFieldVisible($visibility['contact'], $isOwnHousehold)
+                ? ($h['contact_note'] ?? null)
+                : null,
         ];
     }
 

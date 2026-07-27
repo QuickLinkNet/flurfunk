@@ -48,7 +48,8 @@ export function NeighborCard({ household }: Props) {
     !household.statusVisible ? privateText('Status') : null,
     !household.vacationVisible ? privateText('Urlaub') : null,
     !household.childrenVisible ? privateText('Kinder') : null,
-    !household.eventsVisible ? privateText('Events') : null
+    !household.eventsVisible ? privateText('Events') : null,
+    !household.contactVisible ? privateText('Kontakt') : null
   ].filter((entry): entry is string => entry !== null);
 
   return (
@@ -127,6 +128,12 @@ export function NeighborCard({ household }: Props) {
             ) : (
               <p>Keine kommenden Events.</p>
             )}
+          </section>
+        )}
+        {household.contactVisible && (
+          <section>
+            <h3>Kontakt</h3>
+            {household.contact ? <p>{household.contact}</p> : <p>Kein Kontakthinweis hinterlegt.</p>}
           </section>
         )}
       </div>

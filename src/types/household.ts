@@ -7,6 +7,7 @@ export interface Household {
   statusLabel: string;
   statusNote: string | null;
   statusUpdatedAt: string | null;
+  contactNote: string | null;
 }
 
 export const DEFAULT_STATUSES: Array<{ emoji: string; label: string }> = [

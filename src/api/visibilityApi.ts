@@ -1,7 +1,7 @@
 import { apiRequest } from './client';
 import type { Visibility } from '../utils/visibility';
 
-type VisibilityMap = Record<'status' | 'vacation' | 'children_location' | 'events', Visibility>;
+type VisibilityMap = Record<'status' | 'vacation' | 'children_location' | 'events' | 'contact', Visibility>;
 
 export function fetchMyVisibility() {
   return apiRequest<VisibilityMap>('/households/me/visibility');

@@ -38,8 +38,10 @@ export interface NeighborHousehold {
   vacationVisible: boolean;
   childrenVisible: boolean;
   eventsVisible: boolean;
+  contactVisible: boolean;
   status: NeighborStatus | null;
   vacation: NeighborVacation | null;
   children: NeighborChild[];
   events: NeighborEvent[];
+  contact: string | null;
 }

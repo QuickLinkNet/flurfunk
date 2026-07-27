@@ -4,14 +4,15 @@ import { CardRow } from '../molecules/CardRow';
 import { fetchMyVisibility, updateMyVisibility } from '../../api/visibilityApi';
 import type { Visibility } from '../../utils/visibility';
 
-type Field = 'status' | 'vacation' | 'children_location' | 'events';
+type Field = 'status' | 'vacation' | 'children_location' | 'events' | 'contact';
 type VisibilityMap = Record<Field, Visibility>;
 
 const FIELD_LABELS: Record<Field, string> = {
   status: 'Haushaltsstatus',
   vacation: 'Urlaub',
   children_location: 'Aufenthaltsort der Kinder',
-  events: 'Eigene Events'
+  events: 'Eigene Events',
+  contact: 'Kontakthinweis'
 };
 
 const OPTIONS: Array<{ value: Visibility; label: string }> = [
