@@ -31,6 +31,24 @@ final class MailService
         );
     }
 
+    public static function sendTrashReminder(string $email, string $displayName, array $titles): bool
+    {
+        $email = trim($email);
+        if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return false;
+        }
+
+        $list = implode(', ', $titles);
+        $message = implode("\n", [
+            "Hallo {$displayName},",
+            '',
+            "morgen ist Abholtag: {$list}.",
+            '',
+            'Kurzer Gruß von Flurfunk, damit die Tonne nicht vergessen wird.',
+        ]);
+        return self::sendPlainText($email, 'Flurfunk: Mülltermin morgen - ' . $list, $message);
+    }
+
     public static function sendPasswordReset(string $email, string $displayName, string $token): bool
     {
         $email = trim($email);

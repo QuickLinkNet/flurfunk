@@ -8,6 +8,8 @@ import type {
   AdminHousehold,
   AdminNotice,
   AdminSystemStatus,
+  AdminTrashReminderPreview,
+  AdminTrashReminderSendResult,
   AdminUser,
   AdminWeeklyDigest
 } from '../types/admin';
@@ -131,4 +133,12 @@ export function sendAdminDigestTest() {
 
 export function sendAdminDigestToAll() {
   return apiRequest<AdminDigestSendResult>('/admin/digest/send-all', { method: 'POST' });
+}
+
+export function fetchAdminTrashReminderPreview() {
+  return apiRequest<AdminTrashReminderPreview>('/admin/digest/trash-preview');
+}
+
+export function sendAdminTrashReminderNow() {
+  return apiRequest<AdminTrashReminderSendResult>('/admin/digest/trash-send', { method: 'POST' });
 }

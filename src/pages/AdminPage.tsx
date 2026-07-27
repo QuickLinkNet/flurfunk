@@ -6,6 +6,7 @@ import { AdminTabs } from '../components/molecules/AdminTabs';
 import { AdminCalendarList } from '../components/organisms/AdminCalendarList';
 import { AdminCreateHouseholdForm } from '../components/organisms/AdminCreateHouseholdForm';
 import { AdminDigestPanel } from '../components/organisms/AdminDigestPanel';
+import { AdminTrashReminderPanel } from '../components/organisms/AdminTrashReminderPanel';
 import { AdminEventList } from '../components/organisms/AdminEventList';
 import { AdminFeatureFlagsForm } from '../components/organisms/AdminFeatureFlagsForm';
 import { AdminFeedList } from '../components/organisms/AdminFeedList';
@@ -141,6 +142,12 @@ export function AdminPage() {
             description="Vorschau für den Wochenblick. Erst manuell testbar, später per Cron automatisierbar."
           >
             <AdminDigestPanel />
+          </AdminSection>
+          <AdminSection
+            title="Mülltermin-Erinnerung"
+            description="Schickt am Vorabend Push + E-Mail an alle, wenn morgen Abholtag ist. Manuell testbar, später per Cron automatisierbar (siehe /cron/trash-reminder)."
+          >
+            <AdminTrashReminderPanel />
           </AdminSection>
           <AdminSection title="Features">
             <AdminFeatureFlagsForm />

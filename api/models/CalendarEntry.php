@@ -10,6 +10,30 @@ final class CalendarEntry
     public const VISIBILITIES = ['public', 'neighbors', 'private'];
     public const RECURRENCE_RULES = ['none', 'daily', 'weekly', 'monthly'];
 
+    // Mülltermine für ein Datum, für die noch keine Vorabend-Erinnerung
+    // verschickt wurde (siehe TrashReminderService).
+    public static function findPendingTrashRemindersFor(string $date): array
+    {
+        $stmt = Database::pdo()->prepare(
+            "SELECT ce.* FROM calendar_entries ce
+             LEFT JOIN trash_reminders_sent trs ON trs.calendar_entry_id = ce.id
+             WHERE ce.type = 'trash'
+               AND DATE(ce.starts_at) = ?
+               AND trs.id IS NULL
+             ORDER BY ce.title"
+        );
+        $stmt->execute([$date]);
+        return $stmt->fetchAll();
+    }
+
+    public static function markTrashReminderSent(int $id): void
+    {
+        $stmt = Database::pdo()->prepare(
+            'INSERT OR IGNORE INTO trash_reminders_sent (calendar_entry_id) VALUES (?)'
+        );
+        $stmt->execute([$id]);
+    }
+
     public static function findInRange(string $from, string $to, ?string $viewerRole, ?int $viewerHouseholdId): array
     {
         $allowed = $viewerRole === 'guest' ? ['public'] : ['public', 'neighbors'];

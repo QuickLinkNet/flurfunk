@@ -142,6 +142,9 @@ $router->get('/admin/digest/preview', [new AdminDigestController(), 'preview']);
 $router->post('/admin/digest/test', [new AdminDigestController(), 'sendTest']);
 $router->post('/admin/digest/send-all', [new AdminDigestController(), 'sendAll']);
 $router->get('/cron/weekly-digest', [new AdminDigestController(), 'cronSend']);
+$router->get('/admin/digest/trash-preview', [new AdminDigestController(), 'trashReminderPreview']);
+$router->post('/admin/digest/trash-send', [new AdminDigestController(), 'sendTrashReminderNow']);
+$router->get('/cron/trash-reminder', [new AdminDigestController(), 'cronSendTrashReminder']);
 
 try {
     $router->dispatch(Request::method(), Request::path());

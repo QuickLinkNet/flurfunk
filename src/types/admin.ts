@@ -2,6 +2,7 @@ import type { UserRole } from './user';
 import type { HouseholdInvitePerson } from './invite';
 import type { OnboardingStep } from './onboarding';
 import type { FeatureFlags } from './featureFlags';
+import type { PushSendResult } from './push';
 
 export type AdminTab = 'overview' | 'households' | 'invites' | 'users' | 'content' | 'calendar' | 'system';
 
@@ -176,4 +177,20 @@ export interface AdminDigestSendResult {
     email: string;
     status: 'sent' | 'skipped' | 'failed';
   }>;
+}
+
+export interface AdminTrashReminderPreview {
+  date: string;
+  entries: number;
+  titles: string[];
+  mailTotal: number;
+}
+
+export interface AdminTrashReminderSendResult {
+  date: string;
+  entries: number;
+  titles: string[];
+  push: PushSendResult | null;
+  mailSent: number;
+  mailTotal: number;
 }

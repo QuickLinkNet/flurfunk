@@ -44,6 +44,11 @@ final class PushSubscription
         return $stmt->fetchAll();
     }
 
+    public static function findAll(): array
+    {
+        return Database::pdo()->query('SELECT * FROM push_subscriptions')->fetchAll();
+    }
+
     public static function hasAny(int $userId): bool
     {
         $stmt = Database::pdo()->prepare('SELECT 1 FROM push_subscriptions WHERE user_id = ? LIMIT 1');

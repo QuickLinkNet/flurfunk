@@ -16,6 +16,11 @@ final class PushService
         return self::sendToSubscriptions(PushSubscription::findAllExceptUser($authorUserId));
     }
 
+    public static function sendBroadcast(): array
+    {
+        return self::sendToSubscriptions(PushSubscription::findAll());
+    }
+
     private static function sendToSubscriptions(array $subscriptions): array
     {
         if (count($subscriptions) === 0) {
