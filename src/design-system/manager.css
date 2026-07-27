@@ -32,9 +32,17 @@
   gap: var(--md-space-2);
 }
 
-.compact-form,
+.compact-form {
+  align-items: center;
+}
+
 .push-settings-row {
   align-items: center;
+  justify-content: space-between;
+}
+
+.push-settings-row > div {
+  min-width: 0;
 }
 
 .compact-form {
@@ -52,19 +60,14 @@
 
 .empty-note {
   padding: var(--md-space-3);
-  border: 1px dashed rgba(216, 204, 186, 0.92);
+  border: 1px dashed var(--md-color-border);
   border-radius: var(--md-radius-control);
-  background: rgba(255, 253, 252, 0.68);
-}
-
-.push-settings-row {
-  justify-content: space-between;
+  background: var(--md-color-surface);
 }
 
 @media (max-width: 767px) {
   .compact-form,
-  .inline-actions,
-  .push-settings-row {
+  .inline-actions {
     align-items: stretch;
     flex-direction: column;
   }
