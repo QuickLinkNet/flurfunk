@@ -8,6 +8,8 @@ use App\Core\Request;
 use App\Core\Response;
 use App\Models\Child;
 use App\Models\Household;
+use App\Models\HouseholdInvite;
+use App\Models\Street;
 use App\Models\User;
 use App\Models\VisibilitySetting;
 
@@ -46,6 +48,39 @@ final class HouseholdController
             fn(array $household) => $this->toNeighborHousehold($household, $viewerHouseholdId),
             $households
         ));
+    }
+
+    // Jeder angemeldete Nachbar darf einen neuen Nachbar-Haushalt anlegen und
+    // einen Einladungscode dafür erzeugen (nicht nur der Admin). Das ist der
+    // zentrale Hebel für organisches Wachstum: wer die App nutzt, kann direkt
+    // den echten Nachbarn von nebenan einladen, ohne über den Admin zu gehen.
+    public function inviteNeighbor(): void
+    {
+        Auth::requireLogin();
+
+        $body = Request::json();
+        $name = trim($body['name'] ?? '');
+        $addressLine = trim($body['addressLine'] ?? '');
+        $firstName = trim($body['firstName'] ?? '');
+        $lastName = trim($body['lastName'] ?? '');
+        $email = trim($body['email'] ?? '');
+
+        if ($name === '' || $addressLine === '' || $firstName === '' || $lastName === '') {
+            Response::error('Haushaltsname, Adresse, Vor- und Nachname sind Pflicht.', 422);
+        }
+        if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            Response::error('Bitte eine gültige E-Mail-Adresse verwenden.', 422);
+        }
+
+        $street = Street::first();
+        if ($street === null) {
+            Response::error('Keine Straße konfiguriert.', 500);
+        }
+
+        $householdId = Household::create((int) $street['id'], $name, $addressLine);
+        $invite = HouseholdInvite::create($householdId, $firstName, $lastName, $email !== '' ? $email : null);
+
+        Response::json(['householdId' => $householdId, 'invite' => $this->toPublicInvite($invite)], 201);
     }
 
     public function updateMe(array $params): void
@@ -134,6 +169,24 @@ final class HouseholdController
             'contact' => $this->isFieldVisible($visibility['contact'], $isOwnHousehold)
                 ? ($h['contact_note'] ?? null)
                 : null,
+        ];
+    }
+
+    private function toPublicInvite(array $i): array
+    {
+        return [
+            'id' => (int) $i['id'],
+            'code' => $i['code'],
+            'firstName' => $i['first_name'],
+            'lastName' => $i['last_name'],
+            'email' => $i['email'] ?? null,
+            'emailSentAt' => $i['email_sent_at'] ?? null,
+            'emailLastSentAt' => $i['email_last_sent_at'] ?? null,
+            'emailSendCount' => (int) ($i['email_send_count'] ?? 0),
+            'usedAt' => $i['used_at'],
+            'revokedAt' => $i['revoked_at'] ?? null,
+            'createdAt' => $i['created_at'],
+            'usedByUser' => null,
         ];
     }
 

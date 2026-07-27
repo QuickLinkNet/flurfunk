@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { DashboardTemplate } from '../components/templates/DashboardTemplate';
 import { NeighborsGrid } from '../components/organisms/NeighborsGrid';
+import { InviteNeighborForm } from '../components/organisms/InviteNeighborForm';
 import { fetchNeighborHouseholds } from '../api/householdsApi';
 import { PAGE_HEADERS } from '../content/pageHeaders';
 import type { NeighborHousehold } from '../types/neighbor';
@@ -29,6 +30,7 @@ export function NeighborsPage() {
 
   return (
     <DashboardTemplate pageTitle={PAGE_HEADERS.neighbors.title} pageSubtitle={PAGE_HEADERS.neighbors.subtitle}>
+      <InviteNeighborForm />
       {message ? <p className="neighbors-empty">{message}</p> : <NeighborsGrid households={households} />}
     </DashboardTemplate>
   );

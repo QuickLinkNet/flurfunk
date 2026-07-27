@@ -70,6 +70,7 @@ $router->get('/households', [new HouseholdController(), 'index']);
 $router->get('/households/neighbors', [new HouseholdController(), 'neighbors']);
 $router->get('/households/me', [new HouseholdController(), 'me']);
 $router->put('/households/me', [new HouseholdController(), 'updateMe']);
+$router->post('/neighbors/invite', [new HouseholdController(), 'inviteNeighbor']);
 
 $router->get('/children', [new ChildController(), 'index']);
 $router->post('/children', [new ChildController(), 'store']);
