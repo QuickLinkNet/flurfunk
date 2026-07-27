@@ -1,5 +1,5 @@
 import { apiRequest } from './client';
-import type { FeedComment, FeedHelper, FeedItem, FeedItemType } from '../types/feedItem';
+import type { FeedComment, FeedHelper, FeedItem, FeedItemType, FeedLoan } from '../types/feedItem';
 import type { PushSendResult } from '../types/push';
 
 export function fetchFeed() {
@@ -34,4 +34,12 @@ export function updateFeedStatus(id: number, status: FeedItem['status']) {
 
 export function toggleFeedHelper(id: number) {
   return apiRequest<{ helpingByMe: boolean; helpers: FeedHelper[] }>(`/feed/${id}/helpers`, { method: 'POST' });
+}
+
+export function borrowFeedItem(id: number) {
+  return apiRequest<{ loan: FeedLoan }>(`/feed/${id}/loan`, { method: 'POST' });
+}
+
+export function returnFeedItem(id: number) {
+  return apiRequest<{ loan: null }>(`/feed/${id}/loan/return`, { method: 'POST' });
 }

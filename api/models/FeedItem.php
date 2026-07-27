@@ -69,6 +69,7 @@ final class FeedItem
             $pdo->prepare('DELETE FROM feed_comments WHERE feed_item_id = ?')->execute([$id]);
             $pdo->prepare('DELETE FROM feed_reactions WHERE feed_item_id = ?')->execute([$id]);
             $pdo->prepare('DELETE FROM feed_helpers WHERE feed_item_id = ?')->execute([$id]);
+            $pdo->prepare('DELETE FROM feed_loans WHERE feed_item_id = ?')->execute([$id]);
             $pdo->prepare('DELETE FROM feed_items WHERE id = ?')->execute([$id]);
             $pdo->commit();
         } catch (\Throwable $e) {
@@ -180,5 +181,41 @@ final class FeedItem
         );
         $stmt->execute([$feedItemId]);
         return $stmt->fetchAll();
+    }
+
+    // Verleih-Tracking für "Werkzeug verleihbar"-Meldungen. Anders als bei Helfern
+    // kann ein Gegenstand immer nur an einen Haushalt gleichzeitig verliehen sein.
+    public static function activeLoanForItem(int $feedItemId): ?array
+    {
+        $stmt = Database::pdo()->prepare(
+            'SELECT fl.*, h.name AS household_name
+             FROM feed_loans fl
+             LEFT JOIN households h ON h.id = fl.household_id
+             WHERE fl.feed_item_id = ? AND fl.returned_at IS NULL
+             ORDER BY fl.borrowed_at DESC
+             LIMIT 1'
+        );
+        $stmt->execute([$feedItemId]);
+        return $stmt->fetch() ?: null;
+    }
+
+    public static function borrow(int $feedItemId, int $userId, ?int $householdId): bool
+    {
+        if (self::activeLoanForItem($feedItemId) !== null) {
+            return false;
+        }
+        $stmt = Database::pdo()->prepare(
+            'INSERT INTO feed_loans (feed_item_id, user_id, household_id) VALUES (?, ?, ?)'
+        );
+        $stmt->execute([$feedItemId, $userId, $householdId]);
+        return true;
+    }
+
+    public static function returnLoan(int $feedItemId): void
+    {
+        $stmt = Database::pdo()->prepare(
+            'UPDATE feed_loans SET returned_at = CURRENT_TIMESTAMP WHERE feed_item_id = ? AND returned_at IS NULL'
+        );
+        $stmt->execute([$feedItemId]);
     }
 }

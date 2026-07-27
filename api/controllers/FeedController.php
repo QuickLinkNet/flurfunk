@@ -126,6 +126,56 @@ final class FeedController
         ]);
     }
 
+    public function borrowItem(array $params): void
+    {
+        $userId = Auth::requireLogin();
+        $user = User::findById($userId);
+        if ($user === null) {
+            Response::error('Nicht angemeldet.', 401);
+        }
+
+        $itemId = (int) $params['id'];
+        $item = FeedItem::findVisibleById($itemId, $user['role'] ?? 'guest');
+        if ($item === null) {
+            Response::error('Meldung nicht gefunden.', 404);
+        }
+        if ($item['type'] !== 'tool_available') {
+            Response::error('Für diese Meldung gibt es keinen Ausleih-Status.', 422);
+        }
+
+        $borrowed = FeedItem::borrow($itemId, $userId, $user['household_id'] !== null ? (int) $user['household_id'] : null);
+        if (!$borrowed) {
+            Response::error('Ist bereits ausgeliehen.', 409);
+        }
+
+        Response::json(['loan' => $this->toPublicLoan(FeedItem::activeLoanForItem($itemId))]);
+    }
+
+    public function returnItem(array $params): void
+    {
+        $userId = Auth::requireLogin();
+        $user = User::findById($userId);
+        if ($user === null) {
+            Response::error('Nicht angemeldet.', 401);
+        }
+
+        $itemId = (int) $params['id'];
+        $item = FeedItem::findVisibleById($itemId, $user['role'] ?? 'guest');
+        if ($item === null) {
+            Response::error('Meldung nicht gefunden.', 404);
+        }
+
+        $loan = FeedItem::activeLoanForItem($itemId);
+        $isBorrower = $loan !== null && (int) $loan['user_id'] === $userId;
+        $isOwner = $user['household_id'] !== null && (int) $user['household_id'] === (int) $item['household_id'];
+        if (!$isBorrower && !$isOwner && ($user['role'] ?? '') !== 'admin') {
+            Response::error('Nur der Ausleiher oder Eigentümer kann als zurückgegeben markieren.', 403);
+        }
+
+        FeedItem::returnLoan($itemId);
+        Response::json(['loan' => null]);
+    }
+
     public function updateStatus(array $params): void
     {
         $userId = Auth::requireLogin();
@@ -174,6 +224,7 @@ final class FeedController
         $helpers = in_array($item['type'], ['help_needed', 'babysitter_needed'], true)
             ? FeedItem::helpersForItem((int) $item['id'])
             : [];
+        $loan = $item['type'] === 'tool_available' ? FeedItem::activeLoanForItem((int) $item['id']) : null;
 
         return [
             'id' => (int) $item['id'],
@@ -190,6 +241,8 @@ final class FeedController
             'comments' => array_map([$this, 'toPublicComment'], FeedItem::commentsForItem((int) $item['id'])),
             'helpers' => array_map([$this, 'toPublicHelper'], $helpers),
             'helpingByMe' => $userId !== null && in_array($userId, array_map(fn(array $h) => (int) $h['user_id'], $helpers), true),
+            'loan' => $this->toPublicLoan($loan),
+            'loanedByMe' => $userId !== null && $loan !== null && (int) $loan['user_id'] === $userId,
         ];
     }
 
@@ -210,6 +263,17 @@ final class FeedController
             'id' => (int) $helper['id'],
             'householdName' => $helper['household_name'] ?? null,
             'createdAt' => $helper['created_at'],
+        ];
+    }
+
+    private function toPublicLoan(?array $loan): ?array
+    {
+        if ($loan === null) {
+            return null;
+        }
+        return [
+            'householdName' => $loan['household_name'] ?? null,
+            'borrowedAt' => $loan['borrowed_at'],
         ];
     }
 

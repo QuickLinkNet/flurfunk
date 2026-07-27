@@ -17,6 +17,8 @@ export interface FeedItem {
   comments: FeedComment[];
   helpers: FeedHelper[];
   helpingByMe: boolean;
+  loan: FeedLoan | null;
+  loanedByMe: boolean;
 }
 
 export interface FeedComment {
@@ -31,4 +33,9 @@ export interface FeedHelper {
   id: number;
   householdName: string | null;
   createdAt: string;
+}
+
+export interface FeedLoan {
+  householdName: string | null;
+  borrowedAt: string;
 }

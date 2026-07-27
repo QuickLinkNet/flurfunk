@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { IconBadge } from '../atoms/IconBadge';
 import { Button } from '../atoms/Button';
 import { Textarea } from '../atoms/Textarea';
-import { addFeedComment, toggleFeedHelper, toggleFeedReaction, updateFeedStatus } from '../../api/feedApi';
+import { addFeedComment, borrowFeedItem, returnFeedItem, toggleFeedHelper, toggleFeedReaction, updateFeedStatus } from '../../api/feedApi';
 import { FEED_TYPE_META } from '../../utils/feedTypeMeta';
 import type { FeedComment, FeedItem, FeedItemType } from '../../types/feedItem';
 
@@ -13,6 +13,7 @@ interface Props {
 
 const STATUS_TYPES: FeedItemType[] = ['help_needed', 'tool_available', 'babysitter_needed', 'package_received'];
 const HELPER_TYPES: FeedItemType[] = ['help_needed', 'babysitter_needed'];
+const LOAN_TYPES: FeedItemType[] = ['tool_available'];
 
 function formatDate(value: string): string {
   const date = new Date(value.replace(' ', 'T'));
@@ -32,6 +33,10 @@ function supportsStatus(type: FeedItemType): boolean {
 
 function supportsHelpers(type: FeedItemType): boolean {
   return HELPER_TYPES.includes(type);
+}
+
+function supportsLoan(type: FeedItemType): boolean {
+  return LOAN_TYPES.includes(type);
 }
 
 function FeedCommentRow({ comment }: { comment: FeedComment }) {
@@ -55,8 +60,10 @@ export function FeedItemCard({ item, onChanged }: Props) {
   const [isCommenting, setIsCommenting] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [isHelping, setIsHelping] = useState(false);
+  const [isLoanBusy, setIsLoanBusy] = useState(false);
   const showStatus = supportsStatus(item.type);
   const showHelpers = supportsHelpers(item.type);
+  const showLoan = supportsLoan(item.type);
   const commentCountLabel = item.comments.length === 1 ? '1 Kommentar' : `${item.comments.length} Kommentare`;
 
   async function handleReaction() {
@@ -103,6 +110,32 @@ export function FeedItemCard({ item, onChanged }: Props) {
       setMessage(error instanceof Error ? error.message : 'Hilfe-Zusage konnte nicht gespeichert werden.');
     } finally {
       setIsHelping(false);
+    }
+  }
+
+  async function handleBorrow() {
+    setIsLoanBusy(true);
+    setMessage(null);
+    try {
+      await borrowFeedItem(item.id);
+      onChanged();
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Konnte nicht als ausgeliehen markiert werden.');
+    } finally {
+      setIsLoanBusy(false);
+    }
+  }
+
+  async function handleReturn() {
+    setIsLoanBusy(true);
+    setMessage(null);
+    try {
+      await returnFeedItem(item.id);
+      onChanged();
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Konnte nicht als zurückgegeben markiert werden.');
+    } finally {
+      setIsLoanBusy(false);
     }
   }
 
@@ -154,6 +187,16 @@ export function FeedItemCard({ item, onChanged }: Props) {
             🤝 {item.helpingByMe ? 'Ich helfe' : 'Ich kann helfen'}
           </button>
         )}
+        {showLoan && !item.loan && !item.canManage && (
+          <button type="button" disabled={isLoanBusy} onClick={handleBorrow}>
+            📦 Ausleihen
+          </button>
+        )}
+        {showLoan && item.loan && (item.loanedByMe || item.canManage) && (
+          <button type="button" data-active disabled={isLoanBusy} onClick={handleReturn}>
+            📦 Zurückgeben
+          </button>
+        )}
         {showStatus && item.canManage && (
           <button type="button" disabled={isUpdatingStatus} onClick={handleStatusToggle}>
             {item.status === 'done' ? 'Wieder öffnen' : 'Als erledigt markieren'}
@@ -164,6 +207,12 @@ export function FeedItemCard({ item, onChanged }: Props) {
       {showHelpers && (item.helpers?.length ?? 0) > 0 && (
         <p className="feed-helpers">
           Hilft: {item.helpers.map((helper) => helper.householdName ?? 'Nachbar').join(', ')}
+        </p>
+      )}
+
+      {showLoan && item.loan && (
+        <p className="feed-helpers">
+          Ausgeliehen an {item.loan.householdName ?? 'Nachbar'} seit {formatDate(item.loan.borrowedAt)}
         </p>
       )}
 

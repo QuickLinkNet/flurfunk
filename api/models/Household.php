@@ -97,6 +97,7 @@ final class Household
             foreach ($memberUserIds as $userId) {
                 $pdo->prepare('DELETE FROM feed_comments WHERE user_id = ?')->execute([$userId]);
                 $pdo->prepare('DELETE FROM feed_helpers WHERE user_id = ?')->execute([$userId]);
+                $pdo->prepare('DELETE FROM feed_loans WHERE user_id = ?')->execute([$userId]);
                 $pdo->prepare('DELETE FROM event_responses WHERE responded_by_user_id = ?')->execute([$userId]);
                 $pdo->prepare('DELETE FROM notifications WHERE user_id = ?')->execute([$userId]);
                 $pdo->prepare('DELETE FROM push_subscriptions WHERE user_id = ?')->execute([$userId]);
@@ -114,6 +115,7 @@ final class Household
             $pdo->prepare('DELETE FROM feed_comments WHERE feed_item_id IN (SELECT id FROM feed_items WHERE household_id = ?)')->execute([$id]);
             $pdo->prepare('DELETE FROM feed_reactions WHERE feed_item_id IN (SELECT id FROM feed_items WHERE household_id = ?)')->execute([$id]);
             $pdo->prepare('DELETE FROM feed_helpers WHERE feed_item_id IN (SELECT id FROM feed_items WHERE household_id = ?)')->execute([$id]);
+            $pdo->prepare('DELETE FROM feed_loans WHERE feed_item_id IN (SELECT id FROM feed_items WHERE household_id = ?)')->execute([$id]);
             $pdo->prepare('DELETE FROM feed_comments WHERE household_id = ?')->execute([$id]);
             $pdo->prepare('DELETE FROM feed_items WHERE household_id = ?')->execute([$id]);
             $pdo->prepare('DELETE FROM event_responses WHERE household_id = ?')->execute([$id]);
