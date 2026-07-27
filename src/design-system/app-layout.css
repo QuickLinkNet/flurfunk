@@ -311,6 +311,12 @@ a:focus-visible {
      Einladungs-Filter). Ohne min-width: 0 zieht die Button-Reihe den
      ganzen Elternrahmen in die Breite, statt selbst intern zu scrollen. */
   min-width: 0;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.admin-tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .admin-search {
@@ -325,6 +331,7 @@ a:focus-visible {
   border-radius: 999px;
   background: var(--md-color-surface);
   color: var(--md-color-on-surface-variant);
+  font-size: var(--md-font-size-sm);
   font-weight: var(--md-font-weight-medium);
 }
 
@@ -347,6 +354,7 @@ a:focus-visible {
   border-radius: var(--md-radius-control);
   background: var(--md-color-surface);
   color: var(--md-color-brand-green);
+  font-size: var(--md-font-size-base);
   font-weight: var(--md-font-weight-bold);
   text-align: left;
 }

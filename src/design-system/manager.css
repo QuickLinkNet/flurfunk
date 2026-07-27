@@ -10,7 +10,7 @@
 
 .compact-manager h3 {
   color: var(--md-color-brand-green);
-  font-size: var(--md-font-size-lg);
+  font-size: var(--md-font-size-md);
 }
 
 .compact-manager p {

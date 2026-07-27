@@ -33,7 +33,7 @@
 
 .profile-settings-card h3 {
   color: var(--md-color-brand-green);
-  font-size: var(--md-font-size-lg);
+  font-size: var(--md-font-size-md);
 }
 
 .profile-settings-card p {

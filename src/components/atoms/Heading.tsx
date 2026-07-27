@@ -8,7 +8,7 @@ interface Props {
 
 const SIZE_BY_LEVEL: Record<1 | 2, string> = {
   1: 'var(--md-font-size-xl)',
-  2: 'var(--md-font-size-md)'
+  2: 'var(--md-font-size-lg)'
 };
 
 export function Heading({ level, children, className }: Props) {
