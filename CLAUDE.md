@@ -4,7 +4,7 @@ Bitte zuerst `HANDOFF_CLAUDE_CODE.md` vollständig lesen. Dort stehen Projektzie
 
 Kurzregeln:
 
-- Nicht deployen. Deploy macht der Nutzer.
+- Nicht ungefragt deployen. Wenn der Nutzer explizit dazu auffordert (z. B. "deploy bitte"), `npm run deploy` direkt ausführen, ohne nochmal nachzufragen.
 - Kein `npm run build` ohne explizite Freigabe.
 - UTF-8 mit echten Umlauten verwenden.
 - Atomic Design einhalten.
