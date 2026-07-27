@@ -1,4 +1,17 @@
-.app-content-with-hero .app-page-main { margin-top: calc(var(--md-space-5) * -1); }
+/* Content-Sheet zieht sich über das Hero-Foto statt lose danach zu
+   folgen - eine sichtbare, abgerundete Kante statt eines diffusen
+   Übergangs. Gilt für alle Seiten mit Hero-Header (siehe auch
+   .dashboard-layout in dashboard.css für die eigene, parallele
+   Dashboard-Struktur - bewusst gleich gestaltet). */
+.app-content-with-hero .app-page-main {
+  position: relative;
+  margin-top: calc(var(--md-space-5) * -1);
+  background: var(--md-color-paper);
+  border: 1px solid var(--md-color-border);
+  border-bottom: none;
+  border-radius: 20px 20px 0 0;
+  padding-top: var(--md-space-4);
+}
 
 .app-page-hero {
   --md-heading-font-size: clamp(30px, 8vw, 44px);
@@ -40,7 +53,11 @@
 }
 
 @media (min-width: 1024px) {
-  .app-content-with-hero .app-page-main { margin-top: -64px; }
+  .app-content-with-hero .app-page-main {
+    margin-top: -64px;
+    border-radius: 28px 28px 0 0;
+    padding-top: var(--md-space-5);
+  }
 
   .app-page-hero {
     grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
