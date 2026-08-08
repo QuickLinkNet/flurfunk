@@ -56,6 +56,22 @@ final class Household
         $stmt->execute([$contactNote, $householdId]);
     }
 
+    // Duplikat-Schutz fuer den selbstbedienten Einladungslink: Name ODER
+    // Adresse identisch (ohne Gross-/Kleinschreibung, ohne Leerraum) gilt als
+    // "diese Familie gibt es schon" - verhindert, dass sich ein Haushalt aus
+    // Versehen zweimal als eigene "Familie" anlegt, statt beizutreten.
+    public static function findByNormalizedNameOrAddress(int $streetId, string $name, string $addressLine): ?array
+    {
+        $stmt = Database::pdo()->prepare(
+            'SELECT * FROM households
+             WHERE street_id = ?
+               AND (LOWER(TRIM(name)) = LOWER(TRIM(?)) OR LOWER(TRIM(address_line)) = LOWER(TRIM(?)))
+             LIMIT 1'
+        );
+        $stmt->execute([$streetId, $name, $addressLine]);
+        return $stmt->fetch() ?: null;
+    }
+
     public static function create(int $streetId, string $name, string $addressLine): int
     {
         $stmt = Database::pdo()->prepare(

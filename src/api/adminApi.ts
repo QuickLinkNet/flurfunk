@@ -135,6 +135,14 @@ export function deleteAdminFeedback(id: number) {
   return apiRequest<null>(`/admin/feedback/${id}`, { method: 'DELETE' });
 }
 
+export function fetchAdminStreetInvite() {
+  return apiRequest<{ token: string }>('/admin/street-invite');
+}
+
+export function regenerateAdminStreetInvite() {
+  return apiRequest<{ token: string }>('/admin/street-invite/regenerate', { method: 'POST' });
+}
+
 export function fetchAdminSystemStatus() {
   return apiRequest<AdminSystemStatus>('/admin/system-status');
 }

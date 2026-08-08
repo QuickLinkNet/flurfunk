@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { LoginPage } from '../pages/LoginPage';
 import { RegisterPage } from '../pages/RegisterPage';
+import { JoinStreetPage } from '../pages/JoinStreetPage';
 import { ForgotPasswordPage } from '../pages/ForgotPasswordPage';
 import { ResetPasswordPage } from '../pages/ResetPasswordPage';
 import { DashboardPage } from '../pages/DashboardPage';
@@ -56,6 +57,7 @@ export function AppRoutes() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/registrieren" element={<RegisterPage />} />
       <Route path="/registrieren/:inviteCode" element={<RegisterPage />} />
+      <Route path="/beitreten/:token" element={<JoinStreetPage />} />
       <Route path="/passwort-vergessen" element={<ForgotPasswordPage />} />
       <Route path="/passwort-zuruecksetzen/:token" element={<ResetPasswordPage />} />
       <Route

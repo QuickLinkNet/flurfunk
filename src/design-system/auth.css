@@ -95,6 +95,29 @@
   background: var(--md-color-border);
 }
 
+.auth-mode-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--md-space-2);
+}
+
+.auth-mode-toggle button {
+  min-height: 44px;
+  padding: 0 var(--md-space-2);
+  border: 1px solid var(--md-color-border);
+  border-radius: var(--md-radius-control);
+  background: var(--md-color-surface);
+  color: var(--md-color-on-surface-variant);
+  font-size: var(--md-font-size-sm);
+  font-weight: var(--md-font-weight-medium);
+}
+
+.auth-mode-toggle button[data-active='true'] {
+  border-color: var(--md-color-primary);
+  background: var(--md-color-primary-container);
+  color: var(--md-color-primary);
+}
+
 .auth-footer {
   display: grid;
   gap: var(--md-space-2);

@@ -2,7 +2,7 @@ import { Input } from '../atoms/Input';
 import { FeatureIcon } from '../atoms/FeatureIcon';
 import type { InputHTMLAttributes } from 'react';
 
-type AuthInputIcon = 'mail' | 'lock' | 'ticket';
+type AuthInputIcon = 'mail' | 'lock' | 'ticket' | 'users';
 
 interface Props extends InputHTMLAttributes<HTMLInputElement> {
   icon: AuthInputIcon;

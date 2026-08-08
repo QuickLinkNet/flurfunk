@@ -15,6 +15,7 @@ import { AdminHouseholdList } from '../components/organisms/AdminHouseholdList';
 import { AdminInviteRollout } from '../components/organisms/AdminInviteRollout';
 import { AdminNoticePanel } from '../components/organisms/AdminNoticePanel';
 import { AdminOverview } from '../components/organisms/AdminOverview';
+import { AdminStreetInvitePanel } from '../components/organisms/AdminStreetInvitePanel';
 import { AdminSystemStatusPanel } from '../components/organisms/AdminSystemStatusPanel';
 import { AdminUserList } from '../components/organisms/AdminUserList';
 import { AdminWastePickupForm } from '../components/organisms/AdminWastePickupForm';
@@ -104,12 +105,20 @@ export function AdminPage() {
       )}
 
       {activeTab === 'invites' && (
-        <AdminSection
-          title={`Einladungen (${openInviteCount} offen)`}
-          description="Rollout-Status pro Haushalt: Codes kopieren, Einladungstext senden und offene Codes widerrufen."
-        >
-          <AdminInviteRollout households={filteredHouseholds} onChanged={reload} />
-        </AdminSection>
+        <>
+          <AdminSection
+            title="Einladungslink"
+            description="Ein Link für alle: Familien legen sich selbst an oder treten einer bestehenden bei."
+          >
+            <AdminStreetInvitePanel />
+          </AdminSection>
+          <AdminSection
+            title={`Einladungscodes (${openInviteCount} offen)`}
+            description="Rollout-Status pro Haushalt: Codes kopieren, Einladungstext senden und offene Codes widerrufen."
+          >
+            <AdminInviteRollout households={filteredHouseholds} onChanged={reload} />
+          </AdminSection>
+        </>
       )}
 
       {activeTab === 'content' && (

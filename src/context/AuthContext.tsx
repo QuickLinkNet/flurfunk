@@ -1,6 +1,8 @@
 import { createContext, useEffect, useState, type ReactNode } from 'react';
 import * as authApi from '../api/authApi';
+import { submitStreetJoin } from '../api/streetJoinApi';
 import type { OnboardingStep } from '../types/onboarding';
+import type { StreetJoinInput } from '../types/streetJoin';
 import type { User } from '../types/user';
 
 interface RegisterInput {
@@ -14,6 +16,7 @@ interface AuthContextValue {
   isLoading: boolean;
   login: (email: string, password: string, remember?: boolean) => Promise<User>;
   register: (input: RegisterInput) => Promise<void>;
+  registerViaStreetLink: (token: string, input: StreetJoinInput) => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (displayName: string, avatarUrl?: string | null) => Promise<User>;
   updatePassword: (currentPassword: string, newPassword: string) => Promise<User>;
@@ -45,6 +48,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function register(input: RegisterInput) {
     const registeredUser = await authApi.register(input);
+    setUser(registeredUser);
+  }
+
+  async function registerViaStreetLink(token: string, input: StreetJoinInput) {
+    const registeredUser = await submitStreetJoin(token, input);
     setUser(registeredUser);
   }
 
@@ -85,7 +93,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, register, logout, updateProfile, updatePassword, updateDigestPreference, deleteMe, completeOnboarding, saveOnboardingProgress }}>
+    <AuthContext.Provider value={{ user, isLoading, login, register, registerViaStreetLink, logout, updateProfile, updatePassword, updateDigestPreference, deleteMe, completeOnboarding, saveOnboardingProgress }}>
       {children}
     </AuthContext.Provider>
   );

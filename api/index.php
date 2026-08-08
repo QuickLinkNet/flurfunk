@@ -40,9 +40,11 @@ use App\Controllers\AdminController;
 use App\Controllers\AdminDigestController;
 use App\Controllers\AdminFeedbackController;
 use App\Controllers\AdminPushController;
+use App\Controllers\AdminStreetInviteController;
 use App\Controllers\FeatureFlagController;
 use App\Controllers\FeedbackController;
 use App\Controllers\PushController;
+use App\Controllers\StreetJoinController;
 
 error_reporting(E_ALL);
 ini_set('display_errors', '0'); // Fehler nie roh an den Client durchreichen
@@ -110,6 +112,9 @@ $router->post('/events/{id}/remind', [new EventController(), 'remind']);
 
 $router->post('/feedback', [new FeedbackController(), 'store']);
 
+$router->get('/join/{token}', [new StreetJoinController(), 'preview']);
+$router->post('/join/{token}', [new StreetJoinController(), 'register']);
+
 $router->get('/households/me/visibility', [new VisibilityController(), 'me']);
 $router->put('/households/me/visibility', [new VisibilityController(), 'updateMe']);
 
@@ -154,6 +159,9 @@ $router->get('/cron/trash-reminder', [new AdminDigestController(), 'cronSendTras
 $router->get('/admin/feedback', [new AdminFeedbackController(), 'index']);
 $router->put('/admin/feedback/{id}/status', [new AdminFeedbackController(), 'updateStatus']);
 $router->delete('/admin/feedback/{id}', [new AdminFeedbackController(), 'destroy']);
+
+$router->get('/admin/street-invite', [new AdminStreetInviteController(), 'show']);
+$router->post('/admin/street-invite/regenerate', [new AdminStreetInviteController(), 'regenerate']);
 
 try {
     $router->dispatch(Request::method(), Request::path());
