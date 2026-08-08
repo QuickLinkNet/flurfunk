@@ -10,6 +10,7 @@ import { AdminTrashReminderPanel } from '../components/organisms/AdminTrashRemin
 import { AdminEventList } from '../components/organisms/AdminEventList';
 import { AdminFeatureFlagsForm } from '../components/organisms/AdminFeatureFlagsForm';
 import { AdminFeedList } from '../components/organisms/AdminFeedList';
+import { AdminFeedbackList } from '../components/organisms/AdminFeedbackList';
 import { AdminHouseholdList } from '../components/organisms/AdminHouseholdList';
 import { AdminInviteRollout } from '../components/organisms/AdminInviteRollout';
 import { AdminNoticePanel } from '../components/organisms/AdminNoticePanel';
@@ -31,7 +32,7 @@ import type { UserRole } from '../types/user';
 
 export function AdminPage() {
   const [activeTab, setActiveTab] = useState<AdminTab>('overview');
-  const { calendar, events, feed, households, notices, reload, users } = useAdminData();
+  const { calendar, events, feed, feedback, households, notices, reload, users } = useAdminData();
   const { filteredHouseholds, filteredUsers, openOnboardingCount, search, setSearch } = useAdminSearch({ households, users });
 
   const {
@@ -39,6 +40,7 @@ export function AdminPage() {
     requestDeleteCalendarEntry,
     requestDeleteEvent,
     requestDeleteFeedItem,
+    requestDeleteFeedback,
     requestDeleteNotice,
     requestDeleteUser
   } = useAdminDeleteDialog({ onDeleted: reload });
@@ -62,6 +64,7 @@ export function AdminPage() {
     (count, household) => count + household.invites.filter((invite) => !invite.usedAt && !invite.revokedAt).length,
     0
   );
+  const openFeedbackCount = feedback.filter((report) => report.status === 'open').length;
 
   return (
     <DashboardTemplate pageTitle={PAGE_HEADERS.admin.title} pageSubtitle={PAGE_HEADERS.admin.subtitle}>
@@ -78,6 +81,7 @@ export function AdminPage() {
           eventCount={events.length}
           calendarCount={calendar.length}
           noticeCount={notices.length}
+          openFeedbackCount={openFeedbackCount}
           onNavigate={setActiveTab}
         />
       )}
@@ -120,6 +124,15 @@ export function AdminPage() {
             <AdminEventList events={events} onDelete={requestDeleteEvent} />
           </AdminSection>
         </>
+      )}
+
+      {activeTab === 'feedback' && (
+        <AdminSection
+          title={`Feedback (${feedback.length})`}
+          description="Bug-Meldungen und Ideen von Nutzern, direkt aus der App."
+        >
+          <AdminFeedbackList reports={feedback} onDelete={requestDeleteFeedback} onChanged={reload} />
+        </AdminSection>
       )}
 
       {activeTab === 'calendar' && (

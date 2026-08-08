@@ -38,8 +38,10 @@ use App\Controllers\VisibilityController;
 use App\Controllers\EventController;
 use App\Controllers\AdminController;
 use App\Controllers\AdminDigestController;
+use App\Controllers\AdminFeedbackController;
 use App\Controllers\AdminPushController;
 use App\Controllers\FeatureFlagController;
+use App\Controllers\FeedbackController;
 use App\Controllers\PushController;
 
 error_reporting(E_ALL);
@@ -104,6 +106,9 @@ $router->get('/events/{id}', [new EventController(), 'show']);
 $router->put('/events/{id}', [new EventController(), 'update']);
 $router->delete('/events/{id}', [new EventController(), 'destroy']);
 $router->post('/events/{id}/rsvp', [new EventController(), 'rsvp']);
+$router->post('/events/{id}/remind', [new EventController(), 'remind']);
+
+$router->post('/feedback', [new FeedbackController(), 'store']);
 
 $router->get('/households/me/visibility', [new VisibilityController(), 'me']);
 $router->put('/households/me/visibility', [new VisibilityController(), 'updateMe']);
@@ -145,6 +150,10 @@ $router->get('/cron/weekly-digest', [new AdminDigestController(), 'cronSend']);
 $router->get('/admin/digest/trash-preview', [new AdminDigestController(), 'trashReminderPreview']);
 $router->post('/admin/digest/trash-send', [new AdminDigestController(), 'sendTrashReminderNow']);
 $router->get('/cron/trash-reminder', [new AdminDigestController(), 'cronSendTrashReminder']);
+
+$router->get('/admin/feedback', [new AdminFeedbackController(), 'index']);
+$router->put('/admin/feedback/{id}/status', [new AdminFeedbackController(), 'updateStatus']);
+$router->delete('/admin/feedback/{id}', [new AdminFeedbackController(), 'destroy']);
 
 try {
     $router->dispatch(Request::method(), Request::path());

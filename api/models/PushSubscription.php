@@ -49,6 +49,35 @@ final class PushSubscription
         return Database::pdo()->query('SELECT * FROM push_subscriptions')->fetchAll();
     }
 
+    public static function findAdmins(int $excludeUserId): array
+    {
+        $stmt = Database::pdo()->prepare(
+            "SELECT ps.* FROM push_subscriptions ps
+             JOIN users u ON u.id = ps.user_id
+             WHERE u.role = 'admin' AND u.id != ?"
+        );
+        $stmt->execute([$excludeUserId]);
+        return $stmt->fetchAll();
+    }
+
+    // Für Event-Erinnerungen: Nutzer, deren Haushalt noch gar nicht auf das
+    // Event reagiert hat (kein event_responses-Eintrag) - das ist der
+    // haeufigste Fall von "Zusage vergessen", nicht "Vielleicht" o.ae.
+    public static function findForEventNonResponders(int $eventId, int $excludeUserId): array
+    {
+        $stmt = Database::pdo()->prepare(
+            'SELECT ps.*, u.household_id AS reminder_household_id
+             FROM push_subscriptions ps
+             JOIN users u ON u.id = ps.user_id
+             WHERE ps.user_id != ?
+               AND (u.household_id IS NULL OR u.household_id NOT IN (
+                 SELECT household_id FROM event_responses WHERE event_id = ?
+               ))'
+        );
+        $stmt->execute([$excludeUserId, $eventId]);
+        return $stmt->fetchAll();
+    }
+
     public static function hasAny(int $userId): bool
     {
         $stmt = Database::pdo()->prepare('SELECT 1 FROM push_subscriptions WHERE user_id = ? LIMIT 1');

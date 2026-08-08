@@ -17,6 +17,10 @@ export const PAGE_HEADERS = {
     title: 'Events',
     subtitle: 'Plane Treffen und sammle Rückmeldungen aus der Nachbarschaft.'
   },
+  feedback: {
+    title: 'Feedback',
+    subtitle: 'Bug gefunden oder eine Idee? Landet direkt bei den Admins.'
+  },
   household: {
     title: 'Mein Haushalt',
     subtitle: 'Profil, Status, Familie und Sichtbarkeit für deine Straße.'

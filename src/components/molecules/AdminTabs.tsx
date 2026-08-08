@@ -6,6 +6,7 @@ const TABS: Array<{ id: AdminTab; label: string }> = [
   { id: 'invites', label: 'Einladungen' },
   { id: 'users', label: 'Nutzer' },
   { id: 'content', label: 'Inhalte' },
+  { id: 'feedback', label: 'Feedback' },
   { id: 'calendar', label: 'Kalender' },
   { id: 'system', label: 'System' }
 ];

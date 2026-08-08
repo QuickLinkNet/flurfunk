@@ -3,17 +3,19 @@ import {
   deleteAdminCalendarEntry,
   deleteAdminEvent,
   deleteAdminFeedItem,
+  deleteAdminFeedback,
   deleteAdminNotice,
   deleteAdminUser
 } from '../api/adminApi';
-import type { AdminCalendarEntry, AdminEvent, AdminFeedItem, AdminNotice, AdminUser } from '../types/admin';
+import type { AdminCalendarEntry, AdminEvent, AdminFeedItem, AdminFeedbackReport, AdminNotice, AdminUser } from '../types/admin';
 
 type PendingDelete =
   | { type: 'feed'; id: number; title: string; description: string }
   | { type: 'event'; id: number; title: string; description: string }
   | { type: 'calendar'; id: number; title: string; description: string }
   | { type: 'notice'; id: number; title: string; description: string }
-  | { type: 'user'; id: number; title: string; description: string };
+  | { type: 'user'; id: number; title: string; description: string }
+  | { type: 'feedback'; id: number; title: string; description: string };
 
 interface Options {
   onDeleted: () => void;
@@ -65,6 +67,15 @@ export function useAdminDeleteDialog({ onDeleted }: Options) {
     });
   }
 
+  function requestDeleteFeedback(report: AdminFeedbackReport) {
+    openDeleteDialog({
+      type: 'feedback',
+      id: report.id,
+      title: 'Feedback löschen?',
+      description: `Die Meldung von "${report.reporterName}" wird entfernt.`
+    });
+  }
+
   function requestDeleteUser(user: AdminUser) {
     openDeleteDialog({
       type: 'user',
@@ -88,6 +99,8 @@ export function useAdminDeleteDialog({ onDeleted }: Options) {
         await deleteAdminCalendarEntry(pendingDelete.id);
       } else if (pendingDelete.type === 'notice') {
         await deleteAdminNotice(pendingDelete.id);
+      } else if (pendingDelete.type === 'feedback') {
+        await deleteAdminFeedback(pendingDelete.id);
       } else {
         await deleteAdminUser(pendingDelete.id);
       }
@@ -121,6 +134,7 @@ export function useAdminDeleteDialog({ onDeleted }: Options) {
     requestDeleteCalendarEntry,
     requestDeleteEvent,
     requestDeleteFeedItem,
+    requestDeleteFeedback,
     requestDeleteNotice,
     requestDeleteUser
   };

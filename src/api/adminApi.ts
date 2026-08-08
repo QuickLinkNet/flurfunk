@@ -5,6 +5,7 @@ import type {
   AdminDigestTestResult,
   AdminEvent,
   AdminFeedItem,
+  AdminFeedbackReport,
   AdminHousehold,
   AdminNotice,
   AdminSystemStatus,
@@ -117,6 +118,21 @@ export function createAdminNotice(title: string, message: string) {
 
 export function deleteAdminNotice(id: number) {
   return apiRequest<null>(`/admin/notices/${id}`, { method: 'DELETE' });
+}
+
+export function fetchAdminFeedback() {
+  return apiRequest<AdminFeedbackReport[]>('/admin/feedback');
+}
+
+export function updateAdminFeedbackStatus(id: number, status: 'open' | 'done') {
+  return apiRequest<null>(`/admin/feedback/${id}/status`, {
+    method: 'PUT',
+    body: JSON.stringify({ status })
+  });
+}
+
+export function deleteAdminFeedback(id: number) {
+  return apiRequest<null>(`/admin/feedback/${id}`, { method: 'DELETE' });
 }
 
 export function fetchAdminSystemStatus() {

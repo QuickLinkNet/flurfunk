@@ -1,5 +1,5 @@
 import { apiRequest } from './client';
-import type { EventDetail, EventType, RsvpResponse, StreetEvent } from '../types/event';
+import type { EventDetail, EventReminderResult, EventType, RsvpResponse, StreetEvent } from '../types/event';
 
 export function fetchEvents() {
   return apiRequest<StreetEvent[]>('/events');
@@ -43,4 +43,8 @@ export function submitRsvp(eventId: number, input: RsvpInput) {
     method: 'POST',
     body: JSON.stringify(input),
   });
+}
+
+export function sendEventReminder(eventId: number) {
+  return apiRequest<EventReminderResult>(`/events/${eventId}/remind`, { method: 'POST' });
 }

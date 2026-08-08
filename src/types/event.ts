@@ -1,3 +1,5 @@
+import type { PushSendResult } from './push';
+
 export type EventType =
   | 'bbq' | 'campfire' | 'street_festival' | 'kids_play' | 'football'
   | 'pool_party' | 'mulled_wine' | 'christmas_party' | 'other';
@@ -33,4 +35,9 @@ export interface EventResponseEntry {
 export interface EventDetail {
   event: StreetEvent;
   responses: EventResponseEntry[];
+}
+
+export interface EventReminderResult {
+  push: PushSendResult;
+  remindedHouseholds: number;
 }

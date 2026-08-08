@@ -21,6 +21,16 @@ final class PushService
         return self::sendToSubscriptions(PushSubscription::findAll(), $payload);
     }
 
+    public static function sendToAdmins(int $excludeUserId, ?array $payload = null): array
+    {
+        return self::sendToSubscriptions(PushSubscription::findAdmins($excludeUserId), $payload);
+    }
+
+    public static function sendEventReminder(int $eventId, int $excludeUserId, ?array $payload = null): array
+    {
+        return self::sendToSubscriptions(PushSubscription::findForEventNonResponders($eventId, $excludeUserId), $payload);
+    }
+
     private static function sendToSubscriptions(array $subscriptions, ?array $payload): array
     {
         if (count($subscriptions) === 0) {

@@ -4,7 +4,7 @@ import type { OnboardingStep } from './onboarding';
 import type { FeatureFlags } from './featureFlags';
 import type { PushSendResult } from './push';
 
-export type AdminTab = 'overview' | 'households' | 'invites' | 'users' | 'content' | 'calendar' | 'system';
+export type AdminTab = 'overview' | 'households' | 'invites' | 'users' | 'content' | 'feedback' | 'calendar' | 'system';
 
 export interface AdminMember {
   id: number;
@@ -78,6 +78,17 @@ export interface AdminCalendarEntry {
   endsAt: string | null;
   recurrenceRule: 'none' | 'daily' | 'weekly' | 'monthly';
   recurrenceUntil: string | null;
+}
+
+export interface AdminFeedbackReport {
+  id: number;
+  reporterName: string;
+  householdName: string | null;
+  category: 'bug' | 'idea' | 'other';
+  message: string;
+  pagePath: string | null;
+  status: 'open' | 'done';
+  createdAt: string;
 }
 
 export interface AdminNotice {

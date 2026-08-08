@@ -3,10 +3,12 @@
 namespace App\Controllers;
 
 use App\Core\Auth;
+use App\Core\PushService;
 use App\Core\Request;
 use App\Core\Response;
 use App\Models\Event;
 use App\Models\EventResponse;
+use App\Models\PushSubscription;
 use App\Models\User;
 
 final class EventController
@@ -111,6 +113,26 @@ final class EventController
             $userId
         );
         Response::json(['success' => true]);
+    }
+
+    public function remind(array $params): void
+    {
+        $userId = Auth::requireLogin();
+        $event = $this->requireManagingEvent((int) $params['id']);
+
+        $subscriptions = PushSubscription::findForEventNonResponders((int) $event['id'], $userId);
+        $householdIds = array_unique(array_filter(array_map(
+            static fn(array $s) => $s['reminder_household_id'] !== null ? (int) $s['reminder_household_id'] : null,
+            $subscriptions
+        )));
+
+        $push = PushService::sendEventReminder((int) $event['id'], $userId, [
+            'title' => 'Erinnerung: ' . $event['title'],
+            'body' => 'Sag uns kurz Bescheid, ob du dabei bist.',
+            'url' => '/apps/neighborhood/events/' . $event['id'],
+        ]);
+
+        Response::json(['push' => $push, 'remindedHouseholds' => count($householdIds)]);
     }
 
     private function viewerRole(): string

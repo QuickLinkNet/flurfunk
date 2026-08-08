@@ -12,6 +12,7 @@ import { EventDetailPage } from '../pages/EventDetailPage';
 import { HouseholdPage } from '../pages/HouseholdPage';
 import { NeighborsPage } from '../pages/NeighborsPage';
 import { SettingsPage } from '../pages/SettingsPage';
+import { FeedbackPage } from '../pages/FeedbackPage';
 import { AdminPage } from '../pages/AdminPage';
 import { OnboardingPage } from '../pages/OnboardingPage';
 import { useAuth } from '../hooks/useAuth';
@@ -144,6 +145,14 @@ export function AppRoutes() {
         element={
           <RequireAuth>
             <SettingsPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/feedback"
+        element={
+          <RequireAuth>
+            <FeedbackPage />
           </RequireAuth>
         }
       />

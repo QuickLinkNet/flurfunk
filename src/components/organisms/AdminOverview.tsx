@@ -10,6 +10,7 @@ interface Props {
   eventCount: number;
   calendarCount: number;
   noticeCount: number;
+  openFeedbackCount: number;
   onNavigate: (tab: AdminTab) => void;
 }
 
@@ -22,6 +23,7 @@ export function AdminOverview({
   eventCount,
   calendarCount,
   noticeCount,
+  openFeedbackCount,
   onNavigate
 }: Props) {
   return (
@@ -35,6 +37,7 @@ export function AdminOverview({
         <button type="button" onClick={() => onNavigate('content')}>Events: {eventCount}</button>
         <button type="button" onClick={() => onNavigate('calendar')}>Kalender: {calendarCount}</button>
         <button type="button" onClick={() => onNavigate('content')}>Hinweise: {noticeCount}</button>
+        <button type="button" onClick={() => onNavigate('feedback')}>Offenes Feedback: {openFeedbackCount}</button>
       </div>
     </AdminSection>
   );

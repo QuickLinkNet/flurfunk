@@ -9,7 +9,7 @@ import { NewEventForm } from '../components/organisms/NewEventForm';
 import { Input } from '../components/atoms/Input';
 import { Heading } from '../components/atoms/Heading';
 import { Button } from '../components/atoms/Button';
-import { deleteEvent, fetchEvent, submitRsvp } from '../api/eventsApi';
+import { deleteEvent, fetchEvent, sendEventReminder, submitRsvp } from '../api/eventsApi';
 import { EVENT_TYPE_META } from '../utils/eventTypeMeta';
 import { formatDateRangeLabel } from '../utils/date';
 import { useAuth } from '../hooks/useAuth';
@@ -29,6 +29,8 @@ export function EventDetailPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [isReminding, setIsReminding] = useState(false);
+  const [reminderMessage, setReminderMessage] = useState<string | null>(null);
 
   const reload = useCallback(() => {
     if (!id) return;
@@ -68,6 +70,24 @@ export function EventDetailPage() {
     setResponse(nextResponse);
   }
 
+  async function handleRemind() {
+    if (!detail) return;
+    setIsReminding(true);
+    setReminderMessage(null);
+    try {
+      const result = await sendEventReminder(detail.event.id);
+      setReminderMessage(
+        result.remindedHouseholds > 0
+          ? `Erinnerung an ${result.remindedHouseholds} Haushalt(e) ohne Rückmeldung gesendet (${result.push.sent}/${result.push.total} Pushes zugestellt).`
+          : 'Alle Haushalte haben schon geantwortet - keine Erinnerung nötig.'
+      );
+    } catch (err) {
+      setReminderMessage(err instanceof Error ? err.message : 'Erinnerung konnte nicht gesendet werden.');
+    } finally {
+      setIsReminding(false);
+    }
+  }
+
   async function confirmDelete() {
     if (!detail) return;
     setIsDeleting(true);
@@ -91,13 +111,19 @@ export function EventDetailPage() {
 
   const eventMeta = `${meta.emoji} ${meta.label} · ${formatDateRangeLabel(detail.event.startsAt, detail.event.endsAt)}${detail.event.location ? ` · ${detail.event.location}` : ''}`;
   const headerAside = detail.event.canManage ? (
-    <div className="event-detail-actions">
-      <Button type="button" variant="ghost" onClick={() => setIsEditing(true)}>
-        Bearbeiten
-      </Button>
-      <Button type="button" variant="ghost" onClick={() => setConfirmDeleteOpen(true)}>
-        Löschen
-      </Button>
+    <div>
+      <div className="event-detail-actions">
+        <Button type="button" variant="ghost" onClick={() => setIsEditing(true)}>
+          Bearbeiten
+        </Button>
+        <Button type="button" variant="ghost" onClick={() => setConfirmDeleteOpen(true)}>
+          Löschen
+        </Button>
+        <Button type="button" variant="ghost" disabled={isReminding} onClick={handleRemind}>
+          {isReminding ? 'Sendet ...' : 'Erinnerung senden'}
+        </Button>
+      </div>
+      {reminderMessage && <p className="event-rsvp-message">{reminderMessage}</p>}
     </div>
   ) : null;
 
