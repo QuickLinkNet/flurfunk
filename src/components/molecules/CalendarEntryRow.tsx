@@ -10,7 +10,8 @@ const TYPE_LABELS: Record<CalendarEntry['type'], string> = {
   street_action: '📢 Straßenaktion',
   holiday: '🏫 Ferien',
   trash: '🗑 Mülltermin',
-  appointment: '📌 Termin'
+  appointment: '📌 Termin',
+  childcare: '🧒 Kinderbetreuung'
 };
 
 interface Props {

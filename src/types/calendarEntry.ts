@@ -1,6 +1,6 @@
 export interface CalendarEntry {
   id: number | string;
-  type: 'vacation' | 'birthday' | 'event' | 'visit' | 'street_action' | 'holiday' | 'trash' | 'appointment';
+  type: 'vacation' | 'birthday' | 'event' | 'visit' | 'street_action' | 'holiday' | 'trash' | 'appointment' | 'childcare';
   title: string;
   startsAt: string;
   endsAt: string | null;

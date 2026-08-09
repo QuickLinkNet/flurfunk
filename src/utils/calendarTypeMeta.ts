@@ -13,7 +13,8 @@ export const CALENDAR_TYPE_META: Record<CalendarEntry['type'], CalendarTypeMeta>
   street_action: { label: 'Straßenaktion', color: '#D39A2D' },
   holiday: { label: 'Ferien', color: '#8E7CC3' },
   trash: { label: 'Müll', color: '#6B7280' },
-  appointment: { label: 'Termin', color: '#2F5D46' }
+  appointment: { label: 'Termin', color: '#2F5D46' },
+  childcare: { label: 'Kinderbetreuung', color: '#3E9C8F' }
 };
 
 export const CALENDAR_TYPE_OPTIONS = Object.entries(CALENDAR_TYPE_META) as [CalendarEntry['type'], CalendarTypeMeta][];

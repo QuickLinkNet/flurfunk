@@ -6,7 +6,7 @@ use App\Core\Database;
 
 final class CalendarEntry
 {
-    public const TYPES = ['vacation', 'birthday', 'event', 'visit', 'street_action', 'holiday', 'trash', 'appointment'];
+    public const TYPES = ['vacation', 'birthday', 'event', 'visit', 'street_action', 'holiday', 'trash', 'appointment', 'childcare'];
     public const VISIBILITIES = ['public', 'neighbors', 'private'];
     public const RECURRENCE_RULES = ['none', 'daily', 'weekly', 'monthly'];
 
