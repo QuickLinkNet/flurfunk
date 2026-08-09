@@ -36,6 +36,7 @@ use App\Controllers\CalendarController;
 use App\Controllers\DashboardController;
 use App\Controllers\VisibilityController;
 use App\Controllers\EventController;
+use App\Controllers\EventPollController;
 use App\Controllers\AdminController;
 use App\Controllers\AdminDigestController;
 use App\Controllers\AdminFeedbackController;
@@ -109,6 +110,13 @@ $router->put('/events/{id}', [new EventController(), 'update']);
 $router->delete('/events/{id}', [new EventController(), 'destroy']);
 $router->post('/events/{id}/rsvp', [new EventController(), 'rsvp']);
 $router->post('/events/{id}/remind', [new EventController(), 'remind']);
+
+$router->get('/event-polls', [new EventPollController(), 'index']);
+$router->post('/event-polls', [new EventPollController(), 'store']);
+$router->get('/event-polls/{id}', [new EventPollController(), 'show']);
+$router->post('/event-polls/{id}/vote', [new EventPollController(), 'vote']);
+$router->post('/event-polls/{id}/finalize', [new EventPollController(), 'finalize']);
+$router->delete('/event-polls/{id}', [new EventPollController(), 'destroy']);
 
 $router->post('/feedback', [new FeedbackController(), 'store']);
 

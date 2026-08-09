@@ -10,6 +10,7 @@ import { HelpBoardPage } from '../pages/HelpBoardPage';
 import { CalendarPage } from '../pages/CalendarPage';
 import { EventsPage } from '../pages/EventsPage';
 import { EventDetailPage } from '../pages/EventDetailPage';
+import { EventPollDetailPage } from '../pages/EventPollDetailPage';
 import { HouseholdPage } from '../pages/HouseholdPage';
 import { NeighborsPage } from '../pages/NeighborsPage';
 import { SettingsPage } from '../pages/SettingsPage';
@@ -122,6 +123,16 @@ export function AppRoutes() {
           <RequireAuth>
             <RequireFeature feature="events">
               <EventDetailPage />
+            </RequireFeature>
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/terminfindung/:id"
+        element={
+          <RequireAuth>
+            <RequireFeature feature="events">
+              <EventPollDetailPage />
             </RequireFeature>
           </RequireAuth>
         }
