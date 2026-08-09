@@ -95,6 +95,47 @@
   background: var(--md-color-border);
 }
 
+.auth-join-hint {
+  margin: 0 0 var(--md-space-3);
+  padding: var(--md-space-3);
+  border: 1px solid var(--md-color-border);
+  border-radius: var(--md-radius-control);
+  background: var(--md-color-primary-container);
+  color: var(--md-color-on-surface);
+  font-size: var(--md-font-size-sm);
+  line-height: 1.5;
+}
+
+.auth-mode-choice {
+  display: grid;
+  gap: var(--md-space-2);
+}
+
+.auth-mode-choice-card {
+  display: grid;
+  gap: 2px;
+  padding: var(--md-space-3) var(--md-space-4);
+  border: 1px solid var(--md-color-border);
+  border-radius: var(--md-radius-control);
+  background: var(--md-color-surface);
+  color: var(--md-color-on-surface);
+  text-align: left;
+}
+
+.auth-mode-choice-card:hover {
+  border-color: var(--md-color-primary);
+  background: color-mix(in srgb, var(--md-color-primary-container) 52%, var(--md-color-surface));
+}
+
+.auth-mode-choice-card strong {
+  font-size: var(--md-font-size-md);
+}
+
+.auth-mode-choice-card span {
+  color: var(--md-color-on-surface-variant);
+  font-size: var(--md-font-size-sm);
+}
+
 .auth-mode-toggle {
   display: grid;
   grid-template-columns: 1fr 1fr;

@@ -8,6 +8,22 @@ function joinUrl(token: string): string {
   return `${window.location.origin}/apps/neighborhood/beitreten/${token}`;
 }
 
+function joinMessage(link: string): string {
+  return [
+    'Hallo!',
+    '',
+    'Ihr seid zu Flurfunk eingeladen, dem geschützten Nachbarschaftsbereich unserer Straße.',
+    `Los geht's hier: ${link}`,
+    '',
+    'Wichtig: Bitte nur EINE Person pro Familie legt die Familie neu an. Alle anderen aus derselben',
+    'Familie wählen dort "Meine Familie ist schon dabei" und schließen sich an - sonst entstehen',
+    'aus Versehen zwei Familien-Einträge für euch.',
+    '',
+    'Tipp fürs iPhone: Nach dem Öffnen über "Zum Home-Bildschirm hinzufügen" installieren, sonst',
+    'kommen keine Benachrichtigungen an.'
+  ].join('\n');
+}
+
 export function AdminStreetInvitePanel() {
   const [token, setToken] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -20,11 +36,10 @@ export function AdminStreetInvitePanel() {
       .catch(() => setMessage('Link konnte nicht geladen werden.'));
   }, []);
 
-  async function copyLink() {
-    if (!token) return;
+  async function copy(value: string, label: string) {
     try {
-      await navigator.clipboard.writeText(joinUrl(token));
-      setMessage('Link kopiert.');
+      await navigator.clipboard.writeText(value);
+      setMessage(`${label} kopiert.`);
     } catch {
       setMessage('Kopieren fehlgeschlagen.');
     }
@@ -49,7 +64,9 @@ export function AdminStreetInvitePanel() {
       <p>
         Wer diesen Link öffnet, kann sich selbst eine neue Familie anlegen oder einer bestehenden
         beitreten - ohne dass du vorher einen Code pro Person erzeugen musst. Zwei Haushalte mit
-        gleichem Namen oder gleicher Adresse werden automatisch blockiert.
+        gleichem Namen oder gleicher Adresse werden automatisch blockiert. Bitte trotzdem lieber den
+        fertigen Text unten verschicken statt nur den nackten Link - sonst ist bei mehreren Personen
+        aus derselben Familie nicht klar, dass nur einer die Familie neu anlegen soll.
       </p>
       {token && (
         <div className="compact-form">
@@ -57,8 +74,11 @@ export function AdminStreetInvitePanel() {
         </div>
       )}
       <div className="md-card-actions">
-        <Button type="button" variant="ghost" onClick={copyLink} disabled={!token}>
-          Link kopieren
+        <Button type="button" variant="ghost" onClick={() => token && copy(joinUrl(token), 'Link')} disabled={!token}>
+          Nur Link kopieren
+        </Button>
+        <Button type="button" onClick={() => token && copy(joinMessage(joinUrl(token)), 'Einladungstext')} disabled={!token}>
+          Einladungstext kopieren
         </Button>
         <Button type="button" variant="ghost" onClick={() => setConfirmOpen(true)} disabled={!token}>
           Link erneuern
