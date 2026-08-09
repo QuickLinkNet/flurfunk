@@ -2,7 +2,9 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { DashboardTemplate } from '../components/templates/DashboardTemplate';
 import { RSVPButtonGroup } from '../components/molecules/RSVPButtonGroup';
+import { ActionDialog } from '../components/molecules/ActionDialog';
 import { ConfirmDialog } from '../components/molecules/ConfirmDialog';
+import { NewEventPollForm } from '../components/organisms/NewEventPollForm';
 import { Button } from '../components/atoms/Button';
 import { Heading } from '../components/atoms/Heading';
 import { StatusPill } from '../components/atoms/StatusPill';
@@ -23,6 +25,7 @@ export function EventPollDetailPage() {
   const [isFinalizing, setIsFinalizing] = useState(false);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
   const reload = useCallback(() => {
     if (!id) return;
@@ -97,6 +100,11 @@ export function EventPollDetailPage() {
   const meta = EVENT_TYPE_META[poll.type];
   const headerAside = poll.canManage ? (
     <div className="event-detail-actions">
+      {poll.status === 'open' && (
+        <Button type="button" variant="ghost" onClick={() => setIsEditing(true)}>
+          Bearbeiten
+        </Button>
+      )}
       <Button type="button" variant="ghost" onClick={() => setConfirmDeleteOpen(true)}>
         Löschen
       </Button>
@@ -169,6 +177,16 @@ export function EventPollDetailPage() {
         {message && <p style={{ margin: 'var(--md-space-2) 0 0', fontSize: 'var(--md-font-size-sm)', color: 'var(--md-color-on-surface-variant)' }}>{message}</p>}
       </section>
 
+      <ActionDialog open={isEditing} title="Terminfindung bearbeiten" onClose={() => setIsEditing(false)}>
+        <NewEventPollForm
+          poll={poll}
+          onCreated={() => {
+            setIsEditing(false);
+            reload();
+          }}
+          onCancel={() => setIsEditing(false)}
+        />
+      </ActionDialog>
       <ConfirmDialog
         open={finalizingOptionId !== null}
         title="Termin festlegen?"

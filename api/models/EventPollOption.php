@@ -14,6 +14,16 @@ final class EventPollOption
         }
     }
 
+    // Beim Bearbeiten werden alle Terminvorschläge ersetzt statt einzeln
+    // abgeglichen - einfacher und robuster als ein Diff, kostet dafür die
+    // bisherigen Stimmen (ON DELETE CASCADE auf event_poll_votes). Das ist
+    // im Bearbeiten-Formular klar kommuniziert.
+    public static function replaceAll(int $pollId, array $startsAtList): void
+    {
+        Database::pdo()->prepare('DELETE FROM event_poll_options WHERE poll_id = ?')->execute([$pollId]);
+        self::createMany($pollId, $startsAtList);
+    }
+
     public static function findByPoll(int $pollId): array
     {
         $stmt = Database::pdo()->prepare(

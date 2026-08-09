@@ -114,6 +114,7 @@ $router->post('/events/{id}/remind', [new EventController(), 'remind']);
 $router->get('/event-polls', [new EventPollController(), 'index']);
 $router->post('/event-polls', [new EventPollController(), 'store']);
 $router->get('/event-polls/{id}', [new EventPollController(), 'show']);
+$router->put('/event-polls/{id}', [new EventPollController(), 'update']);
 $router->post('/event-polls/{id}/vote', [new EventPollController(), 'vote']);
 $router->post('/event-polls/{id}/finalize', [new EventPollController(), 'finalize']);
 $router->delete('/event-polls/{id}', [new EventPollController(), 'destroy']);

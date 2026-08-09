@@ -3,24 +3,36 @@ import { Select } from '../atoms/Select';
 import { Input } from '../atoms/Input';
 import { Button } from '../atoms/Button';
 import { Textarea } from '../atoms/Textarea';
-import { createEventPoll } from '../../api/eventPollApi';
+import { createEventPoll, updateEventPoll } from '../../api/eventPollApi';
 import { EVENT_TYPE_OPTIONS } from '../../utils/eventTypeMeta';
 import type { EventType } from '../../types/event';
+import type { EventPoll } from '../../types/eventPoll';
 
 interface Props {
+  poll?: EventPoll;
   onCreated: () => void;
+  onCancel?: () => void;
 }
 
 const MIN_DATES = 2;
 const MAX_DATES = 5;
 
-export function NewEventPollForm({ onCreated }: Props) {
-  const [title, setTitle] = useState('');
-  const [type, setType] = useState<EventType>('bbq');
-  const [location, setLocation] = useState('');
-  const [description, setDescription] = useState('');
-  const [visibility, setVisibility] = useState<'public' | 'neighbors'>('neighbors');
-  const [dates, setDates] = useState<string[]>(['', '']);
+function inputDateTime(value: string): string {
+  return value.replace(' ', 'T').slice(0, 16);
+}
+
+function initialDates(poll?: EventPoll): string[] {
+  if (!poll || poll.options.length === 0) return ['', ''];
+  return poll.options.map((option) => inputDateTime(option.startsAt));
+}
+
+export function NewEventPollForm({ poll, onCreated, onCancel }: Props) {
+  const [title, setTitle] = useState(poll?.title ?? '');
+  const [type, setType] = useState<EventType>(poll?.type ?? 'bbq');
+  const [location, setLocation] = useState(poll?.location ?? '');
+  const [description, setDescription] = useState(poll?.description ?? '');
+  const [visibility, setVisibility] = useState<'public' | 'neighbors'>(poll?.visibility ?? 'neighbors');
+  const [dates, setDates] = useState<string[]>(initialDates(poll));
   const [message, setMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -53,23 +65,29 @@ export function NewEventPollForm({ onCreated }: Props) {
 
     setIsSubmitting(true);
     try {
-      const result = await createEventPoll({
+      const input = {
         title: title.trim(),
         type,
         description: description.trim() || undefined,
         location: location.trim() || undefined,
         visibility,
         dates: filledDates.map((d) => new Date(d).toISOString())
-      });
-      setTitle('');
-      setLocation('');
-      setDescription('');
-      setVisibility('neighbors');
-      setDates(['', '']);
-      setMessage(`Terminfindung erstellt.${result.push && result.push.total > 0 ? ` Push: ${result.push.sent}/${result.push.total}.` : ''}`);
+      };
+      if (poll) {
+        await updateEventPoll(poll.id, input);
+        setMessage('Terminfindung aktualisiert.');
+      } else {
+        const result = await createEventPoll(input);
+        setTitle('');
+        setLocation('');
+        setDescription('');
+        setVisibility('neighbors');
+        setDates(['', '']);
+        setMessage(`Terminfindung erstellt.${result.push && result.push.total > 0 ? ` Push: ${result.push.sent}/${result.push.total}.` : ''}`);
+      }
       onCreated();
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : 'Terminfindung konnte nicht erstellt werden.');
+      setMessage(err instanceof Error ? err.message : 'Terminfindung konnte nicht gespeichert werden.');
     } finally {
       setIsSubmitting(false);
     }
@@ -96,6 +114,7 @@ export function NewEventPollForm({ onCreated }: Props) {
       <div style={{ display: 'grid', gap: 'var(--md-space-2)' }}>
         <span style={{ fontSize: 'var(--md-font-size-sm)', color: 'var(--md-color-on-surface-variant)' }}>
           Terminvorschläge ({MIN_DATES}-{MAX_DATES})
+          {poll && ' - Änderung setzt bisherige Antworten zurück'}
         </span>
         {dates.map((date, index) => (
           <div key={index} style={{ display: 'flex', gap: 'var(--md-space-2)', alignItems: 'center' }}>
@@ -123,8 +142,13 @@ export function NewEventPollForm({ onCreated }: Props) {
         maxLength={600}
       />
       <Button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? 'Wird erstellt …' : 'Terminfindung starten'}
+        {isSubmitting ? 'Speichert …' : poll ? 'Terminfindung aktualisieren' : 'Terminfindung starten'}
       </Button>
+      {onCancel && (
+        <Button type="button" variant="ghost" onClick={onCancel} disabled={isSubmitting}>
+          Abbrechen
+        </Button>
+      )}
       {message && (
         <p style={{ margin: 0, color: message.includes('Pflicht') || message.includes('nicht') || message.includes('mindestens') ? 'var(--md-color-error)' : 'var(--md-color-on-surface-variant)' }}>
           {message}

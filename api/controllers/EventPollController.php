@@ -87,6 +87,46 @@ final class EventPollController
         Response::json(['id' => $pollId, 'push' => $push], 201);
     }
 
+    public function update(array $params): void
+    {
+        $poll = $this->requireManagingPoll((int) $params['id']);
+        if ($poll['status'] !== 'open') {
+            Response::error('Abgeschlossene Terminfindungen können nicht mehr bearbeitet werden.', 422);
+        }
+
+        $body = Request::json();
+        $title = trim((string) ($body['title'] ?? ''));
+        $type = (string) ($body['type'] ?? '');
+        $dates = $body['dates'] ?? [];
+        if ($title === '' || !in_array($type, Event::TYPES, true)) {
+            Response::error('Titel und Typ sind Pflicht.', 422);
+        }
+        if (!is_array($dates) || count($dates) < 2 || count($dates) > 5) {
+            Response::error('Bitte zwischen 2 und 5 Terminvorschläge angeben.', 422);
+        }
+        $normalizedDates = [];
+        foreach ($dates as $date) {
+            $date = trim((string) $date);
+            if ($date === '' || strtotime($date) === false) {
+                Response::error('Ein Terminvorschlag ist ungültig.', 422);
+            }
+            $normalizedDates[] = $date;
+        }
+        $visibility = in_array($body['visibility'] ?? '', ['public', 'neighbors'], true) ? $body['visibility'] : 'neighbors';
+
+        EventPoll::update(
+            (int) $poll['id'],
+            $title,
+            $type,
+            trim((string) ($body['description'] ?? '')) ?: null,
+            trim((string) ($body['location'] ?? '')) ?: null,
+            $visibility
+        );
+        EventPollOption::replaceAll((int) $poll['id'], $normalizedDates);
+
+        Response::json($this->toPublicPoll(EventPoll::findById((int) $poll['id'])));
+    }
+
     public function vote(array $params): void
     {
         $userId = Auth::requireLogin();

@@ -51,6 +51,20 @@ final class EventPoll
         return (int) Database::pdo()->lastInsertId();
     }
 
+    public static function update(
+        int $id,
+        string $title,
+        string $type,
+        ?string $description,
+        ?string $location,
+        string $visibility
+    ): void {
+        $stmt = Database::pdo()->prepare(
+            'UPDATE event_polls SET title = ?, type = ?, description = ?, location = ?, visibility = ? WHERE id = ?'
+        );
+        $stmt->execute([$title, $type, $description, $location, $visibility, $id]);
+    }
+
     public static function close(int $id, int $resultingEventId): void
     {
         $stmt = Database::pdo()->prepare("UPDATE event_polls SET status = 'closed', resulting_event_id = ? WHERE id = ?");

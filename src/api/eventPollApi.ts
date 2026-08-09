@@ -17,6 +17,10 @@ export function createEventPoll(input: NewEventPollInput) {
   });
 }
 
+export function updateEventPoll(id: number, input: NewEventPollInput) {
+  return apiRequest<EventPoll>(`/event-polls/${id}`, { method: 'PUT', body: JSON.stringify(input) });
+}
+
 export function voteEventPoll(id: number, votes: EventPollVoteInput[]) {
   return apiRequest<EventPoll>(`/event-polls/${id}/vote`, { method: 'POST', body: JSON.stringify({ votes }) });
 }
