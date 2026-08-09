@@ -95,7 +95,7 @@ export function EventPollDetailPage() {
   }
 
   const meta = EVENT_TYPE_META[poll.type];
-  const headerAside = poll.canManage && poll.status === 'open' ? (
+  const headerAside = poll.canManage ? (
     <div className="event-detail-actions">
       <Button type="button" variant="ghost" onClick={() => setConfirmDeleteOpen(true)}>
         Löschen
