@@ -122,16 +122,6 @@ final class StreetJoinController
         if ($user === null) {
             Response::error('Nutzer nicht gefunden.', 404);
         }
-        return [
-            'id' => (int) $user['id'],
-            'email' => $user['email'],
-            'displayName' => $user['display_name'],
-            'avatarUrl' => $user['avatar_url'] ?? null,
-            'role' => $user['role'],
-            'householdId' => $user['household_id'] !== null ? (int) $user['household_id'] : null,
-            'onboardingCompletedAt' => $user['onboarding_completed_at'] ?? null,
-            'onboardingCurrentStep' => $user['onboarding_current_step'] ?? 'household',
-            'weeklyDigestEnabled' => (bool) ($user['weekly_digest_enabled'] ?? true),
-        ];
+        return User::toPublic($user);
     }
 }

@@ -6,6 +6,25 @@ use App\Core\Database;
 
 final class User
 {
+    // Eigene-Account-Sicht (Auth::login, /auth/me, Profil-Updates, Registrierung
+    // per Code oder Straßen-Link). Nicht zu verwechseln mit der Admin-Listenansicht
+    // in AdminController::toPublicUser, die andere Felder braucht (lastLoginAt,
+    // pushSubscribed statt avatarUrl/weeklyDigestEnabled) und bewusst separat bleibt.
+    public static function toPublic(array $user): array
+    {
+        return [
+            'id' => (int) $user['id'],
+            'email' => $user['email'],
+            'displayName' => $user['display_name'],
+            'avatarUrl' => $user['avatar_url'] ?? null,
+            'role' => $user['role'],
+            'householdId' => $user['household_id'] !== null ? (int) $user['household_id'] : null,
+            'onboardingCompletedAt' => $user['onboarding_completed_at'] ?? null,
+            'onboardingCurrentStep' => $user['onboarding_current_step'] ?? 'household',
+            'weeklyDigestEnabled' => (bool) ($user['weekly_digest_enabled'] ?? true),
+        ];
+    }
+
     public static function findByEmail(string $email): ?array
     {
         $stmt = Database::pdo()->prepare('SELECT * FROM users WHERE email = ? LIMIT 1');
