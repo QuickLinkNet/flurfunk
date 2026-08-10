@@ -21,6 +21,23 @@ function formatDate(value: string | null | undefined) {
   return date.toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' });
 }
 
+interface PushTrigger {
+  event: string;
+  recipients: string;
+  condition: string;
+}
+
+const PUSH_TRIGGERS: PushTrigger[] = [
+  { event: 'Neuer Feed-Beitrag', recipients: 'Alle Abonnenten (außer Autor:in)', condition: 'Nur wenn Sichtbarkeit nicht "privat"' },
+  { event: 'Neue Terminfindung erstellt', recipients: 'Alle Abonnenten (außer Ersteller:in)', condition: 'Immer beim Erstellen' },
+  { event: 'Terminfindung final festgelegt', recipients: 'Alle Abonnenten', condition: 'Immer beim Festlegen' },
+  { event: 'Event-Erinnerung', recipients: 'Haushalte ohne RSVP (außer Anfragende:r)', condition: 'Manuell über "Nicht-Antworter erinnern"' },
+  { event: 'Neue Feedback-Meldung', recipients: 'Alle Admins (außer Melder:in)', condition: 'Immer beim Absenden' },
+  { event: 'Mülltermin-Erinnerung', recipients: 'Alle Abonnenten', condition: 'Automatisch per Cron am Vortag, nur unerinnerte Termine' },
+  { event: 'Admin-Test-Push', recipients: 'Ein einzelner Nutzer', condition: 'Manuell von Admin in der Nutzerliste ausgelöst' },
+  { event: 'Eigener Test-Push', recipients: 'Man selbst', condition: 'Manuell in den eigenen Benachrichtigungs-Einstellungen' }
+];
+
 export function AdminSystemStatusPanel() {
   const [status, setStatus] = useState<AdminSystemStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -134,6 +151,22 @@ export function AdminSystemStatusPanel() {
           </ul>
         </article>
       </div>
+
+      <article className="admin-system-card admin-push-overview">
+        <div className="admin-system-card-header">
+          <strong>Push-Benachrichtigungen: wann &amp; an wen</strong>
+        </div>
+        <ul className="admin-push-overview-list">
+          {PUSH_TRIGGERS.map((trigger) => (
+            <li key={trigger.event}>
+              <strong>{trigger.event}</strong>
+              <span>An: {trigger.recipients}</span>
+              <span>{trigger.condition}</span>
+            </li>
+          ))}
+        </ul>
+        <p>Voraussetzung ist immer ein aktives Push-Abo im Browser des Nutzers (eigenes Opt-in, kein Feature-Flag).</p>
+      </article>
     </div>
   );
 }

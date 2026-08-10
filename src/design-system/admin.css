@@ -292,6 +292,36 @@
   white-space: nowrap;
 }
 
+.admin-push-overview-list {
+  display: grid;
+  gap: var(--md-space-3);
+  padding: 0;
+  list-style: none;
+}
+
+.admin-push-overview-list li {
+  display: grid;
+  gap: 2px;
+  padding-bottom: var(--md-space-2);
+  border-bottom: 1px solid var(--md-color-border);
+}
+
+.admin-push-overview-list li:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.admin-push-overview-list span {
+  color: var(--md-color-on-surface-variant);
+  font-size: var(--md-font-size-sm);
+}
+
+.admin-push-overview > p {
+  margin: 0;
+  color: var(--md-color-on-surface-variant);
+  font-size: var(--md-font-size-sm);
+}
+
 .admin-status-pill {
   flex: 0 0 auto;
   padding: 4px 10px;
