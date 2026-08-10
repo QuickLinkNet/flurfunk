@@ -1,6 +1,6 @@
 # Claude-Code-Handoff: Flurfunk / Nachbarschafts-App
 
-Stand: 09.08.2026
+Stand: 10.08.2026
 
 Dieses Dokument ist der Kontext-Transfer für die Weiterarbeit mit Claude Code. Bitte zuerst komplett lesen, bevor Änderungen gemacht werden.
 
@@ -47,6 +47,13 @@ So ist in dieser Session durchgängig gearbeitet worden, funktioniert gut:
 6. Deploy nur auf explizite Aufforderung (`npm run deploy`).
 7. **Nach Deploy live durchklicken**, inkl. neuer Migrationen (siehe unten) - das ist der einzige Punkt, an dem echte End-to-End-Verifikation möglich ist.
 8. Test-/Fixture-Daten wieder löschen (Test-Haushalte, Test-Events, Test-Feedback etc.).
+
+**Browser-Pane-Tooleigenheit:** Wenn die Browser-Vorschau beim Nutzer nicht sichtbar/im Fokus ist, kompositiert sie keine Frames - dann schlagen `computer`-Klicks auf Koordinaten/Refs fehl oder landen daneben, ohne Fehler zu werfen (React-State ändert sich einfach nicht). Workaround: Element gezielt per `javascript_tool` mit `element.click()` klicken. Bei React-kontrollierten Inputs reicht `el.value = x` + `input`-Event nicht (React trackt den nativen Value-Setter) - stattdessen den nativen Setter explizit aufrufen:
+```js
+const proto = Object.getPrototypeOf(el);
+Object.getOwnPropertyDescriptor(proto, 'value').set.call(el, wert);
+el.dispatchEvent(new Event('input', { bubbles: true }));
+```
 
 ## Tech-Stack
 
@@ -110,7 +117,7 @@ Backend:
 - `api/controllers/`: Controller pro Domäne. **Etabliertes Muster für Admin-Features:** eigener kleiner Subcontroller statt Erweiterung von `AdminController.php` (das liegt schon nah an 500 Zeilen). Jeder Subcontroller dupliziert bewusst seine eigene `requireAdmin()`-Methode statt eine gemeinsame Basisklasse zu nutzen - das war eine explizite Entscheidung (Unabhängigkeit der Controller wichtiger als DRY), **nicht ungefragt ändern**. Beispiele: `AdminDigestController`, `AdminFeedbackController`, `AdminStreetInviteController`.
 - `api/models/`: Datenzugriff, ein Model pro Tabelle/Konzept. Öffentlich-vs-Admin-Mapping-Methoden können sich gleich nennen (`toPublicUser`), aber unterschiedliche Felder liefern (Selbstauskunft vs. Admin-Liste) - vor dem Zusammenlegen immer diffen, nicht nur am Namen orientieren.
 - `api/core/`: `Database.php` (SQLite + Migrationsrunner), `Auth.php`, `PushService.php`/`WebPush.php` (Push-Versand/-Verschlüsselung), `MailService.php`, `WeeklyDigest*`, `TrashReminderService.php`
-- `api/migrations/`: fortlaufend nummeriert, aktuell bis `031_event_polls.sql`
+- `api/migrations/`: fortlaufend nummeriert, aktuell bis `032_calendar_childcare_type.sql`. Wenn ein CHECK-Constraint erweitert werden muss (SQLite kann das nicht per ALTER TABLE): Tabelle neu aufbauen wie in `007_household_invites.sql`/`032_calendar_childcare_type.sql` (`PRAGMA foreign_keys = OFF`, neue Tabelle mit `_new`-Suffix, Daten kopieren, alte droppen, umbenennen, `PRAGMA foreign_keys = ON`).
 
 ## Wichtige UI-Bausteine
 
@@ -138,7 +145,7 @@ Funktioniert und ist live verifiziert:
 - Login/Logout, "Angemeldet bleiben" (7 Tage Session)
 - Passwort vergessen (E-Mail-Reset-Link)
 - Registrierung per personalisiertem Einladungscode (Admin- oder Nachbar-generiert)
-- **Selbstbedienter Einladungslink** (`/beitreten/:token`): ein Link pro Straße, wiederverwendbar, Admin kann ihn im Adminbereich unter "Einladungen" einsehen/kopieren/erneuern. Wer den Link öffnet, legt entweder eine neue Familie an oder tritt einer bestehenden bei (Auswahl aus echter Haushaltsliste). Serverseitiger Duplikat-Schutz: Name **oder** Adresse schon vorhanden → Anlegen wird blockiert, "beitreten" vorgeschlagen (`Household::findByNormalizedNameOrAddress`).
+- **Selbstbedienter Einladungslink** (`/beitreten/:token`): ein Link pro Straße, wiederverwendbar, Admin kann ihn im Adminbereich unter "Einladungen" einsehen/kopieren (roher Link oder fertiger erklärender Einladungstext)/erneuern. Wer den Link öffnet, muss sich zuerst bewusst zwischen "Wir sind neu" und "Familie ist schon dabei" entscheiden (keine Vorauswahl, kein Formular sichtbar vor der Wahl, Warnhinweis prominent) und legt dann entweder eine neue Familie an oder tritt einer bestehenden bei (Auswahl aus echter Haushaltsliste). Serverseitiger Duplikat-Schutz: Name **oder** Adresse schon vorhanden → Anlegen wird blockiert, "beitreten" vorgeschlagen (`Household::findByNormalizedNameOrAddress`).
 - Adminbereich: Übersicht, Haushalte, Einladungen (Codes + Link), Nutzer, Inhalte, Feedback, Kalender, System
 - Haushalte anlegen/löschen (Löschen entfernt Nicht-Admin-Mitglieder vollständig inkl. aller Referenzen, Admins werden nur vom Haushalt gelöst, nie gelöscht)
 - Push: echte Ende-zu-Ende-verschlüsselte Payloads (RFC 8291 aes128gcm), nicht nur generischer "schau rein"-Text
@@ -152,10 +159,11 @@ Funktioniert und ist live verifiziert:
 - Mülltermin-Erinnerung am Vorabend (Push + E-Mail), Cron-Endpoints vorhanden (`/cron/trash-reminder`, `/cron/weekly-digest`), Cron-Token aus lokaler `api/cron-token.local.php` (gitignored)
 - Wöchentlicher Digest als Admin-Vorschau/Test, Cron vorbereitet
 - Admin-Systemstatus, PWA installierbar, Dark Mode
+- Kalender-Kategorien inkl. "Kinderbetreuung" (z. B. "Kinder bei Papa" - bewusst **kein** Status, siehe Sensible Stellen)
 
 ## Zuletzt bearbeiteter Bereich
 
-Diese Session (09.08.2026), chronologisch:
+09.08.2026, chronologisch:
 
 1. Layout-Politur: Hero-Header/Content-Übergang (Content-Sheet überlappt Hero-Foto statt lose zu folgen, `app-hero.css` + `dashboard.css` identisch angepasst), Textgrößen-Hierarchie (Karten-Titel waren größer als Abschnitts-Überschriften), Hero-Leerraum verkleinert, Pillen-Umbruch statt Scroll (siehe UI-Bausteine oben), vertikale Zentrierung in Übersichts-Pillen (`align-items: baseline` → `center`).
 2. Feedback-/Bug-Kanal gebaut (siehe Funktionsstand).
@@ -163,6 +171,12 @@ Diese Session (09.08.2026), chronologisch:
 4. Selbstbedienter Einladungslink gebaut (siehe Funktionsstand) - dabei Alfahosting-Cron eingerichtet (2 Tasks im CloudPit-Panel: `/cron/weekly-digest` wöchentlich, `/cron/trash-reminder` täglich).
 5. Terminfindung gebaut, dann Bearbeiten nachgezogen.
 6. Kleines Refactoring: `User::toPublic()` extrahiert (war 1:1 in `AuthController` und `StreetJoinController` dupliziert), `HANDOFF_CLAUDE_CODE.md` aktualisiert.
+
+10.08.2026 - erster echter Testlauf mit Kathrin (Testerin), zwei konkrete Findings behoben:
+
+7. Einladungslink führte zu Verwirrung ("beide aus einer Familie legen gleichzeitig eine neue Familie an") - `JoinStreetPage` erzwingt jetzt eine bewusste Erstwahl mit Warnhinweis (siehe Funktionsstand), Admin-Panel bekam einen "Einladungstext kopieren"-Button statt nur den nackten Link.
+8. Status "Kinder bei Mama/Papa" passte konzeptionell nicht (kein Datum) - aus `DEFAULT_STATUSES` entfernt, dafür neue Kalender-Kategorie "Kinderbetreuung" (Migration 032, Tabellen-Rebuild für den CHECK-Constraint).
+9. System-Check auf Zuruf: Haushalte/Nutzer/Feed/Events/Kalender/Feedback/Terminfindungen waren schon sauber (nur Manuel + Kathrin, keine Testreste) - die disziplinierte Aufräum-Routine aus Schritt 8 im Workflow zahlt sich aus.
 
 Alles davon ist committed, gepusht und deployed, live verifiziert, Testdaten aufgeräumt.
 
@@ -194,6 +208,10 @@ Self-Delete-Schutz ist wichtig: Admin darf sich nicht selbst löschen/demoten (l
 ### Sichtbarkeit / Privacy
 
 Sichtbarkeits-Level (Öffentlich / Nur Nachbarn / Privat) sind fachlich wichtig, betreffen Status, Urlaub, Kinder, Events, Nachbarschaftsverzeichnis. Neue Features mit Sichtbarkeit (z. B. Terminfindung, Events) folgen demselben `public`/`neighbors`-Muster wie `EventController::isVisible()`.
+
+### Status vs. Kalender
+
+`Household.statusLabel` (Dashboard/Nachbarn "wer ist zuhause") ist bewusst nur für einzelne Jetzt-Werte ohne Datum gedacht (`DEFAULT_STATUSES` in `types/household.ts`). Alles mit einem Zeitraum oder Datum (z. B. Kinderbetreuung, Besuch, Abwesenheit über mehrere Tage) gehört in den Kalender (`calendar_entries`), nicht als neue Status-Option - hier nicht wieder vermischen.
 
 ### Registrierung / Auth
 
