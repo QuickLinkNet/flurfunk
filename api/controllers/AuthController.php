@@ -9,6 +9,7 @@ use App\Core\Request;
 use App\Core\Response;
 use App\Models\Household;
 use App\Models\HouseholdInvite;
+use App\Models\LoginAttempt;
 use App\Models\PasswordReset;
 use App\Models\User;
 
@@ -83,12 +84,19 @@ final class AuthController
         $body = Request::json();
         $email = trim($body['email'] ?? '');
         $password = (string) ($body['password'] ?? '');
+        $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+
+        if (LoginAttempt::isBlocked($email, $ip)) {
+            Response::error('Zu viele Fehlversuche. Bitte in 15 Minuten erneut versuchen.', 429);
+        }
 
         $user = User::findByEmail($email);
         if ($user === null || !password_verify($password, $user['password_hash'])) {
+            LoginAttempt::recordFailure($email, $ip);
             Response::error('E-Mail oder Passwort ist falsch.', 401);
         }
 
+        LoginAttempt::clear($email);
         $remember = !array_key_exists('remember', $body) || (bool) $body['remember'];
         Auth::login((int) $user['id'], $remember);
         Response::json($this->toPublicUser($user));

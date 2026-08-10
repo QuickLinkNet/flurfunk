@@ -19,8 +19,8 @@ export function LoginPage() {
     try {
       const loggedInUser = await login(email, password, remember);
       navigate(loggedInUser.onboardingCompletedAt ? '/dashboard' : '/start', { replace: true });
-    } catch {
-      setError('Login fehlgeschlagen. E-Mail oder Passwort prüfen.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Login fehlgeschlagen. E-Mail oder Passwort prüfen.');
     }
   }
 
