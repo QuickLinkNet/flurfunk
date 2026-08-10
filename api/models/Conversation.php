@@ -33,7 +33,12 @@ final class Conversation
 
     public static function findById(int $id): ?array
     {
-        $stmt = Database::pdo()->prepare('SELECT * FROM conversations WHERE id = ?');
+        $stmt = Database::pdo()->prepare(
+            'SELECT c.*,
+                    (SELECT body FROM messages WHERE conversation_id = c.id ORDER BY created_at DESC, id DESC LIMIT 1) AS last_message_body
+             FROM conversations c
+             WHERE c.id = ?'
+        );
         $stmt->execute([$id]);
         return $stmt->fetch() ?: null;
     }
