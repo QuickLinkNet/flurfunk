@@ -8,6 +8,7 @@ const TABS: Array<{ id: AdminTab; label: string }> = [
   { id: 'content', label: 'Inhalte' },
   { id: 'feedback', label: 'Feedback' },
   { id: 'calendar', label: 'Kalender' },
+  { id: 'map', label: 'Karte' },
   { id: 'system', label: 'System' }
 ];
 

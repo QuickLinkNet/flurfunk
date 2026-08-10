@@ -4,7 +4,7 @@ import type { OnboardingStep } from './onboarding';
 import type { FeatureFlags } from './featureFlags';
 import type { PushSendResult } from './push';
 
-export type AdminTab = 'overview' | 'households' | 'invites' | 'users' | 'content' | 'feedback' | 'calendar' | 'system';
+export type AdminTab = 'overview' | 'households' | 'invites' | 'users' | 'content' | 'feedback' | 'calendar' | 'map' | 'system';
 
 export interface AdminMember {
   id: number;

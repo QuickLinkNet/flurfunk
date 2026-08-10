@@ -16,6 +16,7 @@ import { AdminInviteRollout } from '../components/organisms/AdminInviteRollout';
 import { AdminNoticePanel } from '../components/organisms/AdminNoticePanel';
 import { AdminOverview } from '../components/organisms/AdminOverview';
 import { AdminStreetInvitePanel } from '../components/organisms/AdminStreetInvitePanel';
+import { AdminStreetMap } from '../components/organisms/AdminStreetMap';
 import { AdminSystemStatusPanel } from '../components/organisms/AdminSystemStatusPanel';
 import { AdminUserList } from '../components/organisms/AdminUserList';
 import { AdminWastePickupForm } from '../components/organisms/AdminWastePickupForm';
@@ -148,6 +149,15 @@ export function AdminPage() {
         <AdminSection title={`Kalender (${calendar.length})`}>
           <AdminWastePickupForm onCreated={reload} />
           <AdminCalendarList entries={calendar} onDelete={requestDeleteCalendarEntry} />
+        </AdminSection>
+      )}
+
+      {activeTab === 'map' && (
+        <AdminSection
+          title="Straßenkarte"
+          description="Schematische Anordnung nach Hausnummer (ungerade links, gerade rechts) — noch nur für Admins sichtbar."
+        >
+          <AdminStreetMap households={households} />
         </AdminSection>
       )}
 
