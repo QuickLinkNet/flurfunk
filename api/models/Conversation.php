@@ -98,10 +98,10 @@ final class Conversation
                AND c.last_message_at IS NOT NULL
                AND c.last_message_at > COALESCE(
                     CASE WHEN c.household_a_id = ? THEN c.household_a_last_read_at ELSE c.household_b_last_read_at END,
-                    "1970-01-01"
+                    ?
                )'
         );
-        $stmt->execute([$householdId, $householdId, $householdId]);
+        $stmt->execute([$householdId, $householdId, $householdId, '1970-01-01']);
         return (int) $stmt->fetchColumn();
     }
 }
