@@ -230,8 +230,14 @@
   display: flex;
   align-items: center;
   gap: var(--md-space-2);
-  padding: var(--md-space-2) 0;
+  padding: var(--md-space-2) 0 calc(76px + env(safe-area-inset-bottom));
   border-top: 1px solid var(--md-color-border);
+}
+
+@media (min-width: 1024px) {
+  .chat-input-bar {
+    padding-bottom: var(--md-space-2);
+  }
 }
 
 .chat-input-field {
