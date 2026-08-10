@@ -54,15 +54,14 @@
      draußen). Hero-Header bleibt unangetastet, nur der Karteninhalt wird
      begrenzt und zentriert - etwas breiter als app-page-main, weil hier
      eine zweite Spalte (320px) mitläuft. */
-  max-width: 1200px;
+  max-width: 1400px;
   margin-inline: auto;
   padding: 0 var(--md-space-4) calc(76px + var(--md-space-4));
   /* Gleiche Content-Sheet-Optik wie app-page-main (app-hero.css) - eigenes,
      paralleles Dashboard-Layout, deshalb hier separat gepflegt. */
   background: var(--md-color-paper);
   border: 1px solid var(--md-color-border);
-  border-bottom: none;
-  border-radius: 20px 20px 0 0;
+  border-radius: 20px;
   padding-top: var(--md-space-4);
 }
 
@@ -465,7 +464,7 @@
     align-items: start;
     margin-top: -64px;
     padding: 0 var(--md-space-5) var(--md-space-5);
-    border-radius: 28px 28px 0 0;
+    border-radius: 28px;
     padding-top: var(--md-space-5);
   }
 

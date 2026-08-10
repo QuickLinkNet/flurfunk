@@ -225,8 +225,9 @@ a:focus-visible {
   /* Ohne Obergrenze zieht sich der Inhalt auf breiten Desktop-Monitoren
      nahtlos über die volle Fensterbreite (Formulare/Karten wirken
      "nicht fertig"). Der Hero-Header bleibt bewusst unangetastet und
-     weiterhin volle Breite. */
-  max-width: 1080px;
+     weiterhin volle Breite. 1280 statt 1080, damit auf großen Monitoren
+     nicht unnötig viel Platz links/rechts verschenkt wird. */
+  max-width: 1280px;
   margin-inline: auto;
   padding: 0 var(--md-space-4) calc(76px + var(--md-space-4));
 }

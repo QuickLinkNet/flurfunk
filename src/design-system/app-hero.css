@@ -8,8 +8,7 @@
   margin-top: calc(var(--md-space-5) * -1);
   background: var(--md-color-paper);
   border: 1px solid var(--md-color-border);
-  border-bottom: none;
-  border-radius: 20px 20px 0 0;
+  border-radius: 20px;
   padding-top: var(--md-space-4);
 }
 
@@ -55,7 +54,7 @@
 @media (min-width: 1024px) {
   .app-content-with-hero .app-page-main {
     margin-top: -64px;
-    border-radius: 28px 28px 0 0;
+    border-radius: 28px;
     padding-top: var(--md-space-5);
   }
 
@@ -67,6 +66,9 @@
     background:
       linear-gradient(90deg, color-mix(in srgb, var(--md-color-surface-variant) 96%, transparent) 0%, color-mix(in srgb, var(--md-color-surface-variant) 74%, transparent) 24%, color-mix(in srgb, var(--md-color-surface-variant) 22%, transparent) 52%, color-mix(in srgb, var(--md-color-surface-variant) 36%, transparent) 100%),
       linear-gradient(180deg, color-mix(in srgb, var(--md-color-surface-variant) 18%, transparent), color-mix(in srgb, var(--md-color-surface-variant) 82%, transparent)),
-      url('/apps/neighborhood/brand/auth-background-wide.png') center 62% / cover no-repeat;
+      /* Quellbild ist 1672px breit - "cover" ohne Obergrenze skaliert es auf
+         sehr breiten Monitoren über die Originalgröße hinaus und wird
+         sichtbar unscharf. Deckelt die Breite, Rest füllt der Gradient. */
+      url('/apps/neighborhood/brand/auth-background-wide.png') center 62% / min(1900px, 145vw) auto no-repeat;
   }
 }

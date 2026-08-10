@@ -35,7 +35,11 @@ export function CalendarBoard({ entries, onChanged }: Props) {
   const seriesCount = entries.filter((entry) => filters.has(entry.type) && entry.recurrenceRule !== 'none').length;
   const allFiltersActive = filters.size === CALENDAR_TYPE_OPTIONS.length;
   const hasActiveFilters = filters.size > 0;
-  const initialView = typeof window !== 'undefined' && window.innerWidth < 720 ? 'listWeek' : 'dayGridMonth';
+  // Einheitlich Monatsansicht als Start, auch mobil - die Listenansicht
+  // zeigt beim ersten Öffnen sonst oft "Keine Termine diese Woche" und
+  // wirkt wie ein leerer Kalender, obwohl der Monat Einträge hat. Monat
+  // ist mobil schon auf Overflow/Touch geprüft, funktioniert sauber.
+  const initialView = 'dayGridMonth';
 
   const events = useMemo(
     () =>
