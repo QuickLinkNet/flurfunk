@@ -37,6 +37,7 @@ use App\Controllers\DashboardController;
 use App\Controllers\VisibilityController;
 use App\Controllers\EventController;
 use App\Controllers\EventPollController;
+use App\Controllers\MessageController;
 use App\Controllers\AdminController;
 use App\Controllers\AdminDigestController;
 use App\Controllers\AdminFeedbackController;
@@ -120,6 +121,12 @@ $router->put('/event-polls/{id}', [new EventPollController(), 'update']);
 $router->post('/event-polls/{id}/vote', [new EventPollController(), 'vote']);
 $router->post('/event-polls/{id}/finalize', [new EventPollController(), 'finalize']);
 $router->delete('/event-polls/{id}', [new EventPollController(), 'destroy']);
+
+$router->get('/messages', [new MessageController(), 'index']);
+$router->get('/messages/unread-count', [new MessageController(), 'unreadCount']);
+$router->post('/messages', [new MessageController(), 'start']);
+$router->get('/messages/{id}', [new MessageController(), 'show']);
+$router->post('/messages/{id}', [new MessageController(), 'send']);
 
 $router->post('/feedback', [new FeedbackController(), 'store']);
 

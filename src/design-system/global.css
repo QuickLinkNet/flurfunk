@@ -18,6 +18,7 @@
 @import './dashboard.css';
 @import './onboarding.css';
 @import './neighbors.css';
+@import './messages.css';
 @import './profile-settings.css';
 
 * { box-sizing: border-box; }

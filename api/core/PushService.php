@@ -31,6 +31,11 @@ final class PushService
         return self::sendToSubscriptions(PushSubscription::findForEventNonResponders($eventId, $excludeUserId), $payload);
     }
 
+    public static function sendDirectMessage(int $recipientHouseholdId, int $senderUserId, ?array $payload = null): array
+    {
+        return self::sendToSubscriptions(PushSubscription::findByHouseholdExceptUser($recipientHouseholdId, $senderUserId), $payload);
+    }
+
     private static function sendToSubscriptions(array $subscriptions, ?array $payload): array
     {
         if (count($subscriptions) === 0) {

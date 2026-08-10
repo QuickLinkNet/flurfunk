@@ -78,6 +78,17 @@ final class PushSubscription
         return $stmt->fetchAll();
     }
 
+    public static function findByHouseholdExceptUser(int $householdId, int $excludeUserId): array
+    {
+        $stmt = Database::pdo()->prepare(
+            'SELECT ps.* FROM push_subscriptions ps
+             JOIN users u ON u.id = ps.user_id
+             WHERE u.household_id = ? AND u.id != ?'
+        );
+        $stmt->execute([$householdId, $excludeUserId]);
+        return $stmt->fetchAll();
+    }
+
     public static function hasAny(int $userId): bool
     {
         $stmt = Database::pdo()->prepare('SELECT 1 FROM push_subscriptions WHERE user_id = ? LIMIT 1');

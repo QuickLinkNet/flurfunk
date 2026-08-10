@@ -4,11 +4,13 @@ import { FeatureIcon } from '../atoms/FeatureIcon';
 import { UserAvatar } from '../atoms/UserAvatar';
 import { useAuth } from '../../hooks/useAuth';
 import { useFeatureFlags } from '../../hooks/useFeatureFlags';
+import { useMessages } from '../../hooks/useMessages';
 import { appNavItems } from '../../navigation/appNavigation';
 
 export function BottomNavigation() {
   const { isEnabled } = useFeatureFlags();
   const { user, logout } = useAuth();
+  const { unreadCount } = useMessages();
   const navigate = useNavigate();
   const location = useLocation();
   const [isMoreOpen, setIsMoreOpen] = useState(false);
@@ -54,7 +56,12 @@ export function BottomNavigation() {
                   className={({ isActive }) => `bottom-more-link${isActive ? ' is-active' : ''}`}
                 >
                   <FeatureIcon name={item.icon} size={34} />
-                  {item.label}
+                  <span className="bottom-more-label">
+                    {item.label}
+                    {item.to === '/nachrichten' && unreadCount > 0 && (
+                      <span className="bottom-more-badge">{unreadCount > 9 ? '9+' : unreadCount}</span>
+                    )}
+                  </span>
                 </NavLink>
               ))}
               <button type="button" className="bottom-more-link" onClick={handleLogout}>
@@ -84,6 +91,7 @@ export function BottomNavigation() {
         >
           <span className="bottom-navigation-emoji" aria-hidden="true">⋯</span>
           Mehr
+          {unreadCount > 0 && <span className="bottom-navigation-badge" aria-hidden="true" />}
         </button>
       </nav>
     </>

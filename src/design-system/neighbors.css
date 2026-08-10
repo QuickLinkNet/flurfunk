@@ -243,6 +243,24 @@
   min-height: 48px;
   text-decoration: none;
   font-weight: var(--md-font-weight-medium);
+  width: 100%;
+  border: 0;
+  background: transparent;
+  font-family: inherit;
+  font-size: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.neighbor-card-action:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.neighbor-card-chat-error {
+  margin: 0;
+  font-size: var(--md-font-size-sm);
+  color: var(--md-color-error);
 }
 
 .neighbors-empty {

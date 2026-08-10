@@ -13,6 +13,8 @@ import { EventDetailPage } from '../pages/EventDetailPage';
 import { EventPollDetailPage } from '../pages/EventPollDetailPage';
 import { HouseholdPage } from '../pages/HouseholdPage';
 import { NeighborsPage } from '../pages/NeighborsPage';
+import { MessagesPage } from '../pages/MessagesPage';
+import { MessageDetailPage } from '../pages/MessageDetailPage';
 import { SettingsPage } from '../pages/SettingsPage';
 import { FeedbackPage } from '../pages/FeedbackPage';
 import { AdminPage } from '../pages/AdminPage';
@@ -142,6 +144,22 @@ export function AppRoutes() {
         element={
           <RequireAuth>
             <NeighborsPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/nachrichten"
+        element={
+          <RequireAuth>
+            <MessagesPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/nachrichten/:id"
+        element={
+          <RequireAuth>
+            <MessageDetailPage />
           </RequireAuth>
         }
       />

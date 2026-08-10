@@ -5,6 +5,7 @@ import App from './App';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { FeatureFlagsProvider } from './context/FeatureFlagsContext';
+import { MessagesProvider } from './context/MessagesContext';
 import { initPwaUpdate } from './pwaUpdate';
 import './design-system/global.css';
 
@@ -16,7 +17,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       <FeatureFlagsProvider>
         <BrowserRouter basename="/apps/neighborhood" future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
           <AuthProvider>
-            <App />
+            <MessagesProvider>
+              <App />
+            </MessagesProvider>
           </AuthProvider>
         </BrowserRouter>
       </FeatureFlagsProvider>
