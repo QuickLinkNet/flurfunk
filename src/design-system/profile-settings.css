@@ -55,6 +55,12 @@
   font-size: var(--md-font-size-sm);
 }
 
+.profile-photo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--md-space-2);
+}
+
 .profile-avatar-picker {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

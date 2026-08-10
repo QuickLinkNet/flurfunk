@@ -1,0 +1,8 @@
+# Hochgeladene Dateien (Profilbilder) werden nie als PHP ausgeführt,
+# selbst wenn sich der Dateiname/die Endung manipulieren ließe.
+<IfModule mod_php.c>
+  php_flag engine off
+</IfModule>
+<FilesMatch "\.(php|phtml|php3|php4|php5|phar)$">
+  Require all denied
+</FilesMatch>

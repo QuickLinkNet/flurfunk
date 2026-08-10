@@ -6,6 +6,10 @@ use App\Core\Database;
 
 final class User
 {
+    // Gleiches Präfix wie bei den Brand-Bildern (app-hero.css etc.) - fest
+    // verdrahtet statt aus der Anfrage abgeleitet, siehe HANDOFF-Konvention.
+    private const AVATAR_PHOTO_URL_PREFIX = '/apps/neighborhood/api/uploads/avatars/';
+
     // Eigene-Account-Sicht (Auth::login, /auth/me, Profil-Updates, Registrierung
     // per Code oder Straßen-Link). Nicht zu verwechseln mit der Admin-Listenansicht
     // in AdminController::toPublicUser, die andere Felder braucht (lastLoginAt,
@@ -17,12 +21,29 @@ final class User
             'email' => $user['email'],
             'displayName' => $user['display_name'],
             'avatarUrl' => $user['avatar_url'] ?? null,
+            'avatarPhotoUrl' => self::avatarPhotoUrl($user['avatar_photo_path'] ?? null),
             'role' => $user['role'],
             'householdId' => $user['household_id'] !== null ? (int) $user['household_id'] : null,
             'onboardingCompletedAt' => $user['onboarding_completed_at'] ?? null,
             'onboardingCurrentStep' => $user['onboarding_current_step'] ?? 'household',
             'weeklyDigestEnabled' => (bool) ($user['weekly_digest_enabled'] ?? true),
         ];
+    }
+
+    public static function avatarPhotoFilePath(string $filename): string
+    {
+        return __DIR__ . '/../uploads/avatars/' . $filename;
+    }
+
+    public static function avatarPhotoUrl(?string $filename): ?string
+    {
+        return $filename !== null ? self::AVATAR_PHOTO_URL_PREFIX . $filename : null;
+    }
+
+    public static function updateAvatarPhoto(int $id, ?string $filename): void
+    {
+        $stmt = Database::pdo()->prepare('UPDATE users SET avatar_photo_path = ? WHERE id = ?');
+        $stmt->execute([$filename, $id]);
     }
 
     public static function findByEmail(string $email): ?array

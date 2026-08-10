@@ -30,7 +30,7 @@ export function AppSidebar() {
         ))}
       </nav>
       <div className="app-sidebar-profile">
-        <UserAvatar avatarUrl={user?.avatarUrl} fallback={user?.displayName ?? 'Flurfunk'} />
+        <UserAvatar avatarUrl={user?.avatarUrl} photoUrl={user?.avatarPhotoUrl} fallback={user?.displayName ?? 'Flurfunk'} />
         <div>
           <strong>{user?.displayName ?? 'Flurfunk'}</strong>
           <small>{user?.role === 'admin' ? 'Verwaltung' : 'Nachbarschaft'}</small>

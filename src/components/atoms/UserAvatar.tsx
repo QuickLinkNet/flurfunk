@@ -2,6 +2,7 @@ import { householdAvatar } from '../../utils/householdAvatar';
 
 interface Props {
   avatarUrl?: string | null;
+  photoUrl?: string | null;
   fallback: string;
   size?: number;
 }
@@ -15,7 +16,24 @@ function initials(name: string): string {
     .toUpperCase();
 }
 
-export function UserAvatar({ avatarUrl, fallback, size = 42 }: Props) {
+export function UserAvatar({ avatarUrl, photoUrl, fallback, size = 42 }: Props) {
+  if (photoUrl) {
+    return (
+      <img
+        src={photoUrl}
+        alt={fallback}
+        title={fallback}
+        style={{
+          width: size,
+          height: size,
+          borderRadius: '50%',
+          objectFit: 'cover',
+          flexShrink: 0
+        }}
+      />
+    );
+  }
+
   const avatar = avatarUrl ? householdAvatar(avatarUrl) : null;
   return (
     <span

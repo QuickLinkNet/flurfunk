@@ -19,3 +19,18 @@ export async function apiRequest<T>(path: string, options: RequestInit = {}): Pr
   }
   return body.data as T;
 }
+
+// Für Datei-Uploads: kein Content-Type setzen, der Browser generiert die
+// multipart/form-data-Boundary selbst. Deshalb bewusst kein apiRequest().
+export async function apiUpload<T>(path: string, formData: FormData): Promise<T> {
+  const res = await fetch(`${BASE_URL}${path}`, {
+    method: 'POST',
+    credentials: 'include',
+    body: formData
+  });
+  const body: ApiEnvelope<T> = await res.json();
+  if (!res.ok || !body.success) {
+    throw new Error(body.error ?? `API-Fehler (${res.status})`);
+  }
+  return body.data as T;
+}

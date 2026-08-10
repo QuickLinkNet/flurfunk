@@ -7,6 +7,7 @@ export interface User {
   email: string;
   displayName: string;
   avatarUrl: string | null;
+  avatarPhotoUrl: string | null;
   role: UserRole;
   householdId: number | null;
   onboardingCompletedAt: string | null;

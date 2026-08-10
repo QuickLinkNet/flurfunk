@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../atoms/Button';
 import { Input } from '../atoms/Input';
@@ -8,19 +8,24 @@ import { useAuth } from '../../hooks/useAuth';
 import { exportMe } from '../../api/authApi';
 import { HOUSEHOLD_AVATARS } from '../../utils/householdAvatar';
 
+const MAX_PHOTO_BYTES = 4 * 1024 * 1024;
+
 export function ProfileSettings() {
-  const { user, updateProfile, updatePassword, deleteMe } = useAuth();
+  const { user, updateProfile, uploadAvatarPhoto, deleteAvatarPhoto, updatePassword, deleteMe } = useAuth();
   const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [displayName, setDisplayName] = useState(user?.displayName ?? '');
   const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl ?? 'home');
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [profileMessage, setProfileMessage] = useState<string | null>(null);
   const [passwordMessage, setPasswordMessage] = useState<string | null>(null);
+  const [photoMessage, setPhotoMessage] = useState<string | null>(null);
   const [deleteMessage, setDeleteMessage] = useState<string | null>(null);
   const [exportMessage, setExportMessage] = useState<string | null>(null);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [isSavingPassword, setIsSavingPassword] = useState(false);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
@@ -85,6 +90,43 @@ export function ProfileSettings() {
     }
   }
 
+  async function handlePhotoSelected(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0] ?? null;
+    event.target.value = '';
+    if (!file) return;
+    setPhotoMessage(null);
+    if (!file.type.startsWith('image/')) {
+      setPhotoMessage('Bitte eine Bilddatei auswählen.');
+      return;
+    }
+    if (file.size > MAX_PHOTO_BYTES) {
+      setPhotoMessage('Bild ist zu groß (max. 4 MB).');
+      return;
+    }
+    setIsUploadingPhoto(true);
+    try {
+      await uploadAvatarPhoto(file);
+      setPhotoMessage('Profilbild aktualisiert.');
+    } catch (error) {
+      setPhotoMessage(error instanceof Error ? error.message : 'Foto konnte nicht hochgeladen werden.');
+    } finally {
+      setIsUploadingPhoto(false);
+    }
+  }
+
+  async function handlePhotoDelete() {
+    setPhotoMessage(null);
+    setIsUploadingPhoto(true);
+    try {
+      await deleteAvatarPhoto();
+      setPhotoMessage('Profilbild entfernt.');
+    } catch (error) {
+      setPhotoMessage(error instanceof Error ? error.message : 'Foto konnte nicht entfernt werden.');
+    } finally {
+      setIsUploadingPhoto(false);
+    }
+  }
+
   async function handleExport() {
     setExportMessage(null);
     try {
@@ -106,11 +148,33 @@ export function ProfileSettings() {
     <div className="profile-settings">
       <form className="profile-settings-card profile-settings-card--featured" onSubmit={handleProfileSubmit}>
         <div className="profile-settings-card-header">
-          <UserAvatar avatarUrl={avatarUrl} fallback={displayName || user?.email || 'Profil'} size={56} />
+          <UserAvatar avatarUrl={avatarUrl} photoUrl={user?.avatarPhotoUrl} fallback={displayName || user?.email || 'Profil'} size={56} />
           <div>
             <h3>Profil</h3>
             <p>{user?.email}</p>
           </div>
+        </div>
+
+        <div className="profile-settings-field">
+          <span>Profilfoto</span>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            hidden
+            onChange={handlePhotoSelected}
+          />
+          <div className="profile-photo-actions">
+            <Button type="button" variant="ghost" onClick={() => fileInputRef.current?.click()} disabled={isUploadingPhoto}>
+              {isUploadingPhoto ? 'Lädt...' : user?.avatarPhotoUrl ? 'Foto ändern' : 'Foto hochladen'}
+            </Button>
+            {user?.avatarPhotoUrl && (
+              <Button type="button" variant="ghost" onClick={handlePhotoDelete} disabled={isUploadingPhoto}>
+                Foto entfernen
+              </Button>
+            )}
+          </div>
+          {photoMessage && <p className="profile-settings-message">{photoMessage}</p>}
         </div>
 
         <label className="profile-settings-field">

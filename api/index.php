@@ -67,6 +67,8 @@ $router->post('/auth/onboarding/progress', [new AuthController(), 'saveOnboardin
 $router->get('/auth/me', [new AuthController(), 'me']);
 $router->get('/auth/me/export', [new AuthController(), 'exportMe']);
 $router->put('/auth/me/profile', [new AuthController(), 'updateProfile']);
+$router->post('/auth/me/avatar', [new AuthController(), 'uploadAvatarPhoto']);
+$router->delete('/auth/me/avatar', [new AuthController(), 'deleteAvatarPhoto']);
 $router->put('/auth/me/password', [new AuthController(), 'updatePassword']);
 $router->put('/auth/me/digest-preference', [new AuthController(), 'updateDigestPreference']);
 $router->delete('/auth/me', [new AuthController(), 'deleteMe']);

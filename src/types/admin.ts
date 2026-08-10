@@ -10,6 +10,7 @@ export interface AdminMember {
   id: number;
   email: string;
   displayName: string;
+  avatarPhotoUrl: string | null;
   role: UserRole;
   householdId: number | null;
   lastLoginAt: string | null;

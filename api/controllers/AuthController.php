@@ -212,6 +212,93 @@ final class AuthController
         Response::json($this->toPublicUser(User::findById($userId)));
     }
 
+    // Echtes Foto statt nur der festen Icon-Auswahl (AVATAR_KEYS). Getrennt
+    // gespeichert (users.avatar_photo_path) - ein Foto hat beim Anzeigen
+    // Vorrang, die Icon-Auswahl bleibt als Fallback erhalten.
+    public function uploadAvatarPhoto(): void
+    {
+        $userId = Auth::requireLogin();
+        $user = User::findById($userId);
+        if ($user === null) {
+            Response::error('Nutzer nicht gefunden.', 404);
+        }
+
+        $file = $_FILES['photo'] ?? null;
+        if ($file === null || ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+            Response::error('Bitte ein Bild auswählen.', 422);
+        }
+        if ($file['size'] > 4 * 1024 * 1024) {
+            Response::error('Bild ist zu groß (max. 4 MB).', 422);
+        }
+
+        $info = @getimagesize($file['tmp_name']);
+        $creators = ['image/jpeg' => 'imagecreatefromjpeg', 'image/png' => 'imagecreatefrompng', 'image/webp' => 'imagecreatefromwebp'];
+        if ($info === false || !isset($creators[$info['mime']])) {
+            Response::error('Bitte ein JPG-, PNG- oder WebP-Bild hochladen.', 422);
+        }
+
+        $creator = $creators[$info['mime']];
+        $source = @$creator($file['tmp_name']);
+        if ($source === false) {
+            Response::error('Bild konnte nicht gelesen werden.', 422);
+        }
+
+        // Mittig auf Quadrat zuschneiden, dann auf einheitliche Avatar-Größe
+        // bringen - kein manuelles Zuschneiden im Frontend nötig.
+        $srcWidth = imagesx($source);
+        $srcHeight = imagesy($source);
+        $side = min($srcWidth, $srcHeight);
+        $srcX = (int) (($srcWidth - $side) / 2);
+        $srcY = (int) (($srcHeight - $side) / 2);
+
+        $size = 320;
+        $dest = imagecreatetruecolor($size, $size);
+        imagecopyresampled($dest, $source, 0, 0, $srcX, $srcY, $size, $size, $side, $side);
+        imagedestroy($source);
+
+        $dir = dirname(User::avatarPhotoFilePath('x'));
+        if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir)) {
+            imagedestroy($dest);
+            Response::error('Speicherordner konnte nicht angelegt werden.', 500);
+        }
+
+        $filename = $userId . '-' . bin2hex(random_bytes(8)) . '.jpg';
+        $saved = imagejpeg($dest, User::avatarPhotoFilePath($filename), 85);
+        imagedestroy($dest);
+        if (!$saved) {
+            Response::error('Bild konnte nicht gespeichert werden.', 500);
+        }
+
+        $this->deleteOldAvatarPhotoFile($user);
+        User::updateAvatarPhoto($userId, $filename);
+        Response::json($this->toPublicUser(User::findById($userId)));
+    }
+
+    public function deleteAvatarPhoto(): void
+    {
+        $userId = Auth::requireLogin();
+        $user = User::findById($userId);
+        if ($user === null) {
+            Response::error('Nutzer nicht gefunden.', 404);
+        }
+
+        $this->deleteOldAvatarPhotoFile($user);
+        User::updateAvatarPhoto($userId, null);
+        Response::json($this->toPublicUser(User::findById($userId)));
+    }
+
+    private function deleteOldAvatarPhotoFile(array $user): void
+    {
+        $existing = $user['avatar_photo_path'] ?? null;
+        if ($existing === null) {
+            return;
+        }
+        $path = User::avatarPhotoFilePath($existing);
+        if (is_file($path)) {
+            @unlink($path);
+        }
+    }
+
     public function updatePassword(): void
     {
         $userId = Auth::requireLogin();

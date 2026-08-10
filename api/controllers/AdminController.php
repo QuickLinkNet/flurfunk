@@ -336,6 +336,7 @@ final class AdminController
             'id' => (int) $u['id'],
             'email' => $u['email'],
             'displayName' => $u['display_name'],
+            'avatarPhotoUrl' => User::avatarPhotoUrl($u['avatar_photo_path'] ?? null),
             'role' => $u['role'],
             'householdId' => $u['household_id'] !== null ? (int) $u['household_id'] : null,
             'lastLoginAt' => $u['last_login_at'],

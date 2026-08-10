@@ -1,4 +1,4 @@
-import { apiRequest } from './client';
+import { apiRequest, apiUpload } from './client';
 import type { OnboardingStep } from '../types/onboarding';
 import type { User } from '../types/user';
 
@@ -30,6 +30,16 @@ export function fetchCurrentUser() {
 
 export function updateProfile(displayName: string, avatarUrl?: string | null) {
   return apiRequest<User>('/auth/me/profile', { method: 'PUT', body: JSON.stringify({ displayName, avatarUrl }) });
+}
+
+export function uploadAvatarPhoto(file: File) {
+  const formData = new FormData();
+  formData.append('photo', file);
+  return apiUpload<User>('/auth/me/avatar', formData);
+}
+
+export function deleteAvatarPhoto() {
+  return apiRequest<User>('/auth/me/avatar', { method: 'DELETE' });
 }
 
 export function updatePassword(currentPassword: string, newPassword: string) {

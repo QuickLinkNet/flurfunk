@@ -19,6 +19,8 @@ interface AuthContextValue {
   registerViaStreetLink: (token: string, input: StreetJoinInput) => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (displayName: string, avatarUrl?: string | null) => Promise<User>;
+  uploadAvatarPhoto: (file: File) => Promise<User>;
+  deleteAvatarPhoto: () => Promise<User>;
   updatePassword: (currentPassword: string, newPassword: string) => Promise<User>;
   updateDigestPreference: (enabled: boolean) => Promise<User>;
   deleteMe: () => Promise<void>;
@@ -67,6 +69,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return updatedUser;
   }
 
+  async function uploadAvatarPhoto(file: File) {
+    const updatedUser = await authApi.uploadAvatarPhoto(file);
+    setUser(updatedUser);
+    return updatedUser;
+  }
+
+  async function deleteAvatarPhoto() {
+    const updatedUser = await authApi.deleteAvatarPhoto();
+    setUser(updatedUser);
+    return updatedUser;
+  }
+
   async function updatePassword(currentPassword: string, newPassword: string) {
     const updatedUser = await authApi.updatePassword(currentPassword, newPassword);
     setUser(updatedUser);
@@ -93,7 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, register, registerViaStreetLink, logout, updateProfile, updatePassword, updateDigestPreference, deleteMe, completeOnboarding, saveOnboardingProgress }}>
+    <AuthContext.Provider value={{ user, isLoading, login, register, registerViaStreetLink, logout, updateProfile, uploadAvatarPhoto, deleteAvatarPhoto, updatePassword, updateDigestPreference, deleteMe, completeOnboarding, saveOnboardingProgress }}>
       {children}
     </AuthContext.Provider>
   );

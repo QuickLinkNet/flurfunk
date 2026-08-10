@@ -6,6 +6,8 @@ dev-dist/
 .env.deploy
 api/cron-token.local.php
 api/data/*.sqlite
+api/uploads/avatars/*
+!api/uploads/avatars/.gitkeep
 *.log
 .DS_Store
 .claude/settings.local.json

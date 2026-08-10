@@ -92,7 +92,7 @@ export function AdminUserList({ users, onRoleChange, onDelete, onPushTestComplet
         return (
           <article key={adminUser.id} className="admin-user-card" data-warning={hasMissingHousehold || isOnlyAdmin}>
             <div className="admin-user-main">
-              <UserAvatar avatarUrl={null} fallback={adminUser.displayName || adminUser.email} size={48} />
+              <UserAvatar photoUrl={adminUser.avatarPhotoUrl} fallback={adminUser.displayName || adminUser.email} size={48} />
               <div>
                 <div className="admin-user-title">
                   <strong>{adminUser.displayName}</strong>
