@@ -8,6 +8,7 @@ interface Props {
   invite: HouseholdInvitePerson;
   onEmailSent?: (invite: HouseholdInvitePerson) => void;
   onRevoke?: (id: number) => void;
+  onPurge?: (id: number) => void;
 }
 
 export function inviteUrl(code: string): string {
@@ -53,7 +54,7 @@ function inviteState(invite: HouseholdInvitePerson) {
   return { label: 'offen', tone: 'neutral' as const };
 }
 
-export function InviteCodeRow({ invite, onEmailSent, onRevoke }: Props) {
+export function InviteCodeRow({ invite, onEmailSent, onRevoke, onPurge }: Props) {
   const [notice, setNotice] = useState<string | null>(null);
   const [isError, setIsError] = useState(false);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
@@ -160,6 +161,11 @@ export function InviteCodeRow({ invite, onEmailSent, onRevoke }: Props) {
         {onRevoke && (
           <Button type="button" variant="ghost" onClick={() => onRevoke(invite.id)} disabled={isInactive}>
             Widerrufen
+          </Button>
+        )}
+        {onPurge && isInactive && (
+          <Button type="button" variant="ghost" onClick={() => onPurge(invite.id)}>
+            Endgültig löschen
           </Button>
         )}
       </div>

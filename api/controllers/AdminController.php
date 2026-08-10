@@ -116,6 +116,13 @@ final class AdminController
         Response::json(null);
     }
 
+    public function deleteInvite(array $params): void
+    {
+        $this->requireAdmin();
+        HouseholdInvite::delete((int) $params['id']);
+        Response::json(null);
+    }
+
     public function sendInviteEmail(array $params): void
     {
         $this->requireAdmin();

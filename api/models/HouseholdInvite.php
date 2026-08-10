@@ -90,6 +90,12 @@ final class HouseholdInvite
         $stmt->execute([$inviteId]);
     }
 
+    public static function delete(int $inviteId): void
+    {
+        $stmt = Database::pdo()->prepare('DELETE FROM household_invites WHERE id = ?');
+        $stmt->execute([$inviteId]);
+    }
+
     public static function markEmailSent(int $inviteId): array
     {
         $stmt = Database::pdo()->prepare(

@@ -46,6 +46,10 @@ export function revokeAdminInvite(id: number) {
   return apiRequest<null>(`/admin/invites/${id}`, { method: 'DELETE' });
 }
 
+export function purgeAdminInvite(id: number) {
+  return apiRequest<null>(`/admin/invites/${id}/purge`, { method: 'DELETE' });
+}
+
 export function sendAdminInviteEmail(id: number) {
   return apiRequest<HouseholdInvitePerson>(`/admin/invites/${id}/send-email`, { method: 'POST' });
 }

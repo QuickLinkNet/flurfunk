@@ -12,6 +12,7 @@ interface Props {
   onEmailSent: (invite: HouseholdInvitePerson) => void;
   onPushTest: (invite: HouseholdInvitePerson) => void;
   onRevoke: (invite: HouseholdInvitePerson) => void;
+  onPurge: (invite: HouseholdInvitePerson) => void;
 }
 
 export function missingInviteSteps(invite: HouseholdInvitePerson): string[] {
@@ -73,13 +74,14 @@ export function AdminInviteRolloutRow({
   onCopyFollowUp,
   onEmailSent,
   onPushTest,
-  onRevoke
+  onRevoke,
+  onPurge
 }: Props) {
   const steps = missingInviteSteps(invite);
 
   return (
     <div className="admin-rollout-invite">
-      <InviteCodeRow invite={invite} onEmailSent={onEmailSent} onRevoke={() => onRevoke(invite)} />
+      <InviteCodeRow invite={invite} onEmailSent={onEmailSent} onRevoke={() => onRevoke(invite)} onPurge={() => onPurge(invite)} />
       {!invite.revokedAt && steps.length > 0 && (
         <div className="admin-rollout-next-steps">
           <strong>Fehlt noch:</strong>

@@ -145,6 +145,7 @@ $router->post('/admin/households/{id}/invites', [new AdminController(), 'addInvi
 $router->delete('/admin/households/{id}', [new AdminController(), 'deleteHousehold']);
 $router->post('/admin/invites/{id}/send-email', [new AdminController(), 'sendInviteEmail']);
 $router->delete('/admin/invites/{id}', [new AdminController(), 'revokeInvite']);
+$router->delete('/admin/invites/{id}/purge', [new AdminController(), 'deleteInvite']);
 $router->get('/admin/users', [new AdminController(), 'users']);
 $router->put('/admin/users/{id}/role', [new AdminController(), 'updateUserRole']);
 $router->delete('/admin/users/{id}', [new AdminController(), 'deleteUser']);

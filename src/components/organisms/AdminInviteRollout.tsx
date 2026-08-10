@@ -6,7 +6,7 @@ import { AdminInviteNeedsBoard } from '../molecules/AdminInviteNeedsBoard';
 import { AdminInviteRolloutRow, inviteFollowUpMessage } from '../molecules/AdminInviteRolloutRow';
 import { ConfirmDialog } from '../molecules/ConfirmDialog';
 import { inviteMessage, inviteUrl } from '../molecules/InviteCodeRow';
-import { revokeAdminInvite, sendAdminUserPushTest } from '../../api/adminApi';
+import { purgeAdminInvite, revokeAdminInvite, sendAdminUserPushTest } from '../../api/adminApi';
 import type { AdminHousehold } from '../../types/admin';
 import type { InviteRolloutFilter } from '../../types/adminInviteRollout';
 import type { HouseholdInvitePerson } from '../../types/invite';
@@ -17,6 +17,11 @@ interface Props {
 }
 
 interface PendingRevoke {
+  id: number;
+  name: string;
+}
+
+interface PendingPurge {
   id: number;
   name: string;
 }
@@ -57,6 +62,8 @@ export function AdminInviteRollout({ households, onChanged }: Props) {
   const [filter, setFilter] = useState<InviteRolloutFilter>('open');
   const [pendingRevoke, setPendingRevoke] = useState<PendingRevoke | null>(null);
   const [isRevoking, setIsRevoking] = useState(false);
+  const [pendingPurge, setPendingPurge] = useState<PendingPurge | null>(null);
+  const [isPurging, setIsPurging] = useState(false);
   const [busyPushUserId, setBusyPushUserId] = useState<number | null>(null);
   const [actionMessage, setActionMessage] = useState<Record<number, string>>({});
   const [rolloutMessage, setRolloutMessage] = useState<string | null>(null);
@@ -93,6 +100,26 @@ export function AdminInviteRollout({ households, onChanged }: Props) {
       onChanged();
     } finally {
       setIsRevoking(false);
+    }
+  }
+
+  function requestPurge(invite: HouseholdInvitePerson) {
+    setPendingPurge({
+      id: invite.id,
+      name: `${invite.firstName} ${invite.lastName}`
+    });
+  }
+
+  async function confirmPurge() {
+    if (!pendingPurge) return;
+
+    setIsPurging(true);
+    try {
+      await purgeAdminInvite(pendingPurge.id);
+      setPendingPurge(null);
+      onChanged();
+    } finally {
+      setIsPurging(false);
     }
   }
 
@@ -212,6 +239,7 @@ export function AdminInviteRollout({ households, onChanged }: Props) {
                     onEmailSent={() => onChanged()}
                     onPushTest={sendPushTest}
                     onRevoke={requestRevoke}
+                    onPurge={requestPurge}
                   />
                 ))}
               </div>
@@ -230,6 +258,16 @@ export function AdminInviteRollout({ households, onChanged }: Props) {
         loading={isRevoking}
         onCancel={() => setPendingRevoke(null)}
         onConfirm={confirmRevoke}
+      />
+
+      <ConfirmDialog
+        open={pendingPurge !== null}
+        title="Einladung endgültig löschen?"
+        description={pendingPurge ? `Der Datensatz für ${pendingPurge.name} wird unwiderruflich entfernt. Das geht nur bei bereits genutzten oder widerrufenen Einladungen.` : ''}
+        confirmLabel="Endgültig löschen"
+        loading={isPurging}
+        onCancel={() => setPendingPurge(null)}
+        onConfirm={confirmPurge}
       />
     </>
   );
