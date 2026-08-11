@@ -155,7 +155,7 @@ export function AdminPage() {
       {activeTab === 'map' && (
         <AdminSection
           title="Straßenkarte"
-          description="Schematische Anordnung nach Hausnummer (ungerade links, gerade rechts) — noch nur für Admins sichtbar."
+          description="Schematische Anordnung nach Hausnummer (ungerade links, gerade rechts) — Admin-Ansicht mit Haushaltsmitgliedern. Alle Nachbarn sehen eine eigene Version unter „Karte“ in der Navigation."
         >
           <AdminStreetMap households={households} />
         </AdminSection>

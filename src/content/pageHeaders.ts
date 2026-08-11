@@ -49,6 +49,10 @@ export const PAGE_HEADERS = {
     title: 'Straße',
     subtitle: 'Kurzmeldungen, Hilfe und Hinweise aus deiner direkten Nachbarschaft.'
   },
+  streetMap: {
+    title: 'Karte',
+    subtitle: 'Wer wohnt wo - tippe auf einen Haushalt für Details.'
+  },
   welcome: {
     title: 'Geschafft!',
     subtitle: 'Euer Haushalt ist eingerichtet - das ist eure Nachbarschaft.'

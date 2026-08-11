@@ -2,7 +2,7 @@ import type { FeatureKey } from '../types/featureFlags';
 
 export type AppNavIcon =
   | 'users' | 'calendar' | 'bell' | 'shield' | 'mail' | 'lock'
-  | 'ticket' | 'eye' | 'home' | 'street' | 'settings' | 'briefcase' | 'trash' | 'help' | 'feedback' | 'chat';
+  | 'ticket' | 'eye' | 'home' | 'street' | 'settings' | 'briefcase' | 'trash' | 'help' | 'feedback' | 'chat' | 'map';
 
 export interface AppNavItem {
   to: string;
@@ -23,6 +23,7 @@ export const appNavItems: AppNavItem[] = [
   { to: '/strasse', label: 'Straße', icon: 'street', mobileIcon: '💬', feature: 'feed', mobilePrimary: true },
   { to: '/hilfe', label: 'Hilfe', icon: 'help', mobileIcon: '🙋', feature: 'feed' },
   { to: '/nachbarn', label: 'Nachbarn', icon: 'users', mobileIcon: '👥' },
+  { to: '/karte', label: 'Karte', icon: 'map', mobileIcon: '🗺️' },
   { to: '/nachrichten', label: 'Nachrichten', icon: 'chat', mobileIcon: '✉️' },
   { to: '/feedback', label: 'Feedback', icon: 'feedback', mobileIcon: '🐞' },
   { to: '/einstellungen', label: 'Einstellungen', icon: 'settings', mobileIcon: '⚙️' },

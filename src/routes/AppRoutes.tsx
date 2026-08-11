@@ -13,6 +13,7 @@ import { EventDetailPage } from '../pages/EventDetailPage';
 import { EventPollDetailPage } from '../pages/EventPollDetailPage';
 import { HouseholdPage } from '../pages/HouseholdPage';
 import { NeighborsPage } from '../pages/NeighborsPage';
+import { StreetMapPage } from '../pages/StreetMapPage';
 import { MessagesPage } from '../pages/MessagesPage';
 import { MessageDetailPage } from '../pages/MessageDetailPage';
 import { SettingsPage } from '../pages/SettingsPage';
@@ -153,6 +154,14 @@ export function AppRoutes() {
         element={
           <RequireAuth>
             <NeighborsPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/karte"
+        element={
+          <RequireAuth>
+            <StreetMapPage />
           </RequireAuth>
         }
       />
