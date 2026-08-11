@@ -6,17 +6,23 @@ export type EventType =
 
 export type RsvpResponse = 'yes' | 'maybe' | 'no';
 
+export type RecurrenceRule = 'none' | 'daily' | 'weekly' | 'monthly';
+
 export interface StreetEvent {
   id: number;
   title: string;
   type: EventType;
   description: string | null;
   location: string | null;
+  photoUrl: string | null;
   startsAt: string;
   endsAt: string | null;
   visibility: 'public' | 'neighbors';
   creatorHouseholdName: string;
   createdAt: string;
+  recurrenceRule: RecurrenceRule;
+  recurrenceUntil: string | null;
+  nextOccurrenceAt: string | null;
   canManage: boolean;
   rsvpCounts: { yes: number; maybe: number; no: number };
 }

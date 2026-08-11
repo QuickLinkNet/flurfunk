@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ActionDialog } from '../components/molecules/ActionDialog';
+import { AddToHomeScreenHint } from '../components/organisms/AddToHomeScreenHint';
 import { DashboardCard } from '../components/molecules/DashboardCard';
 import { DashboardListRow } from '../components/molecules/DashboardListRow';
 import { DateMiniCard } from '../components/molecules/DateMiniCard';
@@ -119,6 +120,8 @@ export function DashboardPage() {
 
         <main className="dashboard-layout">
           <div className="dashboard-main">
+            <AddToHomeScreenHint />
+
             <DashboardCard title="Wer ist zuhause?" action={<Link to="/nachbarn">Alle anzeigen</Link>}>
               <PersonStatusStrip households={householdsStatus} />
               {dashboard && householdsStatus.length === 0 && <EmptyRow title={query ? 'Keine passenden Haushalte.' : 'Noch keine Haushalte sichtbar.'} />}

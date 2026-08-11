@@ -3,7 +3,9 @@
 namespace App\Controllers;
 
 use App\Core\Auth;
+use App\Core\ImageUpload;
 use App\Core\PushService;
+use App\Core\RecurrenceExpander;
 use App\Core\Request;
 use App\Core\Response;
 use App\Models\Event;
@@ -17,10 +19,18 @@ final class EventController
     {
         $user = $this->viewerUser();
         $viewerRole = $user['role'] ?? 'guest';
-        Response::json(array_map(
+        $events = array_map(
             fn(array $event) => $this->toPublicEvent($event, $user),
             Event::findUpcoming($viewerRole)
+        );
+        // Bei wiederkehrenden Events zeigt startsAt weiter den Serien-Anker
+        // (wichtig fuers Bearbeiten-Formular) - fuer die "Was steht an"-Liste
+        // wird stattdessen nach dem naechsten Vorkommen sortiert.
+        usort($events, fn(array $a, array $b) => strcmp(
+            $a['nextOccurrenceAt'] ?? $a['startsAt'],
+            $b['nextOccurrenceAt'] ?? $b['startsAt']
         ));
+        Response::json($events);
     }
 
     public function show(array $params): void
@@ -54,7 +64,9 @@ final class EventController
             $payload['location'],
             $payload['startsAt'],
             $payload['endsAt'],
-            $payload['visibility']
+            $payload['visibility'],
+            $payload['recurrenceRule'],
+            $payload['recurrenceUntil']
         );
         Response::json(['id' => $id], 201);
     }
@@ -73,7 +85,9 @@ final class EventController
             $payload['location'],
             $payload['startsAt'],
             $payload['endsAt'],
-            $payload['visibility']
+            $payload['visibility'],
+            $payload['recurrenceRule'],
+            $payload['recurrenceUntil']
         );
 
         $user = $this->viewerUser();
@@ -85,6 +99,40 @@ final class EventController
         $event = $this->requireManagingEvent((int) $params['id']);
         Event::delete((int) $event['id']);
         Response::json(null);
+    }
+
+    public function uploadPhoto(array $params): void
+    {
+        $event = $this->requireManagingEvent((int) $params['id']);
+
+        $source = ImageUpload::readUploadedImage($_FILES['photo'] ?? null);
+        $filename = (int) $event['id'] . '-' . bin2hex(random_bytes(8)) . '.jpg';
+        ImageUpload::saveResizedToFit($source, Event::photoFilePath($filename));
+
+        $this->deleteOldPhotoFile($event);
+        Event::updatePhoto((int) $event['id'], $filename);
+        Response::json(['photoUrl' => Event::photoUrl($filename)]);
+    }
+
+    public function deletePhoto(array $params): void
+    {
+        $event = $this->requireManagingEvent((int) $params['id']);
+
+        $this->deleteOldPhotoFile($event);
+        Event::updatePhoto((int) $event['id'], null);
+        Response::json(null);
+    }
+
+    private function deleteOldPhotoFile(array $event): void
+    {
+        $existing = $event['photo_path'] ?? null;
+        if ($existing === null) {
+            return;
+        }
+        $path = Event::photoFilePath($existing);
+        if (is_file($path)) {
+            @unlink($path);
+        }
     }
 
     public function rsvp(array $params): void
@@ -184,6 +232,11 @@ final class EventController
         $visibility = in_array($body['visibility'] ?? '', ['public', 'neighbors'], true)
             ? $body['visibility']
             : 'neighbors';
+        $recurrenceRule = in_array($body['recurrenceRule'] ?? '', Event::RECURRENCE_RULES, true)
+            ? $body['recurrenceRule']
+            : 'none';
+        $recurrenceUntil = trim((string) ($body['recurrenceUntil'] ?? ''));
+        $recurrenceUntil = $recurrenceRule !== 'none' && $recurrenceUntil !== '' ? $recurrenceUntil : null;
 
         return [
             'title' => $title,
@@ -193,6 +246,8 @@ final class EventController
             'startsAt' => $startsAt,
             'endsAt' => $endsAt,
             'visibility' => $visibility,
+            'recurrenceRule' => $recurrenceRule,
+            'recurrenceUntil' => $recurrenceUntil,
         ];
     }
 
@@ -217,11 +272,15 @@ final class EventController
             'type' => $e['type'],
             'description' => $e['description'],
             'location' => $e['location'],
+            'photoUrl' => Event::photoUrl($e['photo_path'] ?? null),
             'startsAt' => $e['starts_at'],
             'endsAt' => $e['ends_at'],
             'visibility' => $e['visibility'],
             'creatorHouseholdName' => $e['creator_household_name'],
             'createdAt' => $e['created_at'],
+            'recurrenceRule' => $e['recurrence_rule'] ?? 'none',
+            'recurrenceUntil' => $e['recurrence_until'] ?? null,
+            'nextOccurrenceAt' => RecurrenceExpander::nextOccurrenceAt($e, new \DateTimeImmutable('now')),
             'canManage' => $canManage,
             'rsvpCounts' => [
                 'yes' => (int) ($e['yes_count'] ?? 0),

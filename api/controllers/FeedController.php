@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Core\Auth;
+use App\Core\ImageUpload;
 use App\Core\PushService;
 use App\Core\Request;
 use App\Core\Response;
@@ -61,6 +62,66 @@ final class FeedController
         }
 
         Response::json(['id' => $id, 'push' => $push], 201);
+    }
+
+    public function uploadPhoto(array $params): void
+    {
+        $userId = Auth::requireLogin();
+        $user = User::findById($userId);
+        if ($user === null) {
+            Response::error('Nicht angemeldet.', 401);
+        }
+
+        $itemId = (int) $params['id'];
+        $item = FeedItem::findVisibleById($itemId, $user['role'] ?? 'guest');
+        if ($item === null) {
+            Response::error('Meldung nicht gefunden.', 404);
+        }
+        if (!$this->canManage($item)) {
+            Response::error('Du kannst nur eigene Meldungen bebildern.', 403);
+        }
+
+        $source = ImageUpload::readUploadedImage($_FILES['photo'] ?? null);
+        $filename = $itemId . '-' . bin2hex(random_bytes(8)) . '.jpg';
+        ImageUpload::saveResizedToFit($source, FeedItem::photoFilePath($filename));
+
+        $this->deleteOldPhotoFile($item);
+        FeedItem::updatePhoto($itemId, $filename);
+        Response::json(['photoUrl' => FeedItem::photoUrl($filename)]);
+    }
+
+    public function deletePhoto(array $params): void
+    {
+        $userId = Auth::requireLogin();
+        $user = User::findById($userId);
+        if ($user === null) {
+            Response::error('Nicht angemeldet.', 401);
+        }
+
+        $itemId = (int) $params['id'];
+        $item = FeedItem::findVisibleById($itemId, $user['role'] ?? 'guest');
+        if ($item === null) {
+            Response::error('Meldung nicht gefunden.', 404);
+        }
+        if (!$this->canManage($item)) {
+            Response::error('Du kannst nur eigene Meldungen bebildern.', 403);
+        }
+
+        $this->deleteOldPhotoFile($item);
+        FeedItem::updatePhoto($itemId, null);
+        Response::json(null);
+    }
+
+    private function deleteOldPhotoFile(array $item): void
+    {
+        $existing = $item['photo_path'] ?? null;
+        if ($existing === null) {
+            return;
+        }
+        $path = FeedItem::photoFilePath($existing);
+        if (is_file($path)) {
+            @unlink($path);
+        }
     }
 
     public function toggleReaction(array $params): void
@@ -239,6 +300,7 @@ final class FeedController
             'householdName' => $item['household_name'],
             'type' => $item['type'],
             'message' => $item['message'],
+            'photoUrl' => FeedItem::photoUrl($item['photo_path'] ?? null),
             'visibility' => $item['visibility'],
             'status' => $item['status'] ?? 'open',
             'canManage' => $this->canManage($item),

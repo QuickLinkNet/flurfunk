@@ -1,4 +1,4 @@
-import { apiRequest } from './client';
+import { apiRequest, apiUpload } from './client';
 import type { FeedComment, FeedHelper, FeedItem, FeedItemType, FeedLoan } from '../types/feedItem';
 import type { PushSendResult } from '../types/push';
 
@@ -15,6 +15,16 @@ interface NewFeedItem {
 
 export function createFeedItem(item: NewFeedItem) {
   return apiRequest<{ id: number; push: PushSendResult | null }>('/feed', { method: 'POST', body: JSON.stringify(item) });
+}
+
+export function uploadFeedPhoto(itemId: number, file: File) {
+  const formData = new FormData();
+  formData.append('photo', file);
+  return apiUpload<{ photoUrl: string }>(`/feed/${itemId}/photo`, formData);
+}
+
+export function deleteFeedPhoto(itemId: number) {
+  return apiRequest<null>(`/feed/${itemId}/photo`, { method: 'DELETE' });
 }
 
 export function toggleFeedReaction(id: number) {

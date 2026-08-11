@@ -1,5 +1,5 @@
-import { apiRequest } from './client';
-import type { EventDetail, EventReminderResult, EventType, RsvpResponse, StreetEvent } from '../types/event';
+import { apiRequest, apiUpload } from './client';
+import type { EventDetail, EventReminderResult, EventType, RecurrenceRule, RsvpResponse, StreetEvent } from '../types/event';
 
 export function fetchEvents() {
   return apiRequest<StreetEvent[]>('/events');
@@ -17,6 +17,8 @@ interface NewEvent {
   startsAt: string;
   endsAt?: string;
   visibility?: 'public' | 'neighbors';
+  recurrenceRule?: RecurrenceRule;
+  recurrenceUntil?: string | null;
 }
 
 export function createEvent(event: NewEvent) {
@@ -47,4 +49,14 @@ export function submitRsvp(eventId: number, input: RsvpInput) {
 
 export function sendEventReminder(eventId: number) {
   return apiRequest<EventReminderResult>(`/events/${eventId}/remind`, { method: 'POST' });
+}
+
+export function uploadEventPhoto(eventId: number, file: File) {
+  const formData = new FormData();
+  formData.append('photo', file);
+  return apiUpload<{ photoUrl: string }>(`/events/${eventId}/photo`, formData);
+}
+
+export function deleteEventPhoto(eventId: number) {
+  return apiRequest<null>(`/events/${eventId}/photo`, { method: 'DELETE' });
 }

@@ -168,6 +168,9 @@ export function FeedItemCard({ item, onChanged }: Props) {
             )}
           </p>
           {item.message && <p>{item.message}</p>}
+          {item.photoUrl && (
+            <img className="feed-card-photo" src={item.photoUrl} alt="" loading="lazy" />
+          )}
           <small>
             {visibilityLabel(item.visibility)} · {formatDate(item.createdAt)}
             {item.expiresAt ? ` · bis ${formatDate(item.expiresAt)}` : ''}

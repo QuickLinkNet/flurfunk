@@ -12,6 +12,7 @@ import { Button } from '../components/atoms/Button';
 import { deleteEvent, fetchEvent, sendEventReminder, submitRsvp } from '../api/eventsApi';
 import { EVENT_TYPE_META } from '../utils/eventTypeMeta';
 import { formatDateRangeLabel } from '../utils/date';
+import { recurrenceSummary } from '../utils/recurrenceLabels';
 import { useAuth } from '../hooks/useAuth';
 import type { EventDetail, RsvpResponse } from '../types/event';
 
@@ -108,8 +109,10 @@ export function EventDetailPage() {
   }
 
   const meta = EVENT_TYPE_META[detail.event.type];
+  const isRecurring = detail.event.recurrenceRule !== 'none';
+  const displayStartsAt = detail.event.nextOccurrenceAt ?? detail.event.startsAt;
 
-  const eventMeta = `${meta.emoji} ${meta.label} · ${formatDateRangeLabel(detail.event.startsAt, detail.event.endsAt)}${detail.event.location ? ` · ${detail.event.location}` : ''}`;
+  const eventMeta = `${meta.emoji} ${meta.label} · ${formatDateRangeLabel(displayStartsAt, isRecurring ? null : detail.event.endsAt)}${detail.event.location ? ` · ${detail.event.location}` : ''}${isRecurring ? ` · ${recurrenceSummary(detail.event.recurrenceRule, detail.event.recurrenceUntil)}` : ''}`;
   const headerAside = detail.event.canManage ? (
     <div>
       <div className="event-detail-actions">
@@ -129,6 +132,13 @@ export function EventDetailPage() {
 
   return (
     <DashboardTemplate pageTitle={detail.event.title} pageSubtitle={eventMeta} headerAside={headerAside}>
+      {detail.event.photoUrl && (
+        <img
+          src={detail.event.photoUrl}
+          alt=""
+          style={{ width: '100%', maxHeight: 360, objectFit: 'cover', borderRadius: 'var(--md-radius-card)' }}
+        />
+      )}
       {detail.event.description && (
         <section>
           <p style={{ fontSize: 'var(--md-font-size-base)', margin: 0 }}>

@@ -7,6 +7,7 @@ export interface FeedItem {
   householdName: string;
   type: FeedItemType;
   message: string | null;
+  photoUrl: string | null;
   visibility: 'public' | 'neighbors' | 'private';
   status: 'open' | 'done';
   canManage: boolean;

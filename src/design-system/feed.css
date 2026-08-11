@@ -73,6 +73,15 @@
   font-size: var(--md-font-size-xs);
 }
 
+.feed-card-photo {
+  display: block;
+  width: 100%;
+  max-height: 320px;
+  object-fit: cover;
+  border-radius: var(--md-radius-control);
+  margin-top: var(--md-space-2);
+}
+
 .feed-actions {
   display: flex;
   flex-wrap: wrap;

@@ -4,7 +4,8 @@ import { Input } from '../atoms/Input';
 import { Button } from '../atoms/Button';
 import { FeedExpirySelect, feedExpiryDate, type FeedExpiryOption } from '../molecules/FeedExpirySelect';
 import { FeedTypeSelect } from '../molecules/FeedTypeSelect';
-import { createFeedItem } from '../../api/feedApi';
+import { PhotoPickerField } from '../molecules/PhotoPickerField';
+import { createFeedItem, uploadFeedPhoto } from '../../api/feedApi';
 import { FEED_CATEGORY_META, FEED_CATEGORY_OPTIONS, FEED_TYPE_META, type FeedCategory } from '../../utils/feedTypeMeta';
 import type { FeedItemType } from '../../types/feedItem';
 
@@ -26,6 +27,8 @@ export function NewFeedItemForm({ onCreated, initialType = 'help_needed', allowe
   const [expires, setExpires] = useState<FeedExpiryOption>('week');
   const [feedback, setFeedback] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [pickerKey, setPickerKey] = useState(0);
 
   function handleTypeChange(nextType: FeedItemType) {
     setType(nextType);
@@ -57,7 +60,16 @@ export function NewFeedItemForm({ onCreated, initialType = 'help_needed', allowe
         visibility,
         expiresAt: feedExpiryDate(expires)
       });
+      if (photoFile) {
+        try {
+          await uploadFeedPhoto(result.id, photoFile);
+        } catch {
+          // Post ist schon erstellt, Foto ist nur ein Zusatz - nicht blockierend.
+        }
+      }
       setMessage('');
+      setPhotoFile(null);
+      setPickerKey((key) => key + 1);
       const pushInfo = result.push && result.push.total > 0 ? ` Push: ${result.push.sent}/${result.push.total}.` : '';
       setFeedback(`Kurzmeldung geteilt.${pushInfo}`);
       onCreated();
@@ -98,6 +110,7 @@ export function NewFeedItemForm({ onCreated, initialType = 'help_needed', allowe
         </Select>
         <FeedExpirySelect value={expires} onChange={setExpires} />
       </div>
+      <PhotoPickerField key={pickerKey} onFileSelected={setPhotoFile} />
       <Button type="submit" disabled={isSubmitting}>
         {isSubmitting ? 'Wird gepostet...' : 'In der Straße teilen'}
       </Button>

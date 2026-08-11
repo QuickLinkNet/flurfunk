@@ -100,6 +100,8 @@ $router->put('/feed/{id}/status', [new FeedController(), 'updateStatus']);
 $router->post('/feed/{id}/helpers', [new FeedController(), 'toggleHelper']);
 $router->post('/feed/{id}/loan', [new FeedController(), 'borrowItem']);
 $router->post('/feed/{id}/loan/return', [new FeedController(), 'returnItem']);
+$router->post('/feed/{id}/photo', [new FeedController(), 'uploadPhoto']);
+$router->delete('/feed/{id}/photo', [new FeedController(), 'deletePhoto']);
 
 $router->get('/calendar', [new CalendarController(), 'index']);
 $router->post('/calendar', [new CalendarController(), 'store']);
@@ -113,6 +115,8 @@ $router->put('/events/{id}', [new EventController(), 'update']);
 $router->delete('/events/{id}', [new EventController(), 'destroy']);
 $router->post('/events/{id}/rsvp', [new EventController(), 'rsvp']);
 $router->post('/events/{id}/remind', [new EventController(), 'remind']);
+$router->post('/events/{id}/photo', [new EventController(), 'uploadPhoto']);
+$router->delete('/events/{id}/photo', [new EventController(), 'deletePhoto']);
 
 $router->get('/event-polls', [new EventPollController(), 'index']);
 $router->post('/event-polls', [new EventPollController(), 'store']);

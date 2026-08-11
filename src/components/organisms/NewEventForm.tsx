@@ -3,9 +3,11 @@ import { Select } from '../atoms/Select';
 import { Input } from '../atoms/Input';
 import { Button } from '../atoms/Button';
 import { Textarea } from '../atoms/Textarea';
-import { createEvent, updateEvent } from '../../api/eventsApi';
+import { PhotoPickerField } from '../molecules/PhotoPickerField';
+import { createEvent, deleteEventPhoto, updateEvent, uploadEventPhoto } from '../../api/eventsApi';
 import { EVENT_TYPE_OPTIONS } from '../../utils/eventTypeMeta';
-import type { EventType, StreetEvent } from '../../types/event';
+import { recurrenceSummary } from '../../utils/recurrenceLabels';
+import type { EventType, RecurrenceRule, StreetEvent } from '../../types/event';
 
 interface Props {
   event?: StreetEvent;
@@ -25,14 +27,50 @@ export function NewEventForm({ event, onCreated, onCancel }: Props) {
   const [endsAt, setEndsAt] = useState(inputDateTime(event?.endsAt));
   const [description, setDescription] = useState(event?.description ?? '');
   const [visibility, setVisibility] = useState<'public' | 'neighbors'>(event?.visibility ?? 'neighbors');
+  const [recurrenceRule, setRecurrenceRule] = useState<RecurrenceRule>(event?.recurrenceRule ?? 'none');
+  const [recurrenceUntil, setRecurrenceUntil] = useState(() => event?.recurrenceUntil?.slice(0, 10) ?? '');
   const [message, setMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [pickerKey, setPickerKey] = useState(0);
+  const [existingPhotoUrl, setExistingPhotoUrl] = useState(event?.photoUrl ?? null);
+  const [isPhotoBusy, setIsPhotoBusy] = useState(false);
+
+  async function handleRemoveExistingPhoto() {
+    if (!event) return;
+    setIsPhotoBusy(true);
+    try {
+      await deleteEventPhoto(event.id);
+      setExistingPhotoUrl(null);
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'Foto konnte nicht entfernt werden.');
+    } finally {
+      setIsPhotoBusy(false);
+    }
+  }
+
+  async function handleReplaceExistingPhoto(file: File) {
+    if (!event) return;
+    setIsPhotoBusy(true);
+    try {
+      const result = await uploadEventPhoto(event.id, file);
+      setExistingPhotoUrl(result.photoUrl);
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'Foto konnte nicht hochgeladen werden.');
+    } finally {
+      setIsPhotoBusy(false);
+    }
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setMessage(null);
     if (title.trim() === '' || startsAt === '') {
       setMessage('Titel und Startzeit sind Pflicht.');
+      return;
+    }
+    if (recurrenceRule !== 'none' && recurrenceUntil && recurrenceUntil < startsAt.slice(0, 10)) {
+      setMessage('Das Ende der Wiederholung darf nicht vor dem Start liegen.');
       return;
     }
     setIsSubmitting(true);
@@ -44,17 +82,31 @@ export function NewEventForm({ event, onCreated, onCancel }: Props) {
         location: location || undefined,
         startsAt: new Date(startsAt).toISOString(),
         endsAt: endsAt ? new Date(endsAt).toISOString() : undefined,
-        visibility
+        visibility,
+        recurrenceRule,
+        recurrenceUntil: recurrenceRule === 'none' ? null : recurrenceUntil || null
       };
-      if (event) await updateEvent(event.id, payload);
-      else {
-        await createEvent(payload);
+      if (event) {
+        await updateEvent(event.id, payload);
+      } else {
+        const result = await createEvent(payload);
+        if (photoFile) {
+          try {
+            await uploadEventPhoto(result.id, photoFile);
+          } catch {
+            // Event ist schon erstellt, Foto ist nur ein Zusatz - nicht blockierend.
+          }
+        }
         setTitle('');
         setLocation('');
         setStartsAt('');
         setEndsAt('');
         setDescription('');
         setVisibility('neighbors');
+        setRecurrenceRule('none');
+        setRecurrenceUntil('');
+        setPhotoFile(null);
+        setPickerKey((key) => key + 1);
       }
       onCreated();
     } catch (err) {
@@ -85,12 +137,56 @@ export function NewEventForm({ event, onCreated, onCancel }: Props) {
         <Input type="datetime-local" value={startsAt} onChange={(e) => setStartsAt(e.target.value)} required />
         <Input type="datetime-local" value={endsAt} min={startsAt || undefined} onChange={(e) => setEndsAt(e.target.value)} />
       </div>
+      <div className="md-form-grid">
+        <Select value={recurrenceRule} onChange={(e) => setRecurrenceRule(e.target.value as RecurrenceRule)}>
+          <option value="none">Keine Wiederholung</option>
+          <option value="daily">Täglich</option>
+          <option value="weekly">Wöchentlich</option>
+          <option value="monthly">Monatlich</option>
+        </Select>
+        <Input
+          type="date"
+          value={recurrenceUntil}
+          disabled={recurrenceRule === 'none'}
+          onChange={(e) => setRecurrenceUntil(e.target.value)}
+        />
+      </div>
+      {recurrenceRule !== 'none' && (
+        <p style={{ margin: 0, fontSize: 'var(--md-font-size-sm)', color: 'var(--md-color-on-surface-variant)' }}>
+          Serie: {recurrenceSummary(recurrenceRule, recurrenceUntil || null)}
+        </p>
+      )}
       <Textarea
         placeholder="Beschreibung, Treffpunkt oder was mitgebracht werden soll (optional)"
         value={description}
         onChange={(e) => setDescription(e.target.value)}
         maxLength={600}
       />
+      {event ? (
+        <div className="photo-picker-field">
+          {existingPhotoUrl ? (
+            <div className="photo-picker-preview">
+              <img src={existingPhotoUrl} alt="" />
+              <button type="button" disabled={isPhotoBusy} onClick={handleRemoveExistingPhoto}>
+                Foto entfernen
+              </button>
+            </div>
+          ) : (
+            <PhotoPickerField
+              key={pickerKey}
+              label={isPhotoBusy ? 'Lädt...' : 'Foto hinzufügen'}
+              onFileSelected={(file) => {
+                if (file) {
+                  handleReplaceExistingPhoto(file);
+                  setPickerKey((key) => key + 1);
+                }
+              }}
+            />
+          )}
+        </div>
+      ) : (
+        <PhotoPickerField key={pickerKey} onFileSelected={setPhotoFile} />
+      )}
       <Button type="submit" disabled={isSubmitting}>
         {isSubmitting ? 'Speichert …' : event ? 'Event aktualisieren' : 'Event anlegen'}
       </Button>

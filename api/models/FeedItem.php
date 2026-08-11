@@ -12,6 +12,24 @@ final class FeedItem
         'tool_available', 'help_needed', 'street_closed', 'babysitter_needed',
     ];
 
+    private const PHOTO_URL_PREFIX = '/apps/neighborhood/api/uploads/feed/';
+
+    public static function photoFilePath(string $filename): string
+    {
+        return __DIR__ . '/../uploads/feed/' . $filename;
+    }
+
+    public static function photoUrl(?string $filename): ?string
+    {
+        return $filename !== null ? self::PHOTO_URL_PREFIX . $filename : null;
+    }
+
+    public static function updatePhoto(int $id, ?string $filename): void
+    {
+        $stmt = Database::pdo()->prepare('UPDATE feed_items SET photo_path = ? WHERE id = ?');
+        $stmt->execute([$filename, $id]);
+    }
+
     public static function findVisible(?string $viewerRole, ?int $viewerUserId, int $limit = 30): array
     {
         $allowed = $viewerRole === 'guest' ? ['public'] : ['public', 'neighbors'];

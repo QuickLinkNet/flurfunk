@@ -8,6 +8,10 @@ api/cron-token.local.php
 api/data/*.sqlite
 api/uploads/avatars/*
 !api/uploads/avatars/.gitkeep
+api/uploads/feed/*
+!api/uploads/feed/.gitkeep
+api/uploads/events/*
+!api/uploads/events/.gitkeep
 *.log
 .DS_Store
 .claude/settings.local.json

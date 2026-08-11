@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { IconBadge } from '../atoms/IconBadge';
 import { EVENT_TYPE_META } from '../../utils/eventTypeMeta';
 import { formatDateRangeLabel } from '../../utils/date';
+import { RECURRENCE_LABELS } from '../../utils/recurrenceLabels';
 import type { StreetEvent } from '../../types/event';
 
 interface Props {
@@ -10,6 +11,8 @@ interface Props {
 
 export function EventCard({ event }: Props) {
   const meta = EVENT_TYPE_META[event.type];
+  const isRecurring = event.recurrenceRule !== 'none';
+  const displayStartsAt = event.nextOccurrenceAt ?? event.startsAt;
   return (
     <Link
       to={`/events/${event.id}`}
@@ -25,7 +28,16 @@ export function EventCard({ event }: Props) {
         color: 'inherit'
       }}
     >
-      <IconBadge emoji={meta.emoji} tint={meta.tint} />
+      {event.photoUrl ? (
+        <img
+          src={event.photoUrl}
+          alt=""
+          loading="lazy"
+          style={{ width: 56, height: 56, borderRadius: 'var(--md-radius-control)', objectFit: 'cover', flexShrink: 0 }}
+        />
+      ) : (
+        <IconBadge emoji={meta.emoji} tint={meta.tint} />
+      )}
       <div style={{ flex: 1 }}>
         <p style={{ margin: 0, fontSize: 'var(--md-font-size-base)', fontWeight: 'var(--md-font-weight-medium)' }}>
           {event.title}
@@ -37,8 +49,9 @@ export function EventCard({ event }: Props) {
             color: 'var(--md-color-on-surface-variant)'
           }}
         >
-          {meta.label} · {formatDateRangeLabel(event.startsAt, event.endsAt)}
+          {meta.label} · {formatDateRangeLabel(displayStartsAt, isRecurring ? null : event.endsAt)}
           {event.location ? ` · ${event.location}` : ''}
+          {isRecurring ? ` · ${RECURRENCE_LABELS[event.recurrenceRule]}` : ''}
         </p>
         <p
           style={{
