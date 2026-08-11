@@ -31,6 +31,10 @@
   margin: 0;
 }
 
+.profile-settings-card h3 + p {
+  margin-top: var(--md-space-1);
+}
+
 .profile-settings-card h3 {
   color: var(--md-color-brand-green);
   font-size: var(--md-font-size-md);
