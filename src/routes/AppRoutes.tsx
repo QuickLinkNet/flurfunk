@@ -19,6 +19,7 @@ import { SettingsPage } from '../pages/SettingsPage';
 import { FeedbackPage } from '../pages/FeedbackPage';
 import { AdminPage } from '../pages/AdminPage';
 import { OnboardingPage } from '../pages/OnboardingPage';
+import { WelcomePage } from '../pages/WelcomePage';
 import { useAuth } from '../hooks/useAuth';
 import { useFeatureFlags } from '../hooks/useFeatureFlags';
 import { DashboardTemplate } from '../components/templates/DashboardTemplate';
@@ -68,6 +69,14 @@ export function AppRoutes() {
         element={
           <RequireAuth>
             <OnboardingPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/willkommen"
+        element={
+          <RequireAuth>
+            <WelcomePage />
           </RequireAuth>
         }
       />

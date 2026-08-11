@@ -1,20 +1,11 @@
 import { useMemo, useState } from 'react';
 import { AdminEmptyState } from '../molecules/AdminEmptyState';
 import { householdAvatar } from '../../utils/householdAvatar';
+import { splitByStreetSide } from '../../utils/streetMap';
 import type { AdminHousehold } from '../../types/admin';
 
 interface Props {
   households: AdminHousehold[];
-}
-
-interface PlacedHousehold {
-  household: AdminHousehold;
-  number: number;
-}
-
-function parseHouseNumber(addressLine: string): number | null {
-  const match = addressLine.match(/(\d+)\s*[a-zA-Z]?\s*$/);
-  return match ? parseInt(match[1], 10) : null;
 }
 
 function StreetPin({
@@ -41,23 +32,7 @@ function StreetPin({
 export function AdminStreetMap({ households }: Props) {
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
-  const { left, right, unplaced } = useMemo(() => {
-    const placed: PlacedHousehold[] = [];
-    const unplacedList: AdminHousehold[] = [];
-    for (const household of households) {
-      const number = parseHouseNumber(household.addressLine);
-      if (number === null) {
-        unplacedList.push(household);
-      } else {
-        placed.push({ household, number });
-      }
-    }
-    return {
-      left: placed.filter((entry) => entry.number % 2 === 1).sort((a, b) => a.number - b.number),
-      right: placed.filter((entry) => entry.number % 2 === 0).sort((a, b) => a.number - b.number),
-      unplaced: unplacedList
-    };
-  }, [households]);
+  const { left, right, unplaced } = useMemo(() => splitByStreetSide(households), [households]);
 
   if (households.length === 0) {
     return <AdminEmptyState>Noch keine Haushalte vorhanden.</AdminEmptyState>;

@@ -98,7 +98,7 @@ export function OnboardingPage() {
     try {
       await completeOnboarding();
       localStorage.setItem('flurfunk.onboarding.dismissed', '1');
-      navigate('/dashboard', { replace: true });
+      navigate('/willkommen', { replace: true });
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : 'Onboarding konnte nicht abgeschlossen werden.');
     } finally {

@@ -48,5 +48,9 @@ export const PAGE_HEADERS = {
   street: {
     title: 'Straße',
     subtitle: 'Kurzmeldungen, Hilfe und Hinweise aus deiner direkten Nachbarschaft.'
+  },
+  welcome: {
+    title: 'Geschafft!',
+    subtitle: 'Euer Haushalt ist eingerichtet - das ist eure Nachbarschaft.'
   }
 } satisfies Record<string, PageHeaderContent>;

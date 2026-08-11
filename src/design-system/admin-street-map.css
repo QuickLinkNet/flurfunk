@@ -40,6 +40,15 @@
   min-width: 92px;
 }
 
+.admin-street-map-pin[data-own='true'] {
+  border-color: var(--md-color-primary);
+  background: var(--md-color-primary-container);
+}
+
+.admin-street-map-pin[data-own='true'] .admin-street-map-pin-label {
+  color: var(--md-color-primary);
+}
+
 .admin-street-map-pin[data-selected='true'] {
   border-color: var(--md-color-primary);
   box-shadow: 0 0 0 2px var(--md-color-primary-container);

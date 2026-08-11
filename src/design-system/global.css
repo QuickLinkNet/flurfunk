@@ -20,6 +20,7 @@
 @import './neighbors.css';
 @import './messages.css';
 @import './profile-settings.css';
+@import './welcome.css';
 
 * { box-sizing: border-box; }
 
