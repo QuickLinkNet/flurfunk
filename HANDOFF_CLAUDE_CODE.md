@@ -1,6 +1,6 @@
 # Claude-Code-Handoff: Flurfunk / Nachbarschafts-App
 
-Stand: 10.08.2026
+Stand: 11.08.2026
 
 Dieses Dokument ist der Kontext-Transfer für die Weiterarbeit mit Claude Code. Bitte zuerst komplett lesen, bevor Änderungen gemacht werden.
 
@@ -12,11 +12,12 @@ Flurfunk ist eine mobile-first PWA für eine einzelne Straße/Nachbarschaft. Kei
 - Haushalt/Profil/Onboarding
 - Wer ist zuhause, Urlaub, Kinder-Status
 - Straßen-Feed, Hilfe, Hinweise
-- Events mit RSVP, Terminfindung (Doodle-artig), Push-Erinnerung
+- Events mit RSVP, Terminfindung (Doodle-artig), Wiederholung, Push-Erinnerung
 - Kalender mit Kategorien, Farben und Serien
 - Push-Benachrichtigungen (echte verschlüsselte Payloads, nicht nur "schau rein")
+- Private 1:1-Nachrichten zwischen Nachbarn (haushaltsweise)
 - Feedback-/Bug-Kanal von Nutzern an Admins
-- Adminbereich für Rollout, Nutzer, Inhalte, Push-Tests und Systemstatus
+- Adminbereich für Rollout, Nutzer, Inhalte, Push-Tests, Systemstatus und Straßenkarte
 
 Ziel-URL: `https://www.red-it.org/apps/neighborhood/`
 
@@ -116,8 +117,9 @@ Backend:
 - `api/index.php`: einziger Front-Controller, Autoloader + alle Routen
 - `api/controllers/`: Controller pro Domäne. **Etabliertes Muster für Admin-Features:** eigener kleiner Subcontroller statt Erweiterung von `AdminController.php` (das liegt schon nah an 500 Zeilen). Jeder Subcontroller dupliziert bewusst seine eigene `requireAdmin()`-Methode statt eine gemeinsame Basisklasse zu nutzen - das war eine explizite Entscheidung (Unabhängigkeit der Controller wichtiger als DRY), **nicht ungefragt ändern**. Beispiele: `AdminDigestController`, `AdminFeedbackController`, `AdminStreetInviteController`.
 - `api/models/`: Datenzugriff, ein Model pro Tabelle/Konzept. Öffentlich-vs-Admin-Mapping-Methoden können sich gleich nennen (`toPublicUser`), aber unterschiedliche Felder liefern (Selbstauskunft vs. Admin-Liste) - vor dem Zusammenlegen immer diffen, nicht nur am Namen orientieren.
-- `api/core/`: `Database.php` (SQLite + Migrationsrunner), `Auth.php`, `PushService.php`/`WebPush.php` (Push-Versand/-Verschlüsselung), `MailService.php`, `WeeklyDigest*`, `TrashReminderService.php`
-- `api/migrations/`: fortlaufend nummeriert, aktuell bis `032_calendar_childcare_type.sql`. Wenn ein CHECK-Constraint erweitert werden muss (SQLite kann das nicht per ALTER TABLE): Tabelle neu aufbauen wie in `007_household_invites.sql`/`032_calendar_childcare_type.sql` (`PRAGMA foreign_keys = OFF`, neue Tabelle mit `_new`-Suffix, Daten kopieren, alte droppen, umbenennen, `PRAGMA foreign_keys = ON`).
+- `api/core/`: `Database.php` (SQLite + Migrationsrunner), `Auth.php`, `PushService.php`/`WebPush.php` (Push-Versand/-Verschlüsselung), `MailService.php`, `WeeklyDigest*`, `TrashReminderService.php`, `ImageUpload.php` (geteilte GD-Resize-Logik für Feed-/Event-Fotos, Seitenverhältnis erhalten - **nicht** dasselbe wie der quadratische Zuschnitt fürs Profilbild in `AuthController::uploadAvatarPhoto()`, die beiden bewusst getrennt), `RecurrenceExpander.php` (geteilte Wiederholungs-Logik für `calendar_entries` **und** `events` - beide nutzen identische Spaltennamen `starts_at`/`ends_at`/`recurrence_rule`/`recurrence_until`), `LoginAttempt.php`-Zugriff über `Models\LoginAttempt` (Brute-Force-Zähler pro E-Mail/IP)
+- `api/migrations/`: fortlaufend nummeriert, aktuell bis `037_events_recurrence.sql`. Wenn ein CHECK-Constraint erweitert werden muss (SQLite kann das nicht per ALTER TABLE): Tabelle neu aufbauen wie in `007_household_invites.sql`/`032_calendar_childcare_type.sql` (`PRAGMA foreign_keys = OFF`, neue Tabelle mit `_new`-Suffix, Daten kopieren, alte droppen, umbenennen, `PRAGMA foreign_keys = ON`).
+- **Nachrichten (Messenger)**: `Conversation.php`/`Message.php`/`MessageController.php`. Bewusste Design-Entscheidung: Unterhaltungen laufen auf **Haushalts-Ebene** (wie Feed/Events), nicht auf Nutzer-Ebene - ein Haushalt mit mehreren Mitgliedern teilt sich eine Unterhaltung mit dem Nachbar-Haushalt, einzelne Nachrichten merken sich aber `sender_user_id`/`sender_household_id` für die Bubble-Zuordnung im Frontend. Kein Websocket (Shared Hosting) - Frontend pollt (Liste alle 20s über `MessagesContext`, offener Chat alle 5s).
 
 ## Wichtige UI-Bausteine
 
@@ -136,7 +138,7 @@ Bitte bevorzugt wiederverwenden:
 
 CSS-Dateien (`src/design-system/`, importiert über `global.css` in dieser Reihenfolge - später importierte Regeln gewinnen bei gleicher Spezifität):
 
-`theme-light.css`, `theme-dark.css`, `error-boundary.css`, `app-layout.css`, `app-hero.css`, `manager.css`, `admin.css`, `admin-invites.css`, `admin-users.css`, `admin-content.css`, `admin-digest.css`, `auth.css`, `calendar.css`, `events.css`, `feed.css`, `help-board.css`, `dashboard.css`, `onboarding.css`, `neighbors.css`, `profile-settings.css`
+`theme-light.css`, `theme-dark.css`, `error-boundary.css`, `app-layout.css`, `app-hero.css`, `manager.css`, `admin.css`, `admin-invites.css`, `admin-users.css`, `admin-content.css`, `admin-digest.css`, `admin-street-map.css`, `auth.css`, `calendar.css`, `events.css`, `feed.css`, `help-board.css`, `dashboard.css`, `onboarding.css`, `neighbors.css`, `messages.css`, `profile-settings.css`
 
 ## Aktueller Funktionsstand
 
@@ -146,19 +148,23 @@ Funktioniert und ist live verifiziert:
 - Passwort vergessen (E-Mail-Reset-Link)
 - Registrierung per personalisiertem Einladungscode (Admin- oder Nachbar-generiert)
 - **Selbstbedienter Einladungslink** (`/beitreten/:token`): ein Link pro Straße, wiederverwendbar, Admin kann ihn im Adminbereich unter "Einladungen" einsehen/kopieren (roher Link oder fertiger erklärender Einladungstext)/erneuern. Wer den Link öffnet, muss sich zuerst bewusst zwischen "Wir sind neu" und "Familie ist schon dabei" entscheiden (keine Vorauswahl, kein Formular sichtbar vor der Wahl, Warnhinweis prominent) und legt dann entweder eine neue Familie an oder tritt einer bestehenden bei (Auswahl aus echter Haushaltsliste). Serverseitiger Duplikat-Schutz: Name **oder** Adresse schon vorhanden → Anlegen wird blockiert, "beitreten" vorgeschlagen (`Household::findByNormalizedNameOrAddress`).
-- Adminbereich: Übersicht, Haushalte, Einladungen (Codes + Link), Nutzer, Inhalte, Feedback, Kalender, System
+- Adminbereich: Übersicht, Haushalte, Einladungen (Codes + Link, inkl. endgültigem Löschen bereits genutzter/widerrufener Codes), Nutzer, Inhalte, Feedback, Kalender, Karte, System
 - Haushalte anlegen/löschen (Löschen entfernt Nicht-Admin-Mitglieder vollständig inkl. aller Referenzen, Admins werden nur vom Haushalt gelöst, nie gelöscht)
-- Push: echte Ende-zu-Ende-verschlüsselte Payloads (RFC 8291 aes128gcm), nicht nur generischer "schau rein"-Text
-- Dashboard, Onboarding mit Zwischenspeichern, Profil/Selbstverwaltung (Name, Passwort, Konto löschen, Datenexport)
-- Nachbarschaftsverzeichnis, Straßen-Feed mit Reaktionen/Kommentaren/Hilfe-Zusagen/Ausleih-Status
+- Push: echte Ende-zu-Ende-verschlüsselte Payloads (RFC 8291 aes128gcm), nicht nur generischer "schau rein"-Text. Übersicht "wann wird welche Push wann an wen geschickt" permanent im Admin-Tab System (`AdminSystemStatusPanel`)
+- Login-Rate-Limiting: 5 Fehlversuche/E-Mail bzw. 20/IP innerhalb 15 Minuten → 15 Minuten Sperre (429), `LoginAttempt`-Model
+- Dashboard, Onboarding mit Zwischenspeichern, Profil/Selbstverwaltung (Name, Passwort, **Profilbild-Upload** mit serverseitigem quadratischem Zuschnitt, Konto löschen, Datenexport)
+- Nachbarschaftsverzeichnis, Straßen-Feed mit Reaktionen/Kommentaren/Hilfe-Zusagen/Ausleih-Status/**Foto pro Post**
 - Hilfe/Schwarzes Brett
-- Events: RSVP, Bearbeiten/Löschen, manuelle Push-Erinnerung an Haushalte ohne Rückmeldung
+- **Nachrichten** (`/nachrichten`, `/nachrichten/:id`): private 1:1-Unterhaltungen zwischen zwei Nachbar-Haushalten, Einstieg über "Nachricht senden" auf der Nachbarn-Seite, Push bei neuer Nachricht, Ungelesen-Badge in Sidebar/Bottom-Nav (siehe Architekturüberblick für Design-Entscheidung Haushalts- vs. Nutzer-Ebene)
+- **Straßenkarte** (Admin-Tab "Karte"): schematische Anordnung der Haushalte nach Hausnummer (ungerade/gerade links/rechts einer Straßenlinie), bewusst erstmal nur für Admins sichtbar, bis sich das Konzept bewährt hat - noch nicht für alle Nachbarn freigegeben
+- Events: RSVP, Bearbeiten/Löschen, manuelle Push-Erinnerung an Haushalte ohne Rückmeldung, **Foto pro Event**, **Wiederholung** (täglich/wöchentlich/monatlich, gleiche `RecurrenceExpander`-Logik wie Kalender). RSVP bleibt bei wiederkehrenden Events bewusst serienweit (ein Set pro Event-Datensatz, nicht pro Einzeltermin)
 - **Terminfindung** (Doodle-artig, `/terminfindung/:id`): 2-5 Terminvorschläge statt fixem Termin, Nachbarn stimmen mit Kann/Vielleicht/Geht-nicht ab, Organisator/Admin legt Gewinner-Termin fest → wird zu echtem Event (`Event::create`), ab da normale RSVP. Bearbeitbar solange offen (Terminänderung setzt bestehende Stimmen zurück - bewusst vereinfacht, kein Diff). Löschbar unabhängig vom Status.
-- Kalender ↔ Events verknüpft: jedes Event taucht automatisch im Kalender auf (`CalendarController::toCalendarEvent`), Klick führt zur Event-Detailseite
+- Kalender ↔ Events verknüpft: jedes Event (inkl. wiederkehrender, mit Occurrence-Expansion) taucht automatisch im Kalender auf (`CalendarController::toCalendarEvent`), Klick führt zur Event-Detailseite
 - **Feedback-/Bug-Kanal** (`/feedback`): Nutzer melden Bug/Idee/Sonstiges + Freitext, landet im Adminbereich (Tab "Feedback", offen/erledigt umschaltbar), Push an alle Admins bei neuer Meldung
 - Mülltermin-Erinnerung am Vorabend (Push + E-Mail), Cron-Endpoints vorhanden (`/cron/trash-reminder`, `/cron/weekly-digest`), Cron-Token aus lokaler `api/cron-token.local.php` (gitignored)
 - Wöchentlicher Digest als Admin-Vorschau/Test, Cron vorbereitet
 - Admin-Systemstatus, PWA installierbar, Dark Mode
+- **PWA-Installationshinweis** auf dem Dashboard: iOS bekommt eine Teilen-Anleitung (kein natives `beforeinstallprompt` dort), Android/Chrome einen echten Installieren-Button; dismissible, `AddToHomeScreenHint`
 - Kalender-Kategorien inkl. "Kinderbetreuung" (z. B. "Kinder bei Papa" - bewusst **kein** Status, siehe Sensible Stellen)
 
 ## Zuletzt bearbeiteter Bereich
@@ -177,6 +183,17 @@ Funktioniert und ist live verifiziert:
 7. Einladungslink führte zu Verwirrung ("beide aus einer Familie legen gleichzeitig eine neue Familie an") - `JoinStreetPage` erzwingt jetzt eine bewusste Erstwahl mit Warnhinweis (siehe Funktionsstand), Admin-Panel bekam einen "Einladungstext kopieren"-Button statt nur den nackten Link.
 8. Status "Kinder bei Mama/Papa" passte konzeptionell nicht (kein Datum) - aus `DEFAULT_STATUSES` entfernt, dafür neue Kalender-Kategorie "Kinderbetreuung" (Migration 032, Tabellen-Rebuild für den CHECK-Constraint).
 9. System-Check auf Zuruf: Haushalte/Nutzer/Feed/Events/Kalender/Feedback/Terminfindungen waren schon sauber (nur Manuel + Kathrin, keine Testreste) - die disziplinierte Aufräum-Routine aus Schritt 8 im Workflow zahlt sich aus.
+
+11.08.2026, chronologisch (großer Arbeitstag, viele einzelne Freigaben nacheinander):
+
+10. Profilbild-Upload für alle Nutzer (Migration 033, `AuthController::uploadAvatarPhoto()`/`deleteAvatarPhoto()`, quadratischer GD-Zuschnitt auf 320px, `api/uploads/avatars/`).
+11. Push-Benachrichtigungs-Übersicht permanent im Admin-Tab System ergänzt (statt nur einmalig im Chat zu beantworten) - reine Referenztabelle, keine neuen Daten/Tracking.
+12. Zwei Aufräum-Fixes: inaktiven Test-Hinweis gelöscht; für bereits genutzte/widerrufene Einladungen gab es keinen Lösch-Weg (nur Widerrufen, das nur bei offenen Einladungen greift) - neuer "endgültig löschen"-Endpunkt (`DELETE /admin/invites/{id}/purge`) ergänzt.
+13. Straßenkarte im Admin-Tab "Karte" gebaut (siehe Funktionsstand) - auf Wunsch bewusst erstmal nur für Admins, bis sich das Konzept bewährt hat.
+14. **Nachrichten-Messenger** komplett neu gebaut (Migration 034, `Conversation`/`Message`/`MessageController`, Frontend `/nachrichten` + `/nachrichten/:id`, `MessagesContext` für Ungelesen-Badge-Polling). Beim Live-Test mit zwei Accounts zwei echte Bugs gefunden und gefixt: Detailansicht zeigte die letzte Nachricht nicht (fehlender Join in `Conversation::findById`), Ungelesen-Zähler lieferte immer 0 (doppelt gequotetes `"1970-01-01"` in Raw-SQL wurde von SQLite als Spaltenname statt String interpretiert - jetzt gebundener Parameter).
+15. Login-Rate-Limiting gebaut (Migration 035, `LoginAttempt`-Model, siehe Funktionsstand). Nebenbei Bug gefixt: `LoginPage` zeigte immer nur eine generische Fehlermeldung statt der echten Backend-Antwort.
+16. Mobile-Scan über Admin (alle Tabs inkl. der neuen Karte/System-Erweiterung), Nachrichten, Profilbild, Nachbarn-Einstiegspunkt - ein echter Bug gefunden und gefixt: Chat-Sendefeld lag auf dem Handy unter der fixierten Bottom-Navigation versteckt (`.chat-content` reservierte keinen Platz dafür).
+17. Drei weitere Roadmap-Punkte umgesetzt: PWA-Installationshinweis (`AddToHomeScreenHint`), Foto-Uploads in Feed/Events (Migration 036, `ImageUpload`-Core-Klasse, `PhotoPickerField`), wiederkehrende Events mit RSVP (Migration 037, `RecurrenceExpander`-Core-Klasse aus der bisherigen Kalender-Logik extrahiert und für Events wiederverwendet statt dupliziert - RSVP bleibt bewusst serienweit, nicht pro Einzeltermin).
 
 Alles davon ist committed, gepusht und deployed, live verifiziert, Testdaten aufgeräumt.
 
@@ -213,20 +230,23 @@ Sichtbarkeits-Level (Öffentlich / Nur Nachbarn / Privat) sind fachlich wichtig,
 
 `Household.statusLabel` (Dashboard/Nachbarn "wer ist zuhause") ist bewusst nur für einzelne Jetzt-Werte ohne Datum gedacht (`DEFAULT_STATUSES` in `types/household.ts`). Alles mit einem Zeitraum oder Datum (z. B. Kinderbetreuung, Besuch, Abwesenheit über mehrere Tage) gehört in den Kalender (`calendar_entries`), nicht als neue Status-Option - hier nicht wieder vermischen.
 
+### Nachrichten (Messenger)
+
+Läuft bewusst auf **Haushalts-Ebene**, nicht Nutzer-Ebene (siehe Architekturüberblick) - eine Unterhaltung gehört zwei Haushalten, nicht zwei Personen. Das ist eine bewusste Vereinfachung passend zum Rest der App (Feed/Events sind auch haushaltsweise), nicht vergessen und nicht "reparieren" in Richtung Nutzer-zu-Nutzer, ohne das noch mal mit dem Nutzer abzustimmen.
+
 ### Registrierung / Auth
 
 Zwei unabhängige Registrierungswege existieren nebeneinander (siehe Architekturüberblick): `AuthController::register()` (Code-basiert) und `StreetJoinController::register()` (Link-basiert, create-oder-join). Bewusst getrennt gehalten, damit Änderungen am einen Weg den anderen nicht gefährden. Beim Anfassen von Auth-Code: sparsam und additiv bleiben.
 
 ## Bekannte offene Punkte / Roadmap
 
-Noch nicht gebaut, mehrfach angesprochen:
+Noch nicht gebaut bzw. noch offen:
 
-1. **Rate-Limiting/Brute-Force-Schutz auf Login** - aktuell keiner vorhanden.
-2. **Wiederkehrende Events mit RSVP** (Kalender hat schon Serien/Wiederholung, Events noch nicht).
-3. **Foto-Uploads** in Feed und Events.
-4. **PWA "Zum Home-Bildschirm"-Hinweis in-App** - aktuell nur mündlich/in Einladungstexten kommuniziert (wichtig für iOS-Push, die App muss installiert sein, sonst kommen keine Pushes an).
-5. Rolle "Straßensprecher" (Moderation ohne vollen Adminzugriff) - nicht priorisiert.
-6. Reale Mülltermin-Daten sind noch nicht eingepflegt (Dateneingabe-Aufgabe für den Nutzer, kein Code).
+1. **Straßenkarte für alle Nachbarn freigeben** - aktuell bewusst nur im Admin-Tab "Karte" sichtbar (siehe Funktionsstand), auf Zuruf des Nutzers erstmal so gelassen. Rückfrage beim Nutzer, ob/wann sie für alle Nachbarn geöffnet werden soll.
+2. Rolle "Straßensprecher" (Moderation ohne vollen Adminzugriff) - nicht priorisiert.
+3. Reale Mülltermin-Daten sind noch nicht eingepflegt (Dateneingabe-Aufgabe für den Nutzer, kein Code).
+
+Erledigt seit der letzten Roadmap-Fassung: Rate-Limiting/Brute-Force-Schutz, wiederkehrende Events mit RSVP, Foto-Uploads in Feed/Events, PWA-Installationshinweis (siehe Funktionsstand und "Zuletzt bearbeiteter Bereich").
 
 ## Nützliche Check-Kommandos
 
