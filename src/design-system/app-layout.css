@@ -319,6 +319,17 @@ a:focus-visible {
   padding: 0 var(--md-space-4) calc(76px + var(--md-space-4));
 }
 
+/* Mehrere Seiten nutzen ein rohes <section> ohne eigene Klasse als
+   Überschrift+Inhalt-Block (Events, Haushalt, Hilfe, Straße, Einstellungen,
+   Feedback, Terminfindung-Detail). Die Heading-Atom-Komponente setzt bewusst
+   margin:0 (sonst doppelter Abstand in Kontexten mit eigenem Grid/Gap wie
+   AdminSection/OnboardingPanel) - das rohe <section> braucht daher selbst
+   ein Grid+Gap, sonst klebt die Überschrift ohne jeden Abstand am Inhalt. */
+.app-page-main > section {
+  display: grid;
+  gap: var(--md-space-3);
+}
+
 .app-sidebar-brand {
   display: flex;
   align-items: center;
