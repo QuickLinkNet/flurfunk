@@ -4,9 +4,10 @@ import { DashboardTemplate } from '../components/templates/DashboardTemplate';
 import { UserAvatar } from '../components/atoms/UserAvatar';
 import { Button } from '../components/atoms/Button';
 import { AdminEmptyState } from '../components/molecules/AdminEmptyState';
-import { fetchConversation, sendMessage } from '../api/messageApi';
+import { fetchConversation, sendMessage, sendVoiceMessage } from '../api/messageApi';
 import { useAuth } from '../hooks/useAuth';
 import { useMessages } from '../hooks/useMessages';
+import { useVoiceRecorder } from '../hooks/useVoiceRecorder';
 import type { Conversation, Message } from '../types/message';
 
 const POLL_INTERVAL_MS = 5000;
@@ -15,6 +16,12 @@ function formatBubbleTime(iso: string): string {
   const date = new Date(iso.replace(' ', 'T'));
   if (Number.isNaN(date.getTime())) return '';
   return date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+}
+
+function formatDuration(totalSeconds: number): string {
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${String(seconds).padStart(2, '0')}`;
 }
 
 function formatDayChip(iso: string): string {
@@ -41,8 +48,10 @@ export function MessageDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [isSendingVoice, setIsSendingVoice] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const previousMessageCount = useRef(0);
+  const recorder = useVoiceRecorder();
 
   useEffect(() => {
     if (!Number.isFinite(conversationId)) {
@@ -85,6 +94,24 @@ export function MessageDetailPage() {
     }
     previousMessageCount.current = messages.length;
   }, [messages]);
+
+  useEffect(() => {
+    if (recorder.error) setError(recorder.error);
+  }, [recorder.error]);
+
+  async function handleStopAndSendVoice() {
+    const recording = await recorder.stop();
+    if (!recording) return;
+    setIsSendingVoice(true);
+    try {
+      const { message } = await sendVoiceMessage(conversationId, recording.blob, recording.durationSeconds);
+      setMessages((current) => [...current, message]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Sprachnachricht konnte nicht gesendet werden.');
+    } finally {
+      setIsSendingVoice(false);
+    }
+  }
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -158,9 +185,18 @@ export function MessageDetailPage() {
               const isMine = message.senderUserId === user?.id;
               return (
                 <div key={message.id} className={`chat-bubble-row ${isMine ? 'mine' : 'theirs'}`}>
-                  <div className="chat-bubble">
+                  <div className={`chat-bubble ${message.audioUrl ? 'chat-bubble-audio' : ''}`}>
                     {!isMine && <span className="chat-bubble-sender">{message.senderDisplayName}</span>}
-                    <p>{message.body}</p>
+                    {message.audioUrl ? (
+                      <>
+                        <audio controls preload="none" src={message.audioUrl} />
+                        {message.audioDurationSeconds !== null && (
+                          <span className="chat-audio-duration">{formatDuration(message.audioDurationSeconds)}</span>
+                        )}
+                      </>
+                    ) : (
+                      <p>{message.body}</p>
+                    )}
                     <time>{formatBubbleTime(message.createdAt)}</time>
                   </div>
                 </div>
@@ -170,18 +206,46 @@ export function MessageDetailPage() {
         ))}
       </div>
 
-      <form className="chat-input-bar" onSubmit={handleSubmit}>
-        <input
-          className="chat-input-field"
-          placeholder="Nachricht schreiben..."
-          value={draft}
-          onChange={(event) => setDraft(event.target.value)}
-          maxLength={2000}
-        />
-        <button type="submit" className="chat-send-btn" disabled={draft.trim() === '' || isSending} aria-label="Senden">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 12h15M13 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-        </button>
-      </form>
+      {recorder.status === 'recording' ? (
+        <div className="chat-record-bar">
+          <button type="button" className="chat-record-cancel" onClick={recorder.cancel} aria-label="Aufnahme verwerfen">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+          </button>
+          <span className="chat-record-dot" aria-hidden="true" />
+          <span className="chat-record-timer">{formatDuration(recorder.elapsedSeconds)}</span>
+          <button type="button" className="chat-send-btn" onClick={handleStopAndSendVoice} disabled={isSendingVoice} aria-label="Sprachnachricht senden">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+          </button>
+        </div>
+      ) : (
+        <form className="chat-input-bar" onSubmit={handleSubmit}>
+          <input
+            className="chat-input-field"
+            placeholder="Nachricht schreiben..."
+            value={draft}
+            onChange={(event) => setDraft(event.target.value)}
+            maxLength={2000}
+          />
+          {draft.trim() === '' ? (
+            <button
+              type="button"
+              className="chat-send-btn"
+              onClick={recorder.start}
+              disabled={recorder.status === 'requesting' || isSendingVoice}
+              aria-label="Sprachnachricht aufnehmen"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <rect x="9" y="3" width="6" height="11" rx="3" stroke="currentColor" strokeWidth="2" />
+                <path d="M5 11a7 7 0 0 0 14 0M12 18v3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          ) : (
+            <button type="submit" className="chat-send-btn" disabled={isSending} aria-label="Senden">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 12h15M13 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            </button>
+          )}
+        </form>
+      )}
     </DashboardTemplate>
   );
 }

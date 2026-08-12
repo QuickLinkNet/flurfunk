@@ -7,19 +7,36 @@ use App\Core\Database;
 final class Message
 {
     private const MAX_LENGTH = 2000;
+    private const AUDIO_URL_PREFIX = '/apps/neighborhood/api/uploads/messages/';
 
-    public static function create(int $conversationId, int $senderUserId, string $body): array
-    {
+    public static function create(
+        int $conversationId,
+        int $senderUserId,
+        string $body,
+        ?string $audioPath = null,
+        ?int $audioDurationSeconds = null
+    ): array {
         $body = mb_substr(trim($body), 0, self::MAX_LENGTH);
         $stmt = Database::pdo()->prepare(
-            'INSERT INTO messages (conversation_id, sender_user_id, body, created_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP)'
+            'INSERT INTO messages (conversation_id, sender_user_id, body, audio_path, audio_duration_seconds, created_at)
+             VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)'
         );
-        $stmt->execute([$conversationId, $senderUserId, $body]);
+        $stmt->execute([$conversationId, $senderUserId, $body, $audioPath, $audioDurationSeconds]);
         $id = (int) Database::pdo()->lastInsertId();
 
         Conversation::touchLastMessageAt($conversationId);
 
         return self::findById($id) ?? throw new \RuntimeException('Nachricht konnte nicht gespeichert werden.');
+    }
+
+    public static function audioStorageDir(): string
+    {
+        return __DIR__ . '/../uploads/messages';
+    }
+
+    public static function audioUrl(?string $filename): ?string
+    {
+        return $filename !== null ? self::AUDIO_URL_PREFIX . $filename : null;
     }
 
     public static function findById(int $id): ?array

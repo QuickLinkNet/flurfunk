@@ -17,6 +17,8 @@ export interface Message {
   senderUserId: number;
   senderDisplayName: string;
   body: string;
+  audioUrl: string | null;
+  audioDurationSeconds: number | null;
   createdAt: string;
 }
 

@@ -225,6 +225,22 @@
   opacity: 0.75;
 }
 
+.chat-bubble-audio {
+  display: grid;
+  gap: 4px;
+}
+
+.chat-bubble-audio audio {
+  width: 220px;
+  max-width: 60vw;
+  height: 36px;
+}
+
+.chat-audio-duration {
+  font-size: var(--md-font-size-xs);
+  opacity: 0.85;
+}
+
 .chat-input-bar {
   flex-shrink: 0;
   display: flex;
@@ -267,4 +283,53 @@
 .chat-send-btn:disabled {
   opacity: 0.5;
   cursor: default;
+}
+
+.chat-record-bar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--md-space-2);
+  padding: var(--md-space-2) 0 calc(76px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--md-color-border);
+}
+
+@media (min-width: 1024px) {
+  .chat-record-bar {
+    padding-bottom: var(--md-space-2);
+  }
+}
+
+.chat-record-cancel {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: var(--md-color-surface-variant);
+  color: var(--md-color-on-surface-variant);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.chat-record-dot {
+  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--md-color-error);
+  animation: chat-record-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes chat-record-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.chat-record-timer {
+  flex: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--md-color-on-surface-variant);
+  font-size: var(--md-font-size-sm);
 }
