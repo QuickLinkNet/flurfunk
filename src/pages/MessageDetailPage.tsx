@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { DashboardTemplate } from '../components/templates/DashboardTemplate';
-import { HouseholdAvatar } from '../components/atoms/HouseholdAvatar';
+import { UserAvatar } from '../components/atoms/UserAvatar';
 import { Button } from '../components/atoms/Button';
 import { AdminEmptyState } from '../components/molecules/AdminEmptyState';
 import { fetchConversation, sendMessage } from '../api/messageApi';
@@ -136,8 +136,13 @@ export function MessageDetailPage() {
           </Link>
           {conversation && (
             <>
-              <HouseholdAvatar avatarKey={conversation.peerHouseholdAvatarKey} fallback={conversation.peerHouseholdName ?? '?'} size={36} />
-              <strong>{conversation.peerHouseholdName ?? 'Unbekannter Haushalt'}</strong>
+              <UserAvatar
+                photoUrl={conversation.peerAvatarPhotoUrl}
+                avatarUrl={conversation.peerHouseholdAvatarKey}
+                fallback={conversation.peerDisplayName ?? '?'}
+                size={36}
+              />
+              <strong>{conversation.peerDisplayName ?? 'Unbekannte Person'}</strong>
             </>
           )}
         </div>
@@ -150,7 +155,7 @@ export function MessageDetailPage() {
           <div key={group.day}>
             <div className="chat-day-chip"><span>{group.day}</span></div>
             {group.items.map((message) => {
-              const isMine = message.senderHouseholdId !== null && message.senderHouseholdId === user?.householdId;
+              const isMine = message.senderUserId === user?.id;
               return (
                 <div key={message.id} className={`chat-bubble-row ${isMine ? 'mine' : 'theirs'}`}>
                   <div className="chat-bubble">

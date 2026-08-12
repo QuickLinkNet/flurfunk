@@ -169,6 +169,10 @@ final class HouseholdController
             'contact' => $this->isFieldVisible($visibility['contact'], $isOwnHousehold)
                 ? ($h['contact_note'] ?? null)
                 : null,
+            'members' => array_map(
+                fn(array $u) => ['id' => (int) $u['id'], 'displayName' => $u['display_name']],
+                User::findByHousehold($householdId)
+            ),
         ];
     }
 

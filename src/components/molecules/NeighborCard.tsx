@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { HouseholdAvatar } from '../atoms/HouseholdAvatar';
 import { FeatureIcon } from '../atoms/FeatureIcon';
 import { startConversation } from '../../api/messageApi';
+import { useAuth } from '../../hooks/useAuth';
 import { CHILD_LOCATION_LABELS } from '../../types/child';
 import type { NeighborEvent, NeighborHousehold } from '../../types/neighbor';
 
@@ -45,8 +46,10 @@ function privateText(label: string): string {
 
 export function NeighborCard({ household }: Props) {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [isStartingChat, setIsStartingChat] = useState(false);
   const [chatError, setChatError] = useState<string | null>(null);
+  const messageableMembers = household.members.filter((member) => member.id !== user?.id);
   const status = household.status;
   const statusLabel = status?.label ?? 'Status privat';
   const hiddenFields: string[] = [
@@ -57,11 +60,11 @@ export function NeighborCard({ household }: Props) {
     !household.contactVisible ? privateText('Kontakt') : null
   ].filter((entry): entry is string => entry !== null);
 
-  async function handleStartChat() {
+  async function handleStartChat(targetUserId: number) {
     setChatError(null);
     setIsStartingChat(true);
     try {
-      const conversation = await startConversation(household.id);
+      const conversation = await startConversation(targetUserId);
       navigate(`/nachrichten/${conversation.id}`);
     } catch (error) {
       setChatError(error instanceof Error ? error.message : 'Unterhaltung konnte nicht gestartet werden.');
@@ -155,17 +158,28 @@ export function NeighborCard({ household }: Props) {
         )}
       </div>
 
-      {household.isOwnHousehold ? (
+      {household.isOwnHousehold && (
         <Link className="neighbor-card-action" to="/haushalt/mein">
           <FeatureIcon name="settings" size={32} />
           Eigenen Haushalt bearbeiten
         </Link>
-      ) : (
-        <button type="button" className="neighbor-card-action" onClick={handleStartChat} disabled={isStartingChat}>
-          <FeatureIcon name="chat" size={32} />
-          {isStartingChat ? 'Öffnet...' : 'Nachricht senden'}
-        </button>
       )}
+      {messageableMembers.map((member) => (
+        <button
+          key={member.id}
+          type="button"
+          className="neighbor-card-action"
+          onClick={() => handleStartChat(member.id)}
+          disabled={isStartingChat}
+        >
+          <FeatureIcon name="chat" size={32} />
+          {isStartingChat
+            ? 'Öffnet...'
+            : messageableMembers.length > 1
+              ? `Nachricht an ${member.displayName}`
+              : 'Nachricht senden'}
+        </button>
+      ))}
       {chatError && <p className="neighbor-card-chat-error">{chatError}</p>}
     </article>
   );

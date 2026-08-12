@@ -4,6 +4,7 @@ import { Button } from '../atoms/Button';
 import { householdAvatar } from '../../utils/householdAvatar';
 import { splitByStreetSide } from '../../utils/streetMap';
 import { startConversation } from '../../api/messageApi';
+import { useAuth } from '../../hooks/useAuth';
 import type { NeighborHousehold } from '../../types/neighbor';
 
 interface Props {
@@ -33,6 +34,7 @@ function BoardPin({
 
 export function StreetMapBoard({ households }: Props) {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [isStartingChat, setIsStartingChat] = useState(false);
   const [chatError, setChatError] = useState<string | null>(null);
@@ -44,13 +46,13 @@ export function StreetMapBoard({ households }: Props) {
   }
 
   const selected = households.find((household) => household.id === selectedId) ?? null;
+  const messageableMembers = selected ? selected.members.filter((member) => member.id !== user?.id) : [];
 
-  async function handleStartChat() {
-    if (!selected) return;
+  async function handleStartChat(targetUserId: number) {
     setChatError(null);
     setIsStartingChat(true);
     try {
-      const conversation = await startConversation(selected.id);
+      const conversation = await startConversation(targetUserId);
       navigate(`/nachrichten/${conversation.id}`);
     } catch (error) {
       setChatError(error instanceof Error ? error.message : 'Unterhaltung konnte nicht gestartet werden.');
@@ -97,11 +99,21 @@ export function StreetMapBoard({ households }: Props) {
               <p>{selected.addressLine}</p>
             </div>
           </div>
-          {!selected.isOwnHousehold && (
-            <Button type="button" variant="secondary" disabled={isStartingChat} onClick={handleStartChat}>
-              {isStartingChat ? 'Öffnet...' : 'Nachricht senden'}
+          {messageableMembers.map((member) => (
+            <Button
+              key={member.id}
+              type="button"
+              variant="secondary"
+              disabled={isStartingChat}
+              onClick={() => handleStartChat(member.id)}
+            >
+              {isStartingChat
+                ? 'Öffnet...'
+                : messageableMembers.length > 1
+                  ? `Nachricht an ${member.displayName}`
+                  : 'Nachricht senden'}
             </Button>
-          )}
+          ))}
           {chatError && <p className="admin-street-map-unplaced">{chatError}</p>}
         </div>
       )}

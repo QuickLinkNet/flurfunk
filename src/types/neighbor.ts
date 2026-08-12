@@ -28,12 +28,18 @@ export interface NeighborEvent {
   endsAt: string | null;
 }
 
+export interface NeighborMember {
+  id: number;
+  displayName: string;
+}
+
 export interface NeighborHousehold {
   id: number;
   name: string;
   addressLine: string;
   avatarKey: string;
   isOwnHousehold: boolean;
+  members: NeighborMember[];
   statusVisible: boolean;
   vacationVisible: boolean;
   childrenVisible: boolean;

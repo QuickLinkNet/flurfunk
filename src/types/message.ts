@@ -1,6 +1,8 @@
 export interface Conversation {
   id: number;
-  peerHouseholdId: number;
+  peerUserId: number;
+  peerDisplayName: string | null;
+  peerAvatarPhotoUrl: string | null;
   peerHouseholdName: string | null;
   peerHouseholdAvatarKey: string | null;
   lastMessageBody: string | null;
@@ -13,7 +15,6 @@ export interface Message {
   id: number;
   conversationId: number;
   senderUserId: number;
-  senderHouseholdId: number | null;
   senderDisplayName: string;
   body: string;
   createdAt: string;

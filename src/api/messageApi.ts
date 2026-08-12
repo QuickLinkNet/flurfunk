@@ -14,10 +14,10 @@ export function fetchConversation(id: number) {
   return apiRequest<ConversationDetail>(`/messages/${id}`);
 }
 
-export function startConversation(householdId: number) {
+export function startConversation(userId: number) {
   return apiRequest<Conversation>('/messages', {
     method: 'POST',
-    body: JSON.stringify({ householdId })
+    body: JSON.stringify({ userId })
   });
 }
 

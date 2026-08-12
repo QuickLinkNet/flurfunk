@@ -25,7 +25,7 @@ final class Message
     public static function findById(int $id): ?array
     {
         $stmt = Database::pdo()->prepare(
-            'SELECT m.*, u.display_name AS sender_display_name, u.household_id AS sender_household_id
+            'SELECT m.*, u.display_name AS sender_display_name
              FROM messages m
              JOIN users u ON u.id = m.sender_user_id
              WHERE m.id = ?'
@@ -37,7 +37,7 @@ final class Message
     public static function findByConversation(int $conversationId, int $limit = 200): array
     {
         $stmt = Database::pdo()->prepare(
-            'SELECT m.*, u.display_name AS sender_display_name, u.household_id AS sender_household_id
+            'SELECT m.*, u.display_name AS sender_display_name
              FROM messages m
              JOIN users u ON u.id = m.sender_user_id
              WHERE m.conversation_id = ?

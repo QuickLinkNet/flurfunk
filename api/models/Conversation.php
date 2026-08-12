@@ -4,29 +4,30 @@ namespace App\Models;
 
 use App\Core\Database;
 
-// Nachrichten laufen auf Haushalts-Ebene (wie Feed/Events auch): eine
-// Unterhaltung gehört zwei Haushalten, einzelne Nachrichten kennen aber
-// weiterhin den schreibenden Nutzer (sender_user_id) fuer die Anzeige,
-// wenn ein Haushalt mehrere Mitglieder hat.
+// Nachrichten laufen auf Personen-Ebene: eine Unterhaltung gehoert zwei
+// Nutzern, nicht zwei Haushalten. Wichtig, weil mehrkoepfige Haushalte hier
+// die Regel sind - Personen im selben Haushalt sollen sich trotzdem
+// gegenseitig schreiben koennen (frueherer Haushalts-Ansatz hat das
+// verhindert).
 final class Conversation
 {
-    public static function findOrCreateBetween(int $householdIdA, int $householdIdB): array
+    public static function findOrCreateBetween(int $userIdA, int $userIdB): array
     {
-        [$a, $b] = $householdIdA < $householdIdB ? [$householdIdA, $householdIdB] : [$householdIdB, $householdIdA];
+        [$a, $b] = $userIdA < $userIdB ? [$userIdA, $userIdB] : [$userIdB, $userIdA];
 
         $pdo = Database::pdo();
         $stmt = $pdo->prepare(
-            'INSERT OR IGNORE INTO conversations (household_a_id, household_b_id, created_at) VALUES (?, ?, CURRENT_TIMESTAMP)'
+            'INSERT OR IGNORE INTO conversations (user_a_id, user_b_id, created_at) VALUES (?, ?, CURRENT_TIMESTAMP)'
         );
         $stmt->execute([$a, $b]);
 
         return self::findBetween($a, $b) ?? throw new \RuntimeException('Unterhaltung konnte nicht angelegt werden.');
     }
 
-    public static function findBetween(int $householdIdA, int $householdIdB): ?array
+    public static function findBetween(int $userIdA, int $userIdB): ?array
     {
-        [$a, $b] = $householdIdA < $householdIdB ? [$householdIdA, $householdIdB] : [$householdIdB, $householdIdA];
-        $stmt = Database::pdo()->prepare('SELECT * FROM conversations WHERE household_a_id = ? AND household_b_id = ?');
+        [$a, $b] = $userIdA < $userIdB ? [$userIdA, $userIdB] : [$userIdB, $userIdA];
+        $stmt = Database::pdo()->prepare('SELECT * FROM conversations WHERE user_a_id = ? AND user_b_id = ?');
         $stmt->execute([$a, $b]);
         return $stmt->fetch() ?: null;
     }
@@ -43,43 +44,45 @@ final class Conversation
         return $stmt->fetch() ?: null;
     }
 
-    public static function findForHousehold(int $householdId): array
+    public static function findForUser(int $userId): array
     {
         $stmt = Database::pdo()->prepare(
             'SELECT c.*,
-                    CASE WHEN c.household_a_id = ? THEN c.household_b_id ELSE c.household_a_id END AS peer_household_id,
+                    CASE WHEN c.user_a_id = ? THEN c.user_b_id ELSE c.user_a_id END AS peer_user_id,
+                    pu.display_name AS peer_display_name,
+                    pu.avatar_photo_path AS peer_avatar_photo_path,
                     ph.name AS peer_household_name,
                     ph.avatar_key AS peer_household_avatar_key,
-                    (SELECT body FROM messages WHERE conversation_id = c.id ORDER BY created_at DESC, id DESC LIMIT 1) AS last_message_body,
-                    (SELECT sender_user_id FROM messages WHERE conversation_id = c.id ORDER BY created_at DESC, id DESC LIMIT 1) AS last_message_sender_id
+                    (SELECT body FROM messages WHERE conversation_id = c.id ORDER BY created_at DESC, id DESC LIMIT 1) AS last_message_body
              FROM conversations c
-             JOIN households ph ON ph.id = CASE WHEN c.household_a_id = ? THEN c.household_b_id ELSE c.household_a_id END
-             WHERE c.household_a_id = ? OR c.household_b_id = ?
+             JOIN users pu ON pu.id = CASE WHEN c.user_a_id = ? THEN c.user_b_id ELSE c.user_a_id END
+             LEFT JOIN households ph ON ph.id = pu.household_id
+             WHERE c.user_a_id = ? OR c.user_b_id = ?
              ORDER BY COALESCE(c.last_message_at, c.created_at) DESC'
         );
-        $stmt->execute([$householdId, $householdId, $householdId, $householdId]);
+        $stmt->execute([$userId, $userId, $userId, $userId]);
         return $stmt->fetchAll();
     }
 
-    public static function isParticipant(array $conversation, int $householdId): bool
+    public static function isParticipant(array $conversation, int $userId): bool
     {
-        return (int) $conversation['household_a_id'] === $householdId || (int) $conversation['household_b_id'] === $householdId;
+        return (int) $conversation['user_a_id'] === $userId || (int) $conversation['user_b_id'] === $userId;
     }
 
-    public static function lastReadAtFor(array $conversation, int $householdId): ?string
+    public static function lastReadAtFor(array $conversation, int $userId): ?string
     {
-        return (int) $conversation['household_a_id'] === $householdId
-            ? $conversation['household_a_last_read_at']
-            : $conversation['household_b_last_read_at'];
+        return (int) $conversation['user_a_id'] === $userId
+            ? $conversation['user_a_last_read_at']
+            : $conversation['user_b_last_read_at'];
     }
 
-    public static function markRead(int $conversationId, int $householdId): void
+    public static function markRead(int $conversationId, int $userId): void
     {
         $conversation = self::findById($conversationId);
-        if ($conversation === null || !self::isParticipant($conversation, $householdId)) {
+        if ($conversation === null || !self::isParticipant($conversation, $userId)) {
             return;
         }
-        $column = (int) $conversation['household_a_id'] === $householdId ? 'household_a_last_read_at' : 'household_b_last_read_at';
+        $column = (int) $conversation['user_a_id'] === $userId ? 'user_a_last_read_at' : 'user_b_last_read_at';
         $stmt = Database::pdo()->prepare("UPDATE conversations SET $column = CURRENT_TIMESTAMP WHERE id = ?");
         $stmt->execute([$conversationId]);
     }
@@ -90,18 +93,18 @@ final class Conversation
         $stmt->execute([$conversationId]);
     }
 
-    public static function countUnreadForHousehold(int $householdId): int
+    public static function countUnreadForUser(int $userId): int
     {
         $stmt = Database::pdo()->prepare(
             'SELECT COUNT(*) FROM conversations c
-             WHERE (c.household_a_id = ? OR c.household_b_id = ?)
+             WHERE (c.user_a_id = ? OR c.user_b_id = ?)
                AND c.last_message_at IS NOT NULL
                AND c.last_message_at > COALESCE(
-                    CASE WHEN c.household_a_id = ? THEN c.household_a_last_read_at ELSE c.household_b_last_read_at END,
+                    CASE WHEN c.user_a_id = ? THEN c.user_a_last_read_at ELSE c.user_b_last_read_at END,
                     ?
                )'
         );
-        $stmt->execute([$householdId, $householdId, $householdId, '1970-01-01']);
+        $stmt->execute([$userId, $userId, $userId, '1970-01-01']);
         return (int) $stmt->fetchColumn();
     }
 }

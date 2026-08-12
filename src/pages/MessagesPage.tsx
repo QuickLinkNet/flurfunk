@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { DashboardTemplate } from '../components/templates/DashboardTemplate';
-import { HouseholdAvatar } from '../components/atoms/HouseholdAvatar';
+import { UserAvatar } from '../components/atoms/UserAvatar';
 import { FeatureIcon } from '../components/atoms/FeatureIcon';
 import { fetchConversations } from '../api/messageApi';
 import { useMessages } from '../hooks/useMessages';
@@ -82,10 +82,15 @@ export function MessagesPage() {
               className="messages-list-row"
               data-unread={conversation.unread}
             >
-              <HouseholdAvatar avatarKey={conversation.peerHouseholdAvatarKey} fallback={conversation.peerHouseholdName ?? '?'} size={44} />
+              <UserAvatar
+                photoUrl={conversation.peerAvatarPhotoUrl}
+                avatarUrl={conversation.peerHouseholdAvatarKey}
+                fallback={conversation.peerDisplayName ?? '?'}
+                size={44}
+              />
               <div className="messages-list-main">
                 <div className="messages-list-top">
-                  <strong>{conversation.peerHouseholdName ?? 'Unbekannter Haushalt'}</strong>
+                  <strong>{conversation.peerDisplayName ?? 'Unbekannte Person'}</strong>
                   {conversation.lastMessageAt && <time>{formatConversationTime(conversation.lastMessageAt)}</time>}
                 </div>
                 <p>{conversation.lastMessageBody ?? 'Noch keine Nachricht'}</p>
