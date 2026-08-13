@@ -40,6 +40,11 @@ export interface DashboardNotice {
   message: string;
 }
 
+export interface DashboardBirthday {
+  name: string;
+  householdName: string | null;
+}
+
 export interface DashboardData {
   streetName: string;
   householdsStatus: Household[];
@@ -50,4 +55,5 @@ export interface DashboardData {
   wastePickups: CalendarEntry[];
   vacations: DashboardVacation[];
   notice: DashboardNotice;
+  todaysBirthdays: DashboardBirthday[];
 }

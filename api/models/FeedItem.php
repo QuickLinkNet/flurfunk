@@ -10,6 +10,7 @@ final class FeedItem
     public const MVP_TYPES = [
         'vacation', 'home', 'visit_expected', 'package_received',
         'tool_available', 'help_needed', 'street_closed', 'babysitter_needed',
+        'poll', 'marketplace_sell', 'marketplace_give',
     ];
 
     private const PHOTO_URL_PREFIX = '/apps/neighborhood/api/uploads/feed/';
@@ -66,6 +67,80 @@ final class FeedItem
         return (int) Database::pdo()->lastInsertId();
     }
 
+    // Umfrage anlegen: Feed-Eintrag (type='poll', message=Frage) + Antwortoptionen
+    // in einer Transaktion, damit nie ein Post ohne Optionen entstehen kann.
+    public static function createPoll(
+        int $householdId,
+        string $question,
+        string $visibility,
+        ?string $expiresAt,
+        array $optionLabels
+    ): int {
+        $pdo = Database::pdo();
+        $pdo->beginTransaction();
+        try {
+            $stmt = $pdo->prepare(
+                'INSERT INTO feed_items (household_id, type, message, visibility, expires_at, created_at)
+                 VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)'
+            );
+            $stmt->execute([$householdId, 'poll', $question, $visibility, $expiresAt]);
+            $id = (int) $pdo->lastInsertId();
+
+            $insertOption = $pdo->prepare('INSERT INTO feed_poll_options (feed_item_id, label, position) VALUES (?, ?, ?)');
+            foreach (array_values($optionLabels) as $position => $label) {
+                $insertOption->execute([$id, $label, $position]);
+            }
+            $pdo->commit();
+            return $id;
+        } catch (\Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+    public static function pollOptionIds(int $feedItemId): array
+    {
+        $stmt = Database::pdo()->prepare('SELECT id FROM feed_poll_options WHERE feed_item_id = ?');
+        $stmt->execute([$feedItemId]);
+        return array_map('intval', $stmt->fetchAll(\PDO::FETCH_COLUMN));
+    }
+
+    public static function pollOptionsWithCounts(int $feedItemId, ?int $viewerUserId): array
+    {
+        $stmt = Database::pdo()->prepare(
+            'SELECT o.id, o.label, o.position,
+                    COUNT(v.id) AS vote_count,
+                    MAX(CASE WHEN v.user_id = ? THEN 1 ELSE 0 END) AS voted_by_me
+             FROM feed_poll_options o
+             LEFT JOIN feed_poll_votes v ON v.option_id = o.id
+             WHERE o.feed_item_id = ?
+             GROUP BY o.id
+             ORDER BY o.position ASC'
+        );
+        $stmt->execute([$viewerUserId ?? 0, $feedItemId]);
+        return $stmt->fetchAll();
+    }
+
+    // Erneutes Abstimmen ersetzt die vorherige Stimme (delete+insert statt
+    // Upsert-Syntax, siehe HANDOFF-Konvention zu SQLite-Eigenheiten).
+    public static function voteOnPoll(int $feedItemId, int $optionId, int $userId): void
+    {
+        $pdo = Database::pdo();
+        $pdo->beginTransaction();
+        try {
+            $pdo->prepare('DELETE FROM feed_poll_votes WHERE feed_item_id = ? AND user_id = ?')->execute([$feedItemId, $userId]);
+            $pdo->prepare('INSERT INTO feed_poll_votes (feed_item_id, option_id, user_id) VALUES (?, ?, ?)')->execute([$feedItemId, $optionId, $userId]);
+            $pdo->commit();
+        } catch (\Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        }
+    }
+
     // Admin-Ansicht: alle Feed-Einträge unabhängig von Sichtbarkeit/Ablauf.
     public static function findAll(int $limit = 100): array
     {
@@ -88,6 +163,8 @@ final class FeedItem
             $pdo->prepare('DELETE FROM feed_reactions WHERE feed_item_id = ?')->execute([$id]);
             $pdo->prepare('DELETE FROM feed_helpers WHERE feed_item_id = ?')->execute([$id]);
             $pdo->prepare('DELETE FROM feed_loans WHERE feed_item_id = ?')->execute([$id]);
+            $pdo->prepare('DELETE FROM feed_poll_votes WHERE feed_item_id = ?')->execute([$id]);
+            $pdo->prepare('DELETE FROM feed_poll_options WHERE feed_item_id = ?')->execute([$id]);
             $pdo->prepare('DELETE FROM feed_items WHERE id = ?')->execute([$id]);
             $pdo->commit();
         } catch (\Throwable $e) {

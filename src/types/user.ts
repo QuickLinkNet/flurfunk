@@ -13,4 +13,6 @@ export interface User {
   onboardingCompletedAt: string | null;
   onboardingCurrentStep: OnboardingStep;
   weeklyDigestEnabled: boolean;
+  birthdayMonth: number | null;
+  birthdayDay: number | null;
 }

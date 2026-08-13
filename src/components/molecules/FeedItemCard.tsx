@@ -2,7 +2,15 @@ import { useState, type FormEvent } from 'react';
 import { IconBadge } from '../atoms/IconBadge';
 import { Button } from '../atoms/Button';
 import { Textarea } from '../atoms/Textarea';
-import { addFeedComment, borrowFeedItem, returnFeedItem, toggleFeedHelper, toggleFeedReaction, updateFeedStatus } from '../../api/feedApi';
+import {
+  addFeedComment,
+  borrowFeedItem,
+  returnFeedItem,
+  toggleFeedHelper,
+  toggleFeedReaction,
+  updateFeedStatus,
+  voteOnFeedPoll
+} from '../../api/feedApi';
 import { FEED_TYPE_META } from '../../utils/feedTypeMeta';
 import type { FeedComment, FeedItem, FeedItemType } from '../../types/feedItem';
 
@@ -11,9 +19,14 @@ interface Props {
   onChanged: () => void;
 }
 
-const STATUS_TYPES: FeedItemType[] = ['help_needed', 'tool_available', 'babysitter_needed', 'package_received'];
+const STATUS_TYPES: FeedItemType[] = ['help_needed', 'tool_available', 'babysitter_needed', 'package_received', 'marketplace_sell', 'marketplace_give'];
 const HELPER_TYPES: FeedItemType[] = ['help_needed', 'babysitter_needed'];
-const LOAN_TYPES: FeedItemType[] = ['tool_available'];
+const LOAN_TYPES: FeedItemType[] = ['tool_available', 'marketplace_sell', 'marketplace_give'];
+const MARKET_TYPES: FeedItemType[] = ['marketplace_sell', 'marketplace_give'];
+
+function isMarketplace(type: FeedItemType): boolean {
+  return MARKET_TYPES.includes(type);
+}
 
 function formatDate(value: string): string {
   const date = new Date(value.replace(' ', 'T'));
@@ -61,9 +74,11 @@ export function FeedItemCard({ item, onChanged }: Props) {
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [isHelping, setIsHelping] = useState(false);
   const [isLoanBusy, setIsLoanBusy] = useState(false);
+  const [isVoting, setIsVoting] = useState(false);
   const showStatus = supportsStatus(item.type);
   const showHelpers = supportsHelpers(item.type);
   const showLoan = supportsLoan(item.type);
+  const marketplace = isMarketplace(item.type);
   const commentCountLabel = item.comments.length === 1 ? '1 Kommentar' : `${item.comments.length} Kommentare`;
 
   async function handleReaction() {
@@ -120,7 +135,7 @@ export function FeedItemCard({ item, onChanged }: Props) {
       await borrowFeedItem(item.id);
       onChanged();
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Konnte nicht als ausgeliehen markiert werden.');
+      setMessage(error instanceof Error ? error.message : `Konnte nicht als ${marketplace ? 'reserviert' : 'ausgeliehen'} markiert werden.`);
     } finally {
       setIsLoanBusy(false);
     }
@@ -133,7 +148,7 @@ export function FeedItemCard({ item, onChanged }: Props) {
       await returnFeedItem(item.id);
       onChanged();
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Konnte nicht als zurückgegeben markiert werden.');
+      setMessage(error instanceof Error ? error.message : `Konnte nicht als ${marketplace ? 'wieder frei' : 'zurückgegeben'} markiert werden.`);
     } finally {
       setIsLoanBusy(false);
     }
@@ -149,6 +164,19 @@ export function FeedItemCard({ item, onChanged }: Props) {
       setMessage(error instanceof Error ? error.message : 'Status konnte nicht gespeichert werden.');
     } finally {
       setIsUpdatingStatus(false);
+    }
+  }
+
+  async function handleVote(optionId: number) {
+    setIsVoting(true);
+    setMessage(null);
+    try {
+      await voteOnFeedPoll(item.id, optionId);
+      onChanged();
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Stimme konnte nicht gespeichert werden.');
+    } finally {
+      setIsVoting(false);
     }
   }
 
@@ -171,6 +199,29 @@ export function FeedItemCard({ item, onChanged }: Props) {
           {item.photoUrl && (
             <img className="feed-card-photo" src={item.photoUrl} alt="" loading="lazy" />
           )}
+          {item.type === 'poll' && item.poll && (
+            <div className="feed-poll">
+              {item.poll.options.map((option) => {
+                const pct = item.poll!.totalVotes > 0 ? Math.round((option.voteCount / item.poll!.totalVotes) * 100) : 0;
+                const isMine = item.poll!.myOptionId === option.id;
+                return (
+                  <button
+                    key={option.id}
+                    type="button"
+                    className="feed-poll-option"
+                    data-active={isMine}
+                    disabled={isVoting}
+                    onClick={() => handleVote(option.id)}
+                  >
+                    <span className="feed-poll-option-bar" style={{ width: `${pct}%` }} />
+                    <span className="feed-poll-option-label">{option.label}{isMine ? ' ✓' : ''}</span>
+                    <span className="feed-poll-option-pct">{pct}% ({option.voteCount})</span>
+                  </button>
+                );
+              })}
+              <small>{item.poll.totalVotes} Stimme{item.poll.totalVotes === 1 ? '' : 'n'}</small>
+            </div>
+          )}
           <small>
             {visibilityLabel(item.visibility)} · {formatDate(item.createdAt)}
             {item.expiresAt ? ` · bis ${formatDate(item.expiresAt)}` : ''}
@@ -192,17 +243,19 @@ export function FeedItemCard({ item, onChanged }: Props) {
         )}
         {showLoan && !item.loan && !item.canManage && (
           <button type="button" disabled={isLoanBusy} onClick={handleBorrow}>
-            📦 Ausleihen
+            {marketplace ? '🙋 Reservieren' : '📦 Ausleihen'}
           </button>
         )}
         {showLoan && item.loan && (item.loanedByMe || item.canManage) && (
           <button type="button" data-active disabled={isLoanBusy} onClick={handleReturn}>
-            📦 Zurückgeben
+            {marketplace ? '🙋 Reservierung aufheben' : '📦 Zurückgeben'}
           </button>
         )}
         {showStatus && item.canManage && (
           <button type="button" disabled={isUpdatingStatus} onClick={handleStatusToggle}>
-            {item.status === 'done' ? 'Wieder öffnen' : 'Als erledigt markieren'}
+            {item.status === 'done'
+              ? (marketplace ? 'Wieder verfügbar' : 'Wieder öffnen')
+              : (marketplace ? (item.type === 'marketplace_sell' ? 'Als verkauft markieren' : 'Als verschenkt markieren') : 'Als erledigt markieren')}
           </button>
         )}
       </div>
@@ -215,7 +268,7 @@ export function FeedItemCard({ item, onChanged }: Props) {
 
       {showLoan && item.loan && (
         <p className="feed-helpers">
-          Ausgeliehen an {item.loan.householdName ?? 'Nachbar'} seit {formatDate(item.loan.borrowedAt)}
+          {marketplace ? 'Reserviert von' : 'Ausgeliehen an'} {item.loan.householdName ?? 'Nachbar'} seit {formatDate(item.loan.borrowedAt)}
         </p>
       )}
 

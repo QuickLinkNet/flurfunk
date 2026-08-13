@@ -1,5 +1,5 @@
 import { apiRequest, apiUpload } from './client';
-import type { FeedComment, FeedHelper, FeedItem, FeedItemType, FeedLoan } from '../types/feedItem';
+import type { FeedComment, FeedHelper, FeedItem, FeedItemType, FeedLoan, FeedPoll } from '../types/feedItem';
 import type { PushSendResult } from '../types/push';
 
 export function fetchFeed() {
@@ -11,10 +11,18 @@ interface NewFeedItem {
   message?: string;
   visibility?: 'public' | 'neighbors' | 'private';
   expiresAt?: string;
+  options?: string[];
 }
 
 export function createFeedItem(item: NewFeedItem) {
   return apiRequest<{ id: number; push: PushSendResult | null }>('/feed', { method: 'POST', body: JSON.stringify(item) });
+}
+
+export function voteOnFeedPoll(itemId: number, optionId: number) {
+  return apiRequest<{ poll: FeedPoll }>(`/feed/${itemId}/poll-vote`, {
+    method: 'POST',
+    body: JSON.stringify({ optionId })
+  });
 }
 
 export function uploadFeedPhoto(itemId: number, file: File) {

@@ -7,6 +7,7 @@ import { ResetPasswordPage } from '../pages/ResetPasswordPage';
 import { DashboardPage } from '../pages/DashboardPage';
 import { StreetFeedPage } from '../pages/StreetFeedPage';
 import { HelpBoardPage } from '../pages/HelpBoardPage';
+import { MarketplacePage } from '../pages/MarketplacePage';
 import { CalendarPage } from '../pages/CalendarPage';
 import { EventsPage } from '../pages/EventsPage';
 import { EventDetailPage } from '../pages/EventDetailPage';
@@ -105,6 +106,16 @@ export function AppRoutes() {
           <RequireAuth>
             <RequireFeature feature="feed">
               <HelpBoardPage />
+            </RequireFeature>
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/markt"
+        element={
+          <RequireAuth>
+            <RequireFeature feature="feed">
+              <MarketplacePage />
             </RequireFeature>
           </RequireAuth>
         }

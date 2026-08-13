@@ -122,6 +122,12 @@ export function DashboardPage() {
           <div className="dashboard-main">
             <AddToHomeScreenHint />
 
+            {dashboard && dashboard.todaysBirthdays.length > 0 && (
+              <div className="dashboard-birthday-banner">
+                🎂 Heute Geburtstag: {dashboard.todaysBirthdays.map((b) => (b.householdName ? `${b.name} (${b.householdName})` : b.name)).join(', ')}
+              </div>
+            )}
+
             <DashboardCard title="Wer ist zuhause?" action={<Link to="/nachbarn">Alle anzeigen</Link>}>
               <PersonStatusStrip households={householdsStatus} />
               {dashboard && householdsStatus.length === 0 && <EmptyRow title={query ? 'Keine passenden Haushalte.' : 'Noch keine Haushalte sichtbar.'} />}

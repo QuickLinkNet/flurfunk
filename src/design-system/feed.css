@@ -179,6 +179,90 @@
   font-size: var(--md-font-size-sm);
 }
 
+.feed-poll {
+  display: grid;
+  gap: var(--md-space-1);
+  margin-top: var(--md-space-2);
+}
+
+.feed-poll-option {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--md-space-2);
+  min-height: 40px;
+  padding: 0 var(--md-space-3);
+  overflow: hidden;
+  border: 1px solid var(--md-color-border);
+  border-radius: var(--md-radius-control);
+  background: var(--md-color-surface);
+  color: var(--md-color-on-surface);
+  font-size: var(--md-font-size-sm);
+  text-align: left;
+}
+
+.feed-poll-option[data-active='true'] {
+  border-color: var(--md-color-primary);
+}
+
+.feed-poll-option-bar {
+  position: absolute;
+  inset: 0 auto 0 0;
+  z-index: 0;
+  background: var(--md-color-primary-container);
+  transition: width 0.2s ease;
+}
+
+.feed-poll-option-label,
+.feed-poll-option-pct {
+  position: relative;
+  z-index: 1;
+}
+
+.feed-poll-option-label {
+  font-weight: var(--md-font-weight-medium);
+}
+
+.feed-poll-option-pct {
+  flex-shrink: 0;
+  color: var(--md-color-on-surface-variant);
+  font-size: var(--md-font-size-xs);
+}
+
+.feed-poll small {
+  color: var(--md-color-on-surface-variant);
+  font-size: var(--md-font-size-xs);
+}
+
+.feed-poll-editor {
+  display: grid;
+  gap: var(--md-space-2);
+}
+
+.feed-poll-editor-row {
+  display: flex;
+  align-items: center;
+  gap: var(--md-space-2);
+}
+
+.feed-poll-editor-row > *:first-child {
+  flex: 1;
+}
+
+.feed-poll-editor-remove {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--md-color-border);
+  border-radius: 50%;
+  background: var(--md-color-surface);
+  color: var(--md-color-on-surface-variant);
+  font-size: var(--md-font-size-md);
+  line-height: 1;
+  cursor: pointer;
+}
+
 .feed-status {
   display: inline-flex;
   align-items: center;

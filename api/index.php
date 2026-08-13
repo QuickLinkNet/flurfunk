@@ -102,6 +102,7 @@ $router->post('/feed/{id}/loan', [new FeedController(), 'borrowItem']);
 $router->post('/feed/{id}/loan/return', [new FeedController(), 'returnItem']);
 $router->post('/feed/{id}/photo', [new FeedController(), 'uploadPhoto']);
 $router->delete('/feed/{id}/photo', [new FeedController(), 'deletePhoto']);
+$router->post('/feed/{id}/poll-vote', [new FeedController(), 'pollVote']);
 
 $router->get('/calendar', [new CalendarController(), 'index']);
 $router->post('/calendar', [new CalendarController(), 'store']);

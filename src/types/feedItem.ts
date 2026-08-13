@@ -1,6 +1,19 @@
 export type FeedItemType =
   | 'vacation' | 'home' | 'visit_expected' | 'package_received'
-  | 'tool_available' | 'help_needed' | 'street_closed' | 'babysitter_needed';
+  | 'tool_available' | 'help_needed' | 'street_closed' | 'babysitter_needed'
+  | 'poll' | 'marketplace_sell' | 'marketplace_give';
+
+export interface FeedPollOption {
+  id: number;
+  label: string;
+  voteCount: number;
+}
+
+export interface FeedPoll {
+  options: FeedPollOption[];
+  totalVotes: number;
+  myOptionId: number | null;
+}
 
 export interface FeedItem {
   id: number;
@@ -20,6 +33,7 @@ export interface FeedItem {
   helpingByMe: boolean;
   loan: FeedLoan | null;
   loanedByMe: boolean;
+  poll: FeedPoll | null;
 }
 
 export interface FeedComment {

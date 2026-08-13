@@ -33,6 +33,10 @@ export const PAGE_HEADERS = {
     title: 'Nachbarn',
     subtitle: 'Wer sichtbar ist, welchen Status die Haushalte setzen und wie du sie schnell wiedererkennst.'
   },
+  marketplace: {
+    title: 'Markt',
+    subtitle: 'Verkaufen, verschenken und tauschen in deiner Nachbarschaft.'
+  },
   messages: {
     title: 'Nachrichten',
     subtitle: 'Private Unterhaltungen mit einzelnen Nachbarn.'

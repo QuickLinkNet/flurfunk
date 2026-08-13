@@ -2,7 +2,7 @@ import type { CSSProperties } from 'react';
 
 type IconName =
   | 'users' | 'calendar' | 'bell' | 'shield' | 'mail' | 'lock'
-  | 'ticket' | 'eye' | 'home' | 'street' | 'settings' | 'briefcase' | 'trash' | 'help' | 'feedback' | 'chat' | 'map';
+  | 'ticket' | 'eye' | 'home' | 'street' | 'settings' | 'briefcase' | 'trash' | 'help' | 'feedback' | 'chat' | 'map' | 'shop';
 
 interface Props {
   name: IconName;
@@ -29,7 +29,8 @@ const PATHS: Record<IconName, string[]> = {
   help: ['M17 28c-4 0-7-3-7-7s3-7 7-7 7 3 7 7-3 7-7 7Z', 'M7 48c2-8 6-13 10-13s8 5 10 13', 'M35 18c3-4 10-3 10 3 0 6-10 10-10 17', 'M35 46h1'],
   feedback: ['M12 10h32c3 0 5 2 5 5v16c0 3-2 5-5 5H23l-9 9v-9h-2c-3 0-5-2-5-5V15c0-3 2-5 5-5Z', 'M28 18v9', 'M28 32v0.6'],
   chat: ['M10 12h36c3 0 5 2 5 5v18c0 3-2 5-5 5H21l-9 8v-8h-2c-3 0-5-2-5-5V17c0-3 2-5 5-5Z', 'M16 24h24', 'M16 32h16'],
-  map: ['M28 6c-9 0-16 7-16 16 0 12 16 28 16 28s16-16 16-28c0-9-7-16-16-16Z', 'M28 28a6 6 0 1 0 0-12 6 6 0 0 0 0 12Z']
+  map: ['M28 6c-9 0-16 7-16 16 0 12 16 28 16 28s16-16 16-28c0-9-7-16-16-16Z', 'M28 28a6 6 0 1 0 0-12 6 6 0 0 0 0 12Z'],
+  shop: ['M14 20h28l-3 26H17l-3-26Z', 'M20 20v-4a8 8 0 0 1 16 0v4']
 };
 
 export function FeatureIcon({ name, label, size = 52, className, style }: Props) {

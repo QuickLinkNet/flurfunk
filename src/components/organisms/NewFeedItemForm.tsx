@@ -23,12 +23,26 @@ export function NewFeedItemForm({ onCreated, initialType = 'help_needed', allowe
   const [type, setType] = useState<FeedItemType>(initialType);
   const [category, setCategory] = useState<FeedCategory>(categoryForType(initialType));
   const [message, setMessage] = useState('');
+  const [options, setOptions] = useState<string[]>(['', '']);
   const [visibility, setVisibility] = useState<'neighbors' | 'public'>('neighbors');
   const [expires, setExpires] = useState<FeedExpiryOption>('week');
   const [feedback, setFeedback] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [pickerKey, setPickerKey] = useState(0);
+  const isPoll = type === 'poll';
+
+  function handleOptionChange(index: number, value: string) {
+    setOptions((current) => current.map((option, i) => (i === index ? value : option)));
+  }
+
+  function addOption() {
+    setOptions((current) => (current.length < 5 ? [...current, ''] : current));
+  }
+
+  function removeOption(index: number) {
+    setOptions((current) => (current.length > 2 ? current.filter((_, i) => i !== index) : current));
+  }
 
   function handleTypeChange(nextType: FeedItemType) {
     setType(nextType);
@@ -58,9 +72,10 @@ export function NewFeedItemForm({ onCreated, initialType = 'help_needed', allowe
         type,
         message: message.trim() || undefined,
         visibility,
-        expiresAt: feedExpiryDate(expires)
+        expiresAt: feedExpiryDate(expires),
+        options: isPoll ? options.map((option) => option.trim()).filter(Boolean) : undefined
       });
-      if (photoFile) {
+      if (photoFile && !isPoll) {
         try {
           await uploadFeedPhoto(result.id, photoFile);
         } catch {
@@ -68,13 +83,14 @@ export function NewFeedItemForm({ onCreated, initialType = 'help_needed', allowe
         }
       }
       setMessage('');
+      setOptions(['', '']);
       setPhotoFile(null);
       setPickerKey((key) => key + 1);
       const pushInfo = result.push && result.push.total > 0 ? ` Push: ${result.push.sent}/${result.push.total}.` : '';
-      setFeedback(`Kurzmeldung geteilt.${pushInfo}`);
+      setFeedback(`${isPoll ? 'Umfrage gestartet' : 'Kurzmeldung geteilt'}.${pushInfo}`);
       onCreated();
     } catch {
-      setFeedback('Kurzmeldung konnte nicht geteilt werden.');
+      setFeedback(isPoll ? 'Umfrage konnte nicht gestartet werden.' : 'Kurzmeldung konnte nicht geteilt werden.');
     } finally {
       setIsSubmitting(false);
     }
@@ -103,6 +119,33 @@ export function NewFeedItemForm({ onCreated, initialType = 'help_needed', allowe
         onChange={(event) => setMessage(event.target.value)}
         maxLength={280}
       />
+      {isPoll && (
+        <div className="feed-poll-editor">
+          {options.map((option, index) => (
+            <div key={index} className="feed-poll-editor-row">
+              <Input
+                placeholder={`Option ${index + 1}`}
+                value={option}
+                onChange={(event) => handleOptionChange(index, event.target.value)}
+                maxLength={80}
+              />
+              {options.length > 2 && (
+                <button
+                  type="button"
+                  className="feed-poll-editor-remove"
+                  onClick={() => removeOption(index)}
+                  aria-label="Option entfernen"
+                >
+                  ×
+                </button>
+              )}
+            </div>
+          ))}
+          {options.length < 5 && (
+            <Button type="button" variant="ghost" onClick={addOption}>+ Option hinzufügen</Button>
+          )}
+        </div>
+      )}
       <div className="md-form-grid">
         <Select value={visibility} onChange={(event) => setVisibility(event.target.value as 'neighbors' | 'public')}>
           <option value="neighbors">Nur Nachbarschaft</option>
@@ -110,9 +153,9 @@ export function NewFeedItemForm({ onCreated, initialType = 'help_needed', allowe
         </Select>
         <FeedExpirySelect value={expires} onChange={setExpires} />
       </div>
-      <PhotoPickerField key={pickerKey} onFileSelected={setPhotoFile} />
+      {!isPoll && <PhotoPickerField key={pickerKey} onFileSelected={setPhotoFile} />}
       <Button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? 'Wird gepostet...' : 'In der Straße teilen'}
+        {isSubmitting ? 'Wird gepostet...' : isPoll ? 'Umfrage starten' : 'In der Straße teilen'}
       </Button>
       {feedback && (
         <p style={{ margin: 0, color: feedback.includes('nicht') ? 'var(--md-color-error)' : 'var(--md-color-on-surface-variant)' }}>

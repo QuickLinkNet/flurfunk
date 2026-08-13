@@ -16,12 +16,15 @@ export const FEED_TYPE_META: Record<FeedItemType, Meta> = {
   tool_available: { emoji: '🛠️', label: 'Werkzeug verleihbar', tint: 'secondary', template: 'Ich kann heute ... verleihen.' },
   help_needed: { emoji: '🙏', label: 'Hilfe benötigt', tint: 'error', template: 'Kann jemand kurz helfen bei ...?' },
   street_closed: { emoji: '🚧', label: 'Straße gesperrt', tint: 'error', template: 'Die Straße ist am ... zwischen ... gesperrt.' },
-  babysitter_needed: { emoji: '👶', label: 'Babysitter gesucht', tint: 'error', template: 'Wir suchen Babysitting für ...' }
+  babysitter_needed: { emoji: '👶', label: 'Babysitter gesucht', tint: 'error', template: 'Wir suchen Babysitting für ...' },
+  poll: { emoji: '🗳️', label: 'Umfrage', tint: 'info', template: 'Sollen wir ...? Frag die Nachbarschaft.' },
+  marketplace_sell: { emoji: '💶', label: 'Verkaufen', tint: 'primary', template: 'Ich verkaufe ... für ...' },
+  marketplace_give: { emoji: '🎁', label: 'Verschenken', tint: 'secondary', template: 'Ich verschenke ...' }
 };
 
 export const FEED_TYPE_OPTIONS = Object.entries(FEED_TYPE_META) as [FeedItemType, Meta][];
 
-export type FeedCategory = 'all' | 'help' | 'sharing' | 'packages' | 'notices' | 'presence';
+export type FeedCategory = 'all' | 'help' | 'sharing' | 'packages' | 'notices' | 'presence' | 'polls' | 'marketplace';
 
 interface CategoryMeta {
   label: string;
@@ -52,6 +55,14 @@ export const FEED_CATEGORY_META: Record<FeedCategory, CategoryMeta> = {
   presence: {
     label: 'Status',
     types: ['home', 'vacation']
+  },
+  polls: {
+    label: 'Umfragen',
+    types: ['poll']
+  },
+  marketplace: {
+    label: 'Markt',
+    types: ['marketplace_sell', 'marketplace_give']
   }
 };
 

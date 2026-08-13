@@ -50,4 +50,24 @@ final class Child
         $stmt = Database::pdo()->prepare('DELETE FROM children WHERE id = ?');
         $stmt->execute([$childId]);
     }
+
+    // Für die Dashboard-"Heute Geburtstag"-Ansicht - nur Monat/Tag ausgewertet,
+    // Geburtsjahr bleibt privat. Respektiert die "children"-Sichtbarkeit des
+    // Haushalts wie die Nachbarn-Ansicht (siehe HouseholdController).
+    public static function todaysBirthdays(): array
+    {
+        $stmt = Database::pdo()->prepare(
+            "SELECT c.name AS name, h.name AS household_name
+             FROM children c
+             JOIN households h ON h.id = c.household_id
+             LEFT JOIN household_visibility_settings v ON v.household_id = h.id AND v.field_key = 'children'
+             WHERE c.birthdate IS NOT NULL
+               AND CAST(strftime('%m', c.birthdate) AS INTEGER) = ?
+               AND CAST(strftime('%d', c.birthdate) AS INTEGER) = ?
+               AND COALESCE(v.visibility, 'neighbors') != 'private'
+             ORDER BY c.name"
+        );
+        $stmt->execute([(int) date('n'), (int) date('j')]);
+        return $stmt->fetchAll();
+    }
 }

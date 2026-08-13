@@ -38,13 +38,21 @@ final class FeedController
 
         $expiresAt = $this->normalizeExpiresAt($body['expiresAt'] ?? null);
         $message = $this->normalizeMessage($body['message'] ?? null);
-        $id = FeedItem::create(
-            (int) $user['household_id'],
-            $type,
-            $message,
-            $visibility,
-            $expiresAt
-        );
+
+        if ($type === 'poll') {
+            if ($message === null) {
+                Response::error('Bitte eine Frage für die Umfrage eingeben.', 422);
+            }
+            $options = $this->normalizePollOptions($body['options'] ?? []);
+            if (count($options) < 2) {
+                Response::error('Bitte mindestens 2 Antwortmöglichkeiten angeben.', 422);
+            }
+            $id = FeedItem::createPoll((int) $user['household_id'], $message, $visibility, $expiresAt, $options);
+            $pushFallback = 'Neue Umfrage in der Straße.';
+        } else {
+            $id = FeedItem::create((int) $user['household_id'], $type, $message, $visibility, $expiresAt);
+            $pushFallback = 'Neue Meldung in der Straße.';
+        }
 
         $push = null;
         if ($visibility !== 'private') {
@@ -53,7 +61,7 @@ final class FeedController
                 $householdName = $household['name'] ?? 'Ein Nachbar';
                 $push = PushService::sendFeedUpdate($userId, [
                     'title' => 'Flurfunk: ' . $householdName,
-                    'body' => $message !== null ? $this->truncateMessage($message, 120) : 'Neue Meldung in der Straße.',
+                    'body' => $message !== null ? $this->truncateMessage($message, 120) : $pushFallback,
                     'url' => '/apps/neighborhood/strasse',
                 ]);
             } catch (\Throwable $e) {
@@ -62,6 +70,47 @@ final class FeedController
         }
 
         Response::json(['id' => $id, 'push' => $push], 201);
+    }
+
+    private function normalizePollOptions(mixed $rawOptions): array
+    {
+        if (!is_array($rawOptions)) {
+            return [];
+        }
+        $options = [];
+        foreach ($rawOptions as $option) {
+            $label = trim((string) $option);
+            if ($label !== '') {
+                $options[] = mb_substr($label, 0, 80);
+            }
+            if (count($options) >= 5) {
+                break;
+            }
+        }
+        return $options;
+    }
+
+    public function pollVote(array $params): void
+    {
+        $userId = Auth::requireLogin();
+        $user = User::findById($userId);
+        if ($user === null) {
+            Response::error('Nicht angemeldet.', 401);
+        }
+
+        $itemId = (int) $params['id'];
+        $item = FeedItem::findVisibleById($itemId, $user['role'] ?? 'guest');
+        if ($item === null || $item['type'] !== 'poll') {
+            Response::error('Umfrage nicht gefunden.', 404);
+        }
+
+        $optionId = (int) (Request::json()['optionId'] ?? 0);
+        if (!in_array($optionId, FeedItem::pollOptionIds($itemId), true)) {
+            Response::error('Ungültige Antwortmöglichkeit.', 422);
+        }
+
+        FeedItem::voteOnPoll($itemId, $optionId, $userId);
+        Response::json(['poll' => $this->toPublicPoll($itemId, $userId)]);
     }
 
     public function uploadPhoto(array $params): void
@@ -208,7 +257,7 @@ final class FeedController
         if ($item === null) {
             Response::error('Meldung nicht gefunden.', 404);
         }
-        if ($item['type'] !== 'tool_available') {
+        if (!in_array($item['type'], ['tool_available', 'marketplace_sell', 'marketplace_give'], true)) {
             Response::error('Für diese Meldung gibt es keinen Ausleih-Status.', 422);
         }
 
@@ -293,7 +342,9 @@ final class FeedController
         $helpers = in_array($item['type'], ['help_needed', 'babysitter_needed'], true)
             ? FeedItem::helpersForItem((int) $item['id'])
             : [];
-        $loan = $item['type'] === 'tool_available' ? FeedItem::activeLoanForItem((int) $item['id']) : null;
+        $loan = in_array($item['type'], ['tool_available', 'marketplace_sell', 'marketplace_give'], true)
+            ? FeedItem::activeLoanForItem((int) $item['id'])
+            : null;
 
         return [
             'id' => (int) $item['id'],
@@ -313,6 +364,27 @@ final class FeedController
             'helpingByMe' => $userId !== null && in_array($userId, array_map(fn(array $h) => (int) $h['user_id'], $helpers), true),
             'loan' => $this->toPublicLoan($loan),
             'loanedByMe' => $userId !== null && $loan !== null && (int) $loan['user_id'] === $userId,
+            'poll' => $item['type'] === 'poll' ? $this->toPublicPoll((int) $item['id'], $userId) : null,
+        ];
+    }
+
+    private function toPublicPoll(int $feedItemId, ?int $viewerUserId): array
+    {
+        $rows = FeedItem::pollOptionsWithCounts($feedItemId, $viewerUserId);
+        $myOptionId = null;
+        foreach ($rows as $row) {
+            if (((int) ($row['voted_by_me'] ?? 0)) === 1) {
+                $myOptionId = (int) $row['id'];
+            }
+        }
+        return [
+            'options' => array_map(fn(array $r) => [
+                'id' => (int) $r['id'],
+                'label' => $r['label'],
+                'voteCount' => (int) $r['vote_count'],
+            ], $rows),
+            'totalVotes' => array_sum(array_map(fn(array $r) => (int) $r['vote_count'], $rows)),
+            'myOptionId' => $myOptionId,
         ];
     }
 

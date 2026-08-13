@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'r
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../atoms/Button';
 import { Input } from '../atoms/Input';
+import { Select } from '../atoms/Select';
 import { UserAvatar } from '../atoms/UserAvatar';
 import { ConfirmDialog } from '../molecules/ConfirmDialog';
 import { useAuth } from '../../hooks/useAuth';
@@ -9,6 +10,10 @@ import { exportMe } from '../../api/authApi';
 import { HOUSEHOLD_AVATARS } from '../../utils/householdAvatar';
 
 const MAX_PHOTO_BYTES = 4 * 1024 * 1024;
+const MONTH_LABELS = [
+  'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
+  'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'
+];
 
 export function ProfileSettings() {
   const { user, updateProfile, uploadAvatarPhoto, deleteAvatarPhoto, updatePassword, deleteMe } = useAuth();
@@ -16,6 +21,8 @@ export function ProfileSettings() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [displayName, setDisplayName] = useState(user?.displayName ?? '');
   const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl ?? 'home');
+  const [birthdayMonth, setBirthdayMonth] = useState<number | ''>(user?.birthdayMonth ?? '');
+  const [birthdayDay, setBirthdayDay] = useState<number | ''>(user?.birthdayDay ?? '');
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [profileMessage, setProfileMessage] = useState<string | null>(null);
@@ -32,7 +39,9 @@ export function ProfileSettings() {
   useEffect(() => {
     setDisplayName(user?.displayName ?? '');
     setAvatarUrl(user?.avatarUrl ?? 'home');
-  }, [user?.avatarUrl, user?.displayName]);
+    setBirthdayMonth(user?.birthdayMonth ?? '');
+    setBirthdayDay(user?.birthdayDay ?? '');
+  }, [user?.avatarUrl, user?.displayName, user?.birthdayMonth, user?.birthdayDay]);
 
   async function handleProfileSubmit(event: FormEvent) {
     event.preventDefault();
@@ -44,7 +53,7 @@ export function ProfileSettings() {
     }
     setIsSavingProfile(true);
     try {
-      await updateProfile(normalizedName, avatarUrl);
+      await updateProfile(normalizedName, avatarUrl, birthdayMonth === '' ? null : birthdayMonth, birthdayDay === '' ? null : birthdayDay);
       setProfileMessage('Profil gespeichert.');
     } catch (error) {
       setProfileMessage(error instanceof Error ? error.message : 'Profil konnte nicht gespeichert werden.');
@@ -201,6 +210,24 @@ export function ProfileSettings() {
                 {avatar.label}
               </button>
             ))}
+          </div>
+        </div>
+
+        <div className="profile-settings-field">
+          <span>Geburtstag (optional, wird am Tag selbst der Nachbarschaft angezeigt)</span>
+          <div className="profile-birthday-row">
+            <Select value={birthdayDay} onChange={(event) => setBirthdayDay(event.target.value === '' ? '' : Number(event.target.value))}>
+              <option value="">Tag</option>
+              {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
+                <option key={day} value={day}>{day}</option>
+              ))}
+            </Select>
+            <Select value={birthdayMonth} onChange={(event) => setBirthdayMonth(event.target.value === '' ? '' : Number(event.target.value))}>
+              <option value="">Monat</option>
+              {MONTH_LABELS.map((label, index) => (
+                <option key={label} value={index + 1}>{label}</option>
+              ))}
+            </Select>
           </div>
         </div>
 

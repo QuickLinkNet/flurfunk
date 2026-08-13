@@ -427,6 +427,14 @@
   font-size: var(--md-font-size-sm);
 }
 
+.dashboard-birthday-banner {
+  padding: var(--md-space-3);
+  border-radius: var(--md-radius-control);
+  background: linear-gradient(180deg, var(--md-color-paper), var(--md-color-secondary-container));
+  color: var(--md-color-brand-green);
+  font-weight: var(--md-font-weight-medium);
+}
+
 .dashboard-notice {
   display: grid;
   gap: var(--md-space-3);

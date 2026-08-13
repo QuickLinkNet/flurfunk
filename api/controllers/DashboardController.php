@@ -6,6 +6,7 @@ use App\Core\Auth;
 use App\Core\Database;
 use App\Core\Response;
 use App\Models\CalendarEntry;
+use App\Models\Child;
 use App\Models\DashboardNotice;
 use App\Models\User;
 use PDO;
@@ -37,6 +38,7 @@ final class DashboardController
             'wastePickups' => $this->wastePickups($user['role'] ?? 'guest', $user['household_id'] !== null ? (int) $user['household_id'] : null),
             'vacations' => $this->vacations(),
             'notice' => $this->notice(),
+            'todaysBirthdays' => $this->todaysBirthdays(),
         ]);
     }
 
@@ -252,6 +254,16 @@ final class DashboardController
             $guard++;
         }
         return $items;
+    }
+
+    private function todaysBirthdays(): array
+    {
+        $entries = array_merge(
+            array_map(fn(array $r) => ['name' => $r['name'], 'householdName' => $r['household_name']], User::todaysBirthdays()),
+            array_map(fn(array $r) => ['name' => $r['name'], 'householdName' => $r['household_name']], Child::todaysBirthdays())
+        );
+        usort($entries, fn(array $a, array $b) => strcmp($a['name'], $b['name']));
+        return $entries;
     }
 
     private function feedBadge(string $type): string

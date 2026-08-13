@@ -28,8 +28,16 @@ export function fetchCurrentUser() {
   return apiRequest<User>('/auth/me');
 }
 
-export function updateProfile(displayName: string, avatarUrl?: string | null) {
-  return apiRequest<User>('/auth/me/profile', { method: 'PUT', body: JSON.stringify({ displayName, avatarUrl }) });
+export function updateProfile(
+  displayName: string,
+  avatarUrl?: string | null,
+  birthdayMonth?: number | null,
+  birthdayDay?: number | null
+) {
+  return apiRequest<User>('/auth/me/profile', {
+    method: 'PUT',
+    body: JSON.stringify({ displayName, avatarUrl, birthdayMonth, birthdayDay })
+  });
 }
 
 export function uploadAvatarPhoto(file: File) {

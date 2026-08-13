@@ -216,8 +216,24 @@ final class AuthController
             Response::error('Ungültiges Profilbild.', 422);
         }
 
+        [$birthdayMonth, $birthdayDay] = $this->normalizeBirthday($body['birthdayMonth'] ?? null, $body['birthdayDay'] ?? null);
+
         User::updateProfile($userId, $displayName, $avatarUrl !== '' ? $avatarUrl : null);
+        User::updateBirthday($userId, $birthdayMonth, $birthdayDay);
         Response::json($this->toPublicUser(User::findById($userId)));
+    }
+
+    private function normalizeBirthday(mixed $month, mixed $day): array
+    {
+        $month = $month !== null && $month !== '' ? (int) $month : null;
+        $day = $day !== null && $day !== '' ? (int) $day : null;
+        if ($month === null || $day === null) {
+            return [null, null];
+        }
+        if ($month < 1 || $month > 12 || $day < 1 || $day > 31) {
+            Response::error('Ungültiges Geburtsdatum.', 422);
+        }
+        return [$month, $day];
     }
 
     // Echtes Foto statt nur der festen Icon-Auswahl (AVATAR_KEYS). Getrennt
