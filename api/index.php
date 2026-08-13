@@ -131,7 +131,6 @@ $router->get('/messages/unread-count', [new MessageController(), 'unreadCount'])
 $router->post('/messages', [new MessageController(), 'start']);
 $router->get('/messages/{id}', [new MessageController(), 'show']);
 $router->post('/messages/{id}', [new MessageController(), 'send']);
-$router->post('/messages/{id}/voice', [new MessageController(), 'sendVoice']);
 
 $router->post('/feedback', [new FeedbackController(), 'store']);
 

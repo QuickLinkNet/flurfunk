@@ -3,7 +3,6 @@
 namespace App\Controllers;
 
 use App\Core\Auth;
-use App\Core\AudioUpload;
 use App\Core\PushService;
 use App\Core\Request;
 use App\Core\Response;
@@ -94,36 +93,6 @@ final class MessageController
         Response::json(['message' => $this->toPublicMessage($message), 'push' => $push], 201);
     }
 
-    public function sendVoice(array $params): void
-    {
-        $userId = Auth::requireLogin();
-        $user = User::findById($userId);
-        $conversation = $this->requireParticipantConversation((int) $params['id'], $userId);
-
-        $durationSeconds = isset($_POST['duration']) ? max(1, (int) $_POST['duration']) : null;
-        $audioPath = AudioUpload::save($_FILES['audio'] ?? null, Message::audioStorageDir());
-
-        $message = Message::create((int) $conversation['id'], $userId, '🎤 Sprachnachricht', $audioPath, $durationSeconds);
-        Conversation::markRead((int) $conversation['id'], $userId);
-
-        $peerUserId = (int) $conversation['user_a_id'] === $userId
-            ? (int) $conversation['user_b_id']
-            : (int) $conversation['user_a_id'];
-
-        $push = null;
-        try {
-            $push = PushService::sendDirectMessage($peerUserId, [
-                'title' => $user['display_name'] ?? 'Neue Nachricht',
-                'body' => '🎤 Sprachnachricht',
-                'url' => '/apps/neighborhood/nachrichten/' . $conversation['id'],
-            ]);
-        } catch (\Throwable $e) {
-            error_log('Direct message push failed: ' . $e->getMessage());
-        }
-
-        Response::json(['message' => $this->toPublicMessage($message), 'push' => $push], 201);
-    }
-
     private function requireParticipantConversation(int $conversationId, int $userId): array
     {
         $conversation = Conversation::findById($conversationId);
@@ -183,8 +152,6 @@ final class MessageController
             'senderUserId' => (int) $m['sender_user_id'],
             'senderDisplayName' => $m['sender_display_name'],
             'body' => $m['body'],
-            'audioUrl' => Message::audioUrl($m['audio_path'] ?? null),
-            'audioDurationSeconds' => $m['audio_duration_seconds'] !== null ? (int) $m['audio_duration_seconds'] : null,
             'createdAt' => $m['created_at'],
         ];
     }

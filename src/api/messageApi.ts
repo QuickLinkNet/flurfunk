@@ -1,4 +1,4 @@
-import { apiRequest, apiUpload } from './client';
+import { apiRequest } from './client';
 import type { Conversation, ConversationDetail, Message } from '../types/message';
 import type { PushSendResult } from '../types/push';
 
@@ -26,12 +26,4 @@ export function sendMessage(conversationId: number, body: string) {
     method: 'POST',
     body: JSON.stringify({ body })
   });
-}
-
-export function sendVoiceMessage(conversationId: number, blob: Blob, durationSeconds: number) {
-  const extension = blob.type.includes('mp4') ? 'm4a' : blob.type.includes('ogg') ? 'ogg' : 'webm';
-  const formData = new FormData();
-  formData.append('audio', blob, `voice.${extension}`);
-  formData.append('duration', String(Math.round(durationSeconds)));
-  return apiUpload<{ message: Message; push: PushSendResult | null }>(`/messages/${conversationId}/voice`, formData);
 }
