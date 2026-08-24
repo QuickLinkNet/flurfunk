@@ -1,89 +1,151 @@
-# Nachbarn – Straßenplaner
+# Flurfunk
 
-PWA für eine Straße/Nachbarschaft. React + Vite + TypeScript (Atomic Design) im Root,
-PHP 8.x Mini-MVC (natives PDO, keine Composer-Pakete) in `api/`.
-Datenbank: SQLite (eine Datei, kein separater Server nötig – reicht für eine
-einzelne Straße mit 5–40 Haushalten locker aus).
-Ziel-URL: **https://www.red-it.org/apps/neighborhood/**
-Vollständiges Konzept: siehe `PRD_Nachbarschafts-App.md`.
+Neighborhood planning PWA for a single street or small local community.
 
-## Einmalige Einrichtung (nur beim allerersten Mal)
+Flurfunk is a React/Vite/TypeScript frontend with a small PHP 8 SQLite backend. It is designed for practical neighborhood coordination: registration by invitation code, local news/feed items, events, RSVP flows, child/family management, and a simple admin path for the first user.
 
-Seit dem Umstieg auf SQLite gibt es genau einen manuellen Schritt: die
-FTP-Zugangsdaten lokal eintragen.
+Live target:
+
+```text
+https://www.red-it.org/apps/neighborhood/
+```
+
+The full product concept is documented in `PRD_Nachbarschafts-App.md`.
+
+## Why This Project Matters
+
+This project shows how I build a complete small-business/community web app around realistic constraints:
+
+- no separate database server required
+- deployable to common PHP hosting
+- SQLite persistence with automatic migrations
+- PWA-friendly frontend structure
+- clear separation between frontend build and backend API
+- careful deployment process that preserves live SQLite data
+
+## Tech Stack
+
+- React + Vite
+- TypeScript
+- PHP 8.x
+- SQLite
+- Native PDO
+- Atomic Design frontend structure
+- Mini-MVC backend structure
+- FTP/FTPS deployment script
+
+## Product Scope
+
+Implemented and connected to real API endpoints:
+
+- registration with invitation code
+- first user becomes admin automatically
+- login
+- dashboard
+- street/community feed
+- calendar list view
+- child/family management
+- events with RSVP
+
+The planned v1.0 scope is described in `PRD_Nachbarschafts-App.md`, chapter 3. A dedicated settings/privacy page is still open.
+
+## Architecture
+
+```text
+src/            React frontend
+api/            PHP backend with core/controllers/models/migrations
+public/         Static assets, PWA manifest, icons
+scripts/        Deployment script and environment loader
+.htaccess       SPA fallback for the frontend, excluding api/
+```
+
+Frontend structure follows Atomic Design:
+
+```text
+atoms -> molecules -> organisms -> templates -> pages
+```
+
+The backend is a small PHP Mini-MVC without Composer packages. SQLite is used as a single-file database, which is enough for the intended scope of one street with roughly 5-40 households.
+
+## First-Time Setup
+
+Since the move to SQLite, only the local FTP deployment credentials need to be configured manually:
 
 ```bash
 cp .env.deploy.example .env.deploy
 ```
 
-Dann in `.env.deploy` eintragen: `FTP_HOST`, `FTP_USER`, `FTP_PASSWORD`
-(aus deinem Hosting-Panel für www.red-it.org). `REMOTE_BASE_DIR` nur ändern,
-falls der Zielordner wirklich anders heißen soll.
+Then set:
 
-`api/config.php` und die Datenbank-Tabellen brauchen **keine** manuellen
-Schritte mehr: `config.php` wird ganz normal mitdeployed (enthält seit SQLite
-keine Zugangsdaten mehr, nur einen Dateipfad), und `api/core/Database.php`
-führt alle noch nicht angewendeten Dateien aus `api/migrations/` automatisch
-beim ersten echten Request aus. Die SQLite-Datei selbst entsteht dabei unter
-`api/data/` und ist dort per `.htaccess` vor direktem Web-Zugriff geschützt.
+```text
+FTP_HOST
+FTP_USER
+FTP_PASSWORD
+```
+
+`REMOTE_BASE_DIR` only needs to change if the target folder is different.
+
+No manual database setup is required:
+
+- `api/config.php` is deployed normally and contains no credentials
+- `api/core/Database.php` runs pending migrations automatically on the first real request
+- the SQLite file is created under `api/data/`
+- `api/data/` is protected from direct web access via `.htaccess`
+
+## Local Development
+
+The frontend can run locally while talking to the live API:
+
+```bash
+npm install
+cp .env.local.example .env.local
+npm run dev
+```
+
+For backend changes:
+
+```bash
+php -l path/to/file.php
+npm run deploy
+```
 
 ## Deployment
 
-Danach reicht für jedes weitere Update:
+For regular updates:
 
 ```bash
 npm install
 npm run deploy
 ```
 
-Das baut das Frontend (`npm run build`) und lädt es per FTP/FTPS hoch:
-`dist/` → `/apps/neighborhood/`, `api/` → `/apps/neighborhood/api/`.
-Das Skript (`scripts/deploy.mjs`) fasst **ausschließlich** diesen einen
-Ordner an: Es wandert von deinem FTP-Login-Verzeichnis gezielt in
-`/apps/neighborhood`, legt dort höchstens fehlende Unterordner an und
-löscht nur den generierten `assets/`-Ordner (alte Vite-Bundles) neu – nichts
-außerhalb, nichts in Geschwister-Verzeichnissen. Die SQLite-Datenbankdatei
-selbst (`api/data/*.sqlite`) liegt nicht lokal vor und wird deshalb beim
-Hochladen nie berührt – deine Live-Daten bleiben unangetastet.
+The deployment script:
 
-## Lokale Entwicklung
+- builds the frontend with `npm run build`
+- uploads `dist/` to `/apps/neighborhood/`
+- uploads `api/` to `/apps/neighborhood/api/`
+- only touches the intended app folder
+- recreates only the generated `assets/` folder
+- never uploads or overwrites local SQLite data
 
-Kein lokales PHP/DB-Setup nötig – das Frontend spricht direkt mit dem Live-Backend.
+This keeps live data safe during frontend/API deployments.
 
-```bash
-npm install
-cp .env.local.example .env.local   # zeigt auf https://www.red-it.org/apps/neighborhood/api
-npm run dev
-```
+## Configuration Files
 
-Für Backend-Änderungen: PHP-Dateien lokal editieren, mit `php -l datei.php` auf
-Syntaxfehler prüfen, dann `npm run deploy` (lädt automatisch auch `api/` mit hoch).
-
-## Projektstruktur
-
-```
-src/            React-Frontend (Atomic Design: atoms/molecules/organisms/templates/pages)
-api/            PHP-Backend (Mini-MVC: core/controllers/models/migrations)
-public/         Statische Assets, PWA-Manifest, Icons
-scripts/        Deploy-Skript (scripts/deploy.mjs) + .env-Loader
-.htaccess       SPA-Fallback für den Root (api/ bleibt ausgenommen)
-```
-
-## Konfigurationsübersicht (wo trage ich was ein?)
-
-| Datei | Wo | Wofür | Wird deployed? |
+| File | Location | Purpose | Deployed? |
 |---|---|---|---|
-| `.env.local` | lokal bei dir | Frontend-Dev zeigt auf Live-API | Nein (gitignored) |
-| `.env.local.example` | Repo | Vorlage für `.env.local` | Ja (enthält keine Geheimnisse) |
-| `.env.deploy` | lokal bei dir | FTP-Zugangsdaten für `npm run deploy` | Nein (gitignored) |
-| `.env.deploy.example` | Repo | Vorlage für `.env.deploy` | Ja (enthält keine Geheimnisse) |
-| `api/config.php` | Repo | SQLite-Dateipfad, Session-Name | Ja (enthält seit SQLite keine Geheimnisse mehr) |
+| `.env.local` | local | frontend dev points to live API | no |
+| `.env.local.example` | repo | template for `.env.local` | yes |
+| `.env.deploy` | local | FTP credentials for `npm run deploy` | no |
+| `.env.deploy.example` | repo | template for `.env.deploy` | yes |
+| `api/config.php` | repo | SQLite file path and session name | yes |
 
-## Status
+## Security Notes
 
-Registrierung (mit Einladungscode, erster Nutzer wird automatisch Admin),
-Login, Dashboard, Straßen-Feed, Kalender (Listenansicht), Kinderverwaltung
-und Events mit RSVP sind als klickbare UI vorhanden und gegen die echten
-API-Endpunkte verdrahtet. Der volle v1.0-Funktionsumfang ist in
-`PRD_Nachbarschafts-App.md` Kapitel 3 beschrieben; offen ist u.a. eine eigene
-Einstellungen/Sichtbarkeit-Seite.
+Do not commit:
+
+- `.env.local`
+- `.env.deploy`
+- SQLite database files under `api/data/`
+- generated frontend builds
+
+The deployment flow is intentionally conservative so the live SQLite database is not overwritten during updates.
