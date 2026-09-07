@@ -126,6 +126,11 @@
      eine zweite Spalte (320px) mitläuft. */
   max-width: 1400px;
   margin-inline: auto;
+  /* Ohne minmax(0, ...) sizt sich der implizite Grid-Track auf die
+     Max-Content-Breite des Inhalts (z. B. die horizontal scrollende
+     Haushalts-Karten-Strip) statt auf die verfügbare Breite zu schrumpfen -
+     Ursache für Overflow/abgeschnittenen Inhalt auf schmalen Viewports. */
+  grid-template-columns: minmax(0, 1fr);
   padding: 0 var(--md-space-4) calc(76px + var(--md-space-4));
   /* Gleiche Content-Sheet-Optik wie app-page-main (app-hero.css) - eigenes,
      paralleles Dashboard-Layout, deshalb hier separat gepflegt. */
@@ -139,6 +144,7 @@
 .dashboard-side,
 .dashboard-split-grid {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--md-space-3);
 }
 
