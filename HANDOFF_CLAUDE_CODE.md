@@ -29,7 +29,9 @@ Ziel-URL: `https://www.red-it.org/apps/neighborhood/`
 - Alles UTF-8, echte Umlaute verwenden: `ä`, `ö`, `ü`, `ß`.
 - Atomic Design beachten: `atoms`, `molecules`, `organisms`, `templates`, `pages`.
 - Dateien möglichst unter 500 Zeilen halten. Bei Admin-Controllern: neue Admin-Features als eigener Subcontroller (siehe Architekturüberblick), nicht in `AdminController.php` reinquetschen.
-- Mobile-first arbeiten, grob drei Breakpoint-Ebenen beachten.
+- Mobile-first arbeiten. Standard-Breakpoints (2026 vereinheitlicht, siehe Kommentar-Block oben in `global.css`): **768px** (Tablet-Umbruch) und **1024px** (Desktop-Umbruch, Sidebar erscheint). 480px ist als seltene "xs"-Zusatzstufe erlaubt, sonst keine neuen Zwischenwerte einführen.
+- **Grid-Container immer mit `grid-template-columns: minmax(0, 1fr)` (oder explizitem Spalten-Template) versehen, nie `display: grid` ohne Spalten-Angabe lassen**, wenn der Container potenziell breiten/nicht umbrechenden Inhalt enthalten könnte (Karten-Strips, lange Namen mit `white-space: nowrap`). Ohne das sizt sich der implizite Grid-Track auf die Max-Content-Breite des Inhalts statt zu schrumpfen → Overflow auf schmalen Viewports, siehe `dashboard.css`-Fix (`.dashboard-status-strip` hat das Dashboard bis auf ~900px aufgeblasen). Bei Flex-Containern gilt dasselbe über `min-width: 0` auf dem Kind-Element, das `overflow: hidden; text-overflow: ellipsis;` bekommt (siehe `.chat-header strong`).
+- `body { overflow-x: hidden }` in `global.css` ist ein Sicherheitsnetz gegen genau dieses Overflow-Muster, kein Ersatz dafür, es an der Wurzel zu vermeiden.
 - Einheitliche Atome/Molecules verwenden. Keine parallelen Button-, Card-, Modal- oder Header-Varianten bauen.
 - Bestehende UX nicht durch CSS-Fixes an anderer Stelle kaputtmachen. Besonders Login, Dashboard, mobile Navigation und Header-Hintergrund sind sensibel (siehe unten).
 - Worktree normalerweise sauber halten: nach jedem fertigen Feature committen und pushen (siehe Workflow unten).

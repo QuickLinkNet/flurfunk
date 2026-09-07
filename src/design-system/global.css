@@ -22,6 +22,20 @@
 @import './profile-settings.css';
 @import './welcome.css';
 
+/* ---------------------------------------------------------------------
+   Responsive Breakpoints - Standard für die ganze App.
+   Neue @media-Regeln bitte an diesen zwei Werten ausrichten, nicht an
+   Zwischenwerten (frühere Streuung über 640/720/900/1120/1200px wurde
+   2026 konsolidiert):
+     - 768px  Tablet-Umbruch: ein- auf zweispaltig, Filterleisten etc.
+     - 1024px Desktop-Umbruch: Sidebar-Navigation erscheint
+   480px (min-width) ist als seltene dritte "xs"-Stufe für Mikro-
+   Anpassungen auf sehr kleinen Handys erlaubt (siehe app-layout.css,
+   welcome.css) - kein Ersatz für 768px, nur zusätzliche Politur darunter.
+   Ausnahme: auth.css nutzt zusätzlich 1440px für ein Hero-Hintergrundbild
+   in höherer Auflösung (reine Bildqualität, keine Layout-Struktur).
+   --------------------------------------------------------------------- */
+
 * { box-sizing: border-box; }
 
 html,
@@ -32,8 +46,21 @@ body,
 
 body {
   margin: 0;
+  /* Sicherheitsnetz gegen horizontalen Overflow: verhindert, dass ein
+     einzelnes noch unentdecktes Layout-Problem (z. B. ein Grid-Track ohne
+     minmax(0, ...), siehe dashboard.css) die ganze Seite seitwärts
+     scrollbar macht, statt nur lokal begrenzt zu clippen. Behebt nicht
+     die Ursache - findet man am schnellsten trotzdem per DevTools/
+     Browser-Pane bei 320-375px Breite. */
+  overflow-x: hidden;
   font-family: var(--md-font-family);
   font-size: var(--md-font-size-base);
   background: var(--md-color-surface-variant);
   color: var(--md-color-on-surface);
+}
+
+img,
+video {
+  max-width: 100%;
+  height: auto;
 }

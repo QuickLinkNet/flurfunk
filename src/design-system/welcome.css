@@ -63,6 +63,8 @@
   width: 100%;
 }
 
+/* Gegenstück zur "xs"-Zusatzstufe (siehe global.css) - unterhalb 480px
+   noch mal vertikal stapeln statt nebeneinander. */
 @media (max-width: 480px) {
   .welcome-reveal-photo {
     flex-direction: column;

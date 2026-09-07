@@ -200,6 +200,8 @@
   }
 }
 
+/* 1440px ist bewusst kein vierter Layout-Breakpoint (siehe global.css),
+   nur ein höher aufgelöstes Hero-Hintergrundbild für sehr breite Monitore. */
 @media (min-width: 1440px) {
   .auth-hero {
     background:

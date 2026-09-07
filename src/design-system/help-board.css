@@ -71,7 +71,7 @@
   color: #fff;
 }
 
-@media (min-width: 720px) {
+@media (min-width: 768px) {
   .help-board-compose {
     grid-template-columns: minmax(220px, 0.42fr) minmax(0, 1fr);
     align-items: start;

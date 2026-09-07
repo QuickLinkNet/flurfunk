@@ -386,7 +386,7 @@
   color: var(--md-color-primary);
 }
 
-@media (min-width: 720px) {
+@media (min-width: 768px) {
   .feed-card {
     padding: var(--md-space-4);
   }

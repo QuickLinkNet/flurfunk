@@ -559,6 +559,8 @@ a:focus-visible {
   line-height: 1;
 }
 
+/* 480px ist die erlaubte "xs"-Zusatzstufe unterhalb des 768px-Standards
+   (siehe global.css) - nur für Mikro-Politur auf sehr kleinen Handys. */
 @media (min-width: 480px) {
   .household-avatar-picker {
     grid-template-columns: repeat(4, minmax(0, 1fr));

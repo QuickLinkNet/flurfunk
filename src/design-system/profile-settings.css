@@ -126,7 +126,7 @@
   font-size: var(--md-font-size-sm);
 }
 
-@media (min-width: 720px) {
+@media (min-width: 768px) {
   .profile-settings-card {
     padding: var(--md-space-4);
   }

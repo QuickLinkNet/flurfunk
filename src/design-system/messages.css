@@ -140,6 +140,7 @@
 }
 
 .chat-header strong {
+  min-width: 0;
   color: var(--md-color-brand-green);
   font-size: var(--md-font-size-md);
   overflow: hidden;

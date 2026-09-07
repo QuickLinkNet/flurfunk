@@ -515,13 +515,11 @@
   color: #fff;
 }
 
-@media (min-width: 640px) {
+@media (min-width: 768px) {
   .dashboard-action-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-}
 
-@media (min-width: 768px) {
   .dashboard-split-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
