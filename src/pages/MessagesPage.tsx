@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { DashboardTemplate } from '../components/templates/DashboardTemplate';
 import { UserAvatar } from '../components/atoms/UserAvatar';
 import { FeatureIcon } from '../components/atoms/FeatureIcon';
+import { Button } from '../components/atoms/Button';
 import { fetchConversations } from '../api/messageApi';
 import { useMessages } from '../hooks/useMessages';
 import { PAGE_HEADERS } from '../content/pageHeaders';
@@ -26,6 +27,7 @@ function formatConversationTime(iso: string): string {
 }
 
 export function MessagesPage() {
+  const navigate = useNavigate();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [message, setMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -69,7 +71,11 @@ export function MessagesPage() {
             <FeatureIcon name="chat" size={56} />
           </span>
           <strong>Noch keine Nachrichten</strong>
-          <p>Schreib einer Nachbarin oder einem Nachbarn - auf der <Link to="/nachbarn">Nachbarn-Seite</Link> gibt es dafür einen Button.</p>
+          <p>Das ist normal, wenn du noch niemandem geschrieben hast. Sobald eine Unterhaltung startet, taucht sie hier auf.</p>
+          <div className="messages-empty-actions">
+            <Button type="button" onClick={() => navigate('/nachbarn')}>Zu den Nachbarn</Button>
+            <Button type="button" variant="ghost" onClick={() => navigate('/karte')}>Zur Straßenkarte</Button>
+          </div>
         </div>
       )}
 

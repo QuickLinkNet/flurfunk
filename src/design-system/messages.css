@@ -22,9 +22,19 @@
   font-size: var(--md-font-size-sm);
 }
 
-.messages-empty a {
-  color: var(--md-color-primary);
-  font-weight: var(--md-font-weight-medium);
+.messages-empty-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--md-space-2);
+  width: 100%;
+  max-width: 360px;
+  margin-top: var(--md-space-2);
+}
+
+@media (min-width: 480px) {
+  .messages-empty-actions {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 .messages-list {
