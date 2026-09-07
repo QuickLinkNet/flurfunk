@@ -34,7 +34,43 @@ final class ImageUpload
         if ($source === false) {
             Response::error('Bild konnte nicht gelesen werden.', 422);
         }
-        return $source;
+        return self::correctOrientation($source, $file['tmp_name']);
+    }
+
+    // Handykameras speichern Hochkant-Fotos oft als liegende Pixel-Daten +
+    // EXIF-Orientation-Tag statt die Pixel selbst zu drehen. GD liest nur die
+    // rohen Pixel und ignoriert den Tag komplett - ohne diese Korrektur landen
+    // Hochformat-Uploads (Profilbild, Feed-/Event-Foto) um 90°/180° gedreht.
+    // Nur reine Rotation abgedeckt (Orientation 3/6/8) - gespiegelte Varianten
+    // (2/4/5/7) kommen von Kamera-Hardware praktisch nie vor.
+    public static function correctOrientation(\GdImage $image, string $tmpFilePath): \GdImage
+    {
+        if (!function_exists('exif_read_data') || !function_exists('imagerotate')) {
+            return $image;
+        }
+        $exif = @exif_read_data($tmpFilePath);
+        if ($exif === false || !isset($exif['Orientation'])) {
+            return $image;
+        }
+
+        $angle = match ((int) $exif['Orientation']) {
+            3 => 180,
+            6 => -90,
+            8 => 90,
+            default => 0,
+        };
+        if ($angle === 0) {
+            return $image;
+        }
+
+        $rotated = imagerotate($image, $angle, 0);
+        if ($rotated === false) {
+            return $image;
+        }
+        imagedestroy($image);
+        imagealphablending($rotated, false);
+        imagesavealpha($rotated, true);
+        return $rotated;
     }
 
     public static function saveResizedToFit(\GdImage $source, string $destPath, int $maxDimension = 1400, int $quality = 82): void

@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Core\Auth;
 use App\Core\Database;
+use App\Core\ImageUpload;
 use App\Core\MailService;
 use App\Core\Request;
 use App\Core\Response;
@@ -266,6 +267,7 @@ final class AuthController
         if ($source === false) {
             Response::error('Bild konnte nicht gelesen werden.', 422);
         }
+        $source = ImageUpload::correctOrientation($source, $file['tmp_name']);
 
         // Mittig auf Quadrat zuschneiden, dann auf einheitliche Avatar-Größe
         // bringen - kein manuelles Zuschneiden im Frontend nötig.
