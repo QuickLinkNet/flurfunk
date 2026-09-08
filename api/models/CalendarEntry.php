@@ -7,8 +7,12 @@ use App\Core\Database;
 final class CalendarEntry
 {
     public const TYPES = ['vacation', 'birthday', 'event', 'visit', 'street_action', 'holiday', 'trash', 'appointment', 'childcare'];
-    public const VISIBILITIES = ['public', 'neighbors', 'private'];
-    public const RECURRENCE_RULES = ['none', 'daily', 'weekly', 'monthly'];
+    // 'public' bleibt hier nur für alte Einträge lesbar (siehe findInRange) -
+    // im Erstell-/Bearbeiten-Formular wird es bewusst nicht mehr angeboten
+    // (siehe CalendarController::validVisibility), macht für einen privaten
+    // Nachbarschaftskalender ohne Gäste-Rolle keinen echten Sinn.
+    public const VISIBILITIES = ['neighbors', 'private'];
+    public const RECURRENCE_RULES = ['none', 'daily', 'weekly', 'monthly', 'yearly'];
 
     // Mülltermine für ein Datum, für die noch keine Vorabend-Erinnerung
     // verschickt wurde (siehe TrashReminderService).

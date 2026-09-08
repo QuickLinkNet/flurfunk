@@ -214,6 +214,17 @@
   margin: 0;
 }
 
+.calendar-form-note {
+  margin: 0;
+  color: var(--md-color-on-surface-variant);
+  font-size: var(--md-font-size-sm);
+}
+
+.calendar-form-note a {
+  color: var(--md-color-primary);
+  font-weight: var(--md-font-weight-medium);
+}
+
 .calendar-form-message {
   color: var(--md-color-on-surface-variant);
   font-size: var(--md-font-size-sm);

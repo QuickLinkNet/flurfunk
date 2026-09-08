@@ -84,6 +84,7 @@ final class RecurrenceExpander
             'daily' => new \DateInterval('P1D'),
             'weekly' => new \DateInterval('P1W'),
             'monthly' => new \DateInterval('P1M'),
+            'yearly' => new \DateInterval('P1Y'),
             default => new \DateInterval('P100Y'),
         };
     }

@@ -12,7 +12,6 @@ import { AppPageHeader } from '../components/organisms/AppPageHeader';
 import { AppSidebar } from '../components/organisms/AppSidebar';
 import { BottomNavigation } from '../components/organisms/BottomNavigation';
 import { HouseholdStatusForm } from '../components/organisms/HouseholdStatusForm';
-import { NewCalendarEntryForm } from '../components/organisms/NewCalendarEntryForm';
 import { NewFeedItemForm } from '../components/organisms/NewFeedItemForm';
 import { OnboardingChecklist } from '../components/organisms/OnboardingChecklist';
 import { fetchDashboard } from '../api/dashboardApi';
@@ -44,7 +43,6 @@ function matchesSearch(query: string, ...values: Array<string | null | undefined
 function actionTitle(action: DialogAction | null): string {
   if (action === 'feed') return 'Kurzmeldung';
   if (action === 'help') return 'Hilfe suchen';
-  if (action === 'event') return 'Event planen';
   return 'Status ändern';
 }
 
@@ -82,6 +80,10 @@ export function DashboardPage() {
   function handleQuickAction(action: QuickActionId) {
     if (action === 'help') {
       navigate('/hilfe');
+      return;
+    }
+    if (action === 'event') {
+      navigate('/events');
       return;
     }
     setDialogAction((current) => (current === action ? null : action));
@@ -217,7 +219,6 @@ export function DashboardPage() {
           {dialogAction === 'status' && <HouseholdStatusForm onSaved={handleSaved} />}
           {dialogAction === 'feed' && <NewFeedItemForm key="feed-dialog" initialType="tool_available" onCreated={handleSaved} />}
           {dialogAction === 'help' && <NewFeedItemForm key="help-dialog" initialType="help_needed" onCreated={handleSaved} />}
-          {dialogAction === 'event' && <NewCalendarEntryForm onCreated={handleSaved} />}
         </ActionDialog>
         <BottomNavigation />
       </div>

@@ -6,7 +6,8 @@ export const RECURRENCE_LABELS: Record<RecurrenceRule, string> = {
   none: 'Keine Wiederholung',
   daily: 'Täglich',
   weekly: 'Wöchentlich',
-  monthly: 'Monatlich'
+  monthly: 'Monatlich',
+  yearly: 'Jährlich'
 };
 
 export function recurrenceSummary(rule: RecurrenceRule, until?: string | null): string {

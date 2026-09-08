@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import { Link } from 'react-router-dom';
 import { Button } from '../atoms/Button';
 import { Input } from '../atoms/Input';
 import { Select } from '../atoms/Select';
@@ -6,6 +7,13 @@ import { createCalendarEntry, updateCalendarEntry } from '../../api/calendarApi'
 import { CALENDAR_TYPE_OPTIONS } from '../../utils/calendarTypeMeta';
 import { recurrenceSummary } from '../../utils/recurrenceLabels';
 import type { CalendarEntry } from '../../types/calendarEntry';
+
+// "Event" bewusst nicht wählbar: eine reine Kalendernotiz kann nicht auf
+// "sind dabei/vielleicht/nicht dabei" reagiert werden lassen, ohne das
+// RSVP-System zu duplizieren (siehe HANDOFF, "keine parallelen Systeme").
+// Für alles mit Zu-/Absagen gibt es den eigenen Events-Bereich - der taucht
+// über CalendarController::toCalendarEvent() ohnehin automatisch hier auf.
+const CREATABLE_TYPE_OPTIONS = CALENDAR_TYPE_OPTIONS.filter(([value]) => value !== 'event');
 
 interface Props {
   initialDate?: string;
@@ -43,6 +51,12 @@ export function NewCalendarEntryForm({ initialDate, entry, onCreated, onCancel }
   const [recurrenceUntil, setRecurrenceUntil] = useState(() => entry?.recurrenceUntil?.slice(0, 10) ?? '');
   const [message, setMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Bearbeitet man einen alten "Event"-Eintrag bzw. einen alten "Öffentlich"-
+  // Eintrag, muss die Auswahl trotzdem etwas Passendes anzeigen - nur bei
+  // neuen Einträgen sind die Optionen ausgeblendet.
+  const typeOptions = entry?.type === 'event' ? CALENDAR_TYPE_OPTIONS : CREATABLE_TYPE_OPTIONS;
+  const showPublicOption = entry?.visibility === 'public';
 
   function handleAllDayChange(checked: boolean) {
     setAllDay(checked);
@@ -98,7 +112,7 @@ export function NewCalendarEntryForm({ initialDate, entry, onCreated, onCancel }
         <label className="calendar-form-field">
           <span>Kategorie</span>
           <Select value={type} onChange={(event) => setType(event.target.value as CalendarEntry['type'])}>
-            {CALENDAR_TYPE_OPTIONS.map(([value, meta]) => (
+            {typeOptions.map(([value, meta]) => (
               <option key={value} value={value}>
                 {meta.label}
               </option>
@@ -108,12 +122,17 @@ export function NewCalendarEntryForm({ initialDate, entry, onCreated, onCancel }
         <label className="calendar-form-field">
           <span>Sichtbarkeit</span>
           <Select value={visibility} onChange={(event) => setVisibility(event.target.value as 'public' | 'neighbors' | 'private')}>
-            <option value="neighbors">Nachbarschaft</option>
-            <option value="public">Öffentlich</option>
-            <option value="private">Privat</option>
+            <option value="neighbors">Nachbarschaft (alle Nachbarn)</option>
+            <option value="private">Privat (nur mein Haushalt)</option>
+            {showPublicOption && <option value="public">Öffentlich (auch für Gäste)</option>}
           </Select>
         </label>
       </div>
+
+      <p className="calendar-form-note">
+        Für Treffen mit Zu-/Absage ("dabei"/"vielleicht"/"nicht dabei") gibt es die{' '}
+        <Link to="/events">Events-Seite</Link> - die taucht hier im Kalender automatisch mit auf.
+      </p>
 
       <div className="calendar-form-grid">
         <label className="calendar-form-field">
@@ -139,6 +158,7 @@ export function NewCalendarEntryForm({ initialDate, entry, onCreated, onCancel }
             <option value="daily">Täglich</option>
             <option value="weekly">Wöchentlich</option>
             <option value="monthly">Monatlich</option>
+            <option value="yearly">Jährlich</option>
           </Select>
         </label>
         <label className="calendar-form-field">
