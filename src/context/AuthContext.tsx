@@ -23,6 +23,7 @@ interface AuthContextValue {
   deleteAvatarPhoto: () => Promise<User>;
   updatePassword: (currentPassword: string, newPassword: string) => Promise<User>;
   updateDigestPreference: (enabled: boolean) => Promise<User>;
+  updateTrashReminderPreference: (pushEnabled: boolean, emailEnabled: boolean) => Promise<User>;
   deleteMe: () => Promise<void>;
   completeOnboarding: () => Promise<void>;
   saveOnboardingProgress: (step: OnboardingStep) => Promise<void>;
@@ -93,6 +94,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return updatedUser;
   }
 
+  async function updateTrashReminderPreference(pushEnabled: boolean, emailEnabled: boolean) {
+    const updatedUser = await authApi.updateTrashReminderPreference(pushEnabled, emailEnabled);
+    setUser(updatedUser);
+    return updatedUser;
+  }
+
   async function deleteMe() {
     await authApi.deleteMe();
     setUser(null);
@@ -107,7 +114,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, register, registerViaStreetLink, logout, updateProfile, uploadAvatarPhoto, deleteAvatarPhoto, updatePassword, updateDigestPreference, deleteMe, completeOnboarding, saveOnboardingProgress }}>
+    <AuthContext.Provider value={{ user, isLoading, login, register, registerViaStreetLink, logout, updateProfile, uploadAvatarPhoto, deleteAvatarPhoto, updatePassword, updateDigestPreference, updateTrashReminderPreference, deleteMe, completeOnboarding, saveOnboardingProgress }}>
       {children}
     </AuthContext.Provider>
   );

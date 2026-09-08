@@ -29,6 +29,8 @@ final class User
             'weeklyDigestEnabled' => (bool) ($user['weekly_digest_enabled'] ?? true),
             'birthdayMonth' => isset($user['birthday_month']) && $user['birthday_month'] !== null ? (int) $user['birthday_month'] : null,
             'birthdayDay' => isset($user['birthday_day']) && $user['birthday_day'] !== null ? (int) $user['birthday_day'] : null,
+            'trashReminderPushEnabled' => (bool) ($user['trash_reminder_push_enabled'] ?? false),
+            'trashReminderEmailEnabled' => (bool) ($user['trash_reminder_email_enabled'] ?? false),
         ];
     }
 
@@ -139,6 +141,14 @@ final class User
     {
         $stmt = Database::pdo()->prepare('UPDATE users SET birthday_month = ?, birthday_day = ? WHERE id = ?');
         $stmt->execute([$month, $day, $id]);
+    }
+
+    public static function updateTrashReminderPreference(int $id, bool $pushEnabled, bool $emailEnabled): void
+    {
+        $stmt = Database::pdo()->prepare(
+            'UPDATE users SET trash_reminder_push_enabled = ?, trash_reminder_email_enabled = ? WHERE id = ?'
+        );
+        $stmt->execute([$pushEnabled ? 1 : 0, $emailEnabled ? 1 : 0, $id]);
     }
 
     // Für die Dashboard-"Heute Geburtstag"-Ansicht - Vorname reicht, kein

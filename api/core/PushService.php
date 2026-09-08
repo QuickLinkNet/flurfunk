@@ -21,6 +21,11 @@ final class PushService
         return self::sendToSubscriptions(PushSubscription::findAll(), $payload);
     }
 
+    public static function sendTrashReminder(?array $payload = null): array
+    {
+        return self::sendToSubscriptions(PushSubscription::findForTrashReminder(), $payload);
+    }
+
     public static function sendToAdmins(int $excludeUserId, ?array $payload = null): array
     {
         return self::sendToSubscriptions(PushSubscription::findAdmins($excludeUserId), $payload);

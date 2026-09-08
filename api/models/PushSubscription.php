@@ -49,6 +49,17 @@ final class PushSubscription
         return Database::pdo()->query('SELECT * FROM push_subscriptions')->fetchAll();
     }
 
+    // Mülltermin-Erinnerung ist per-Nutzer opt-in (siehe Migration 042) -
+    // bewusst kein Broadcast an alle Abos mehr.
+    public static function findForTrashReminder(): array
+    {
+        return Database::pdo()->query(
+            'SELECT ps.* FROM push_subscriptions ps
+             JOIN users u ON u.id = ps.user_id
+             WHERE u.trash_reminder_push_enabled = 1'
+        )->fetchAll();
+    }
+
     public static function findAdmins(int $excludeUserId): array
     {
         $stmt = Database::pdo()->prepare(

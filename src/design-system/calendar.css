@@ -111,9 +111,19 @@
 
 .calendar-detail-header {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr);
   gap: var(--md-space-2);
   align-items: start;
+}
+
+.calendar-detail-badge {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-size: 20px;
+  flex-shrink: 0;
 }
 
 .calendar-detail-header p,
@@ -133,13 +143,19 @@
   font-size: var(--md-font-size-lg);
 }
 
-.calendar-detail-header button {
-  min-height: 36px;
-  padding: 0 var(--md-space-2);
-  border: 1px solid var(--md-color-border);
-  border-radius: 999px;
-  background: var(--md-color-surface);
+.calendar-detail-creator {
+  display: flex;
+  align-items: center;
+  gap: var(--md-space-2);
+  padding: var(--md-space-2);
+  border-radius: var(--md-radius-control);
+  background: var(--md-color-surface-variant);
+  font-size: var(--md-font-size-sm);
   color: var(--md-color-on-surface-variant);
+}
+
+.calendar-detail-creator strong {
+  color: var(--md-color-on-surface);
 }
 
 .calendar-detail-meta {

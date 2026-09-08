@@ -5,6 +5,7 @@ import { Select } from '../components/atoms/Select';
 import { Heading } from '../components/atoms/Heading';
 import { EmailNotificationSettings } from '../components/organisms/EmailNotificationSettings';
 import { PushNotificationSettings } from '../components/organisms/PushNotificationSettings';
+import { TrashReminderSettings } from '../components/organisms/TrashReminderSettings';
 import { ProfileSettings } from '../components/organisms/ProfileSettings';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../hooks/useTheme';
@@ -43,6 +44,7 @@ export function SettingsPage() {
         <Heading level={2}>Benachrichtigungen</Heading>
         <EmailNotificationSettings />
         <PushNotificationSettings />
+        <TrashReminderSettings />
       </section>
       <section>
         <Heading level={2}>Account</Heading>

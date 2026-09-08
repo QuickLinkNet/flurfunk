@@ -61,6 +61,13 @@ export function updateDigestPreference(weeklyDigestEnabled: boolean) {
   });
 }
 
+export function updateTrashReminderPreference(pushEnabled: boolean, emailEnabled: boolean) {
+  return apiRequest<User>('/auth/me/trash-reminder-preference', {
+    method: 'PUT',
+    body: JSON.stringify({ pushEnabled, emailEnabled })
+  });
+}
+
 export function deleteMe() {
   return apiRequest<null>('/auth/me', { method: 'DELETE' });
 }

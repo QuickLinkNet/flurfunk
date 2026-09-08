@@ -33,7 +33,7 @@ const PUSH_TRIGGERS: PushTrigger[] = [
   { event: 'Terminfindung final festgelegt', recipients: 'Alle Abonnenten', condition: 'Immer beim Festlegen' },
   { event: 'Event-Erinnerung', recipients: 'Haushalte ohne RSVP (außer Anfragende:r)', condition: 'Manuell über "Nicht-Antworter erinnern"' },
   { event: 'Neue Feedback-Meldung', recipients: 'Alle Admins (außer Melder:in)', condition: 'Immer beim Absenden' },
-  { event: 'Mülltermin-Erinnerung', recipients: 'Alle Abonnenten', condition: 'Automatisch per Cron am Vortag, nur unerinnerte Termine' },
+  { event: 'Mülltermin-Erinnerung', recipients: 'Nur Nutzer mit aktiviertem Opt-in (Einstellungen)', condition: 'Automatisch per Cron am Vortag, nur unerinnerte Termine, standardmäßig aus' },
   { event: 'Admin-Test-Push', recipients: 'Ein einzelner Nutzer', condition: 'Manuell von Admin in der Nutzerliste ausgelöst' },
   { event: 'Eigener Test-Push', recipients: 'Man selbst', condition: 'Manuell in den eigenen Benachrichtigungs-Einstellungen' }
 ];

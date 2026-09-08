@@ -360,6 +360,23 @@ final class AuthController
         Response::json($this->toPublicUser(User::findById($userId)));
     }
 
+    public function updateTrashReminderPreference(): void
+    {
+        $userId = Auth::requireLogin();
+        $user = User::findById($userId);
+        if ($user === null) {
+            Response::error('Nutzer nicht gefunden.', 404);
+        }
+
+        $body = Request::json();
+        User::updateTrashReminderPreference(
+            $userId,
+            (bool) ($body['pushEnabled'] ?? false),
+            (bool) ($body['emailEnabled'] ?? false)
+        );
+        Response::json($this->toPublicUser(User::findById($userId)));
+    }
+
     public function deleteMe(): void
     {
         $userId = Auth::requireLogin();

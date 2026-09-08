@@ -15,4 +15,6 @@ export interface User {
   weeklyDigestEnabled: boolean;
   birthdayMonth: number | null;
   birthdayDay: number | null;
+  trashReminderPushEnabled: boolean;
+  trashReminderEmailEnabled: boolean;
 }

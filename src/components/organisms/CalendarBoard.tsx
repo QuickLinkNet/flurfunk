@@ -146,7 +146,6 @@ export function CalendarBoard({ entries, onChanged }: Props) {
         {selectedEntry && (
           <CalendarEntryDetail
             entry={selectedEntry}
-            onClose={() => setSelectedEntry(null)}
             onEdit={() => setEditingEntry(selectedEntry)}
             onDelete={() => {
               setDeletingEntry(selectedEntry);

@@ -72,6 +72,7 @@ $router->post('/auth/me/avatar', [new AuthController(), 'uploadAvatarPhoto']);
 $router->delete('/auth/me/avatar', [new AuthController(), 'deleteAvatarPhoto']);
 $router->put('/auth/me/password', [new AuthController(), 'updatePassword']);
 $router->put('/auth/me/digest-preference', [new AuthController(), 'updateDigestPreference']);
+$router->put('/auth/me/trash-reminder-preference', [new AuthController(), 'updateTrashReminderPreference']);
 $router->delete('/auth/me', [new AuthController(), 'deleteMe']);
 
 $router->get('/dashboard', [new DashboardController(), 'index']);

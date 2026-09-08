@@ -11,4 +11,6 @@ export interface CalendarEntry {
   canManage: boolean;
   source?: 'calendar' | 'event';
   eventId?: number | null;
+  creatorHouseholdName?: string | null;
+  creatorHouseholdAvatarKey?: string | null;
 }

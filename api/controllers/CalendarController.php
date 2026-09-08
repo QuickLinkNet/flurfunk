@@ -23,7 +23,7 @@ final class CalendarController
         $viewerHouseholdId = $user['household_id'] ?? null;
 
         $calendarEntries = CalendarEntry::findInRange($from, $to, $viewerRole, $viewerHouseholdId !== null ? (int) $viewerHouseholdId : null);
-        $entries = $this->expandEntries($calendarEntries, $from, $to, $viewerRole, $viewerHouseholdId !== null ? (int) $viewerHouseholdId : null);
+        $entries = $this->expandEntries($calendarEntries, $from, $to, $viewerHouseholdId !== null ? (int) $viewerHouseholdId : null);
 
         $events = [];
         foreach (Event::findInRange($from, $to, $viewerRole) as $event) {
@@ -89,7 +89,6 @@ final class CalendarController
         );
         Response::json($this->toPublicEntry(
             CalendarEntry::findById((int) $params['id']),
-            $user['role'],
             $user['household_id'] !== null ? (int) $user['household_id'] : null
         ));
     }
@@ -101,6 +100,11 @@ final class CalendarController
         Response::json(null);
     }
 
+    // Bewusst kein Admin-Override mehr (anders als sonst im Adminbereich
+    // üblich): Termine im normalen Kalender darf nur der erstellende
+    // Haushalt bearbeiten/löschen. Admins moderieren stattdessen bewusst
+    // getrennt über den eigenen Adminbereich (/admin/calendar), nicht
+    // beiläufig über den normalen "Termindetails"-Dialog.
     private function requireManagingUser(int $entryId): array
     {
         $userId = Auth::requireLogin();
@@ -110,7 +114,7 @@ final class CalendarController
             Response::error('Termin nicht gefunden.', 404);
         }
         $isOwner = $user['household_id'] !== null && (int) $user['household_id'] === (int) $entry['household_id'];
-        if ($user['role'] !== 'admin' && !$isOwner) {
+        if (!$isOwner) {
             Response::error('Du kannst nur eigene Termine bearbeiten.', 403);
         }
         return $user;
@@ -137,23 +141,25 @@ final class CalendarController
         return $normalized !== '' ? $normalized : null;
     }
 
-    private function expandEntries(array $entries, string $from, string $to, string $viewerRole, ?int $viewerHouseholdId): array
+    private function expandEntries(array $entries, string $from, string $to, ?int $viewerHouseholdId): array
     {
         $result = [];
         foreach ($entries as $entry) {
             foreach (RecurrenceExpander::occurrencesInRange($entry, $from, $to) as $occurrence) {
-                $result[] = $this->toPublicEntry($occurrence, $viewerRole, $viewerHouseholdId);
+                $result[] = $this->toPublicEntry($occurrence, $viewerHouseholdId);
             }
         }
         return $result;
     }
 
-    private function toPublicEntry(?array $e, string $viewerRole, ?int $viewerHouseholdId): array
+    // Bewusst kein Admin-Override (siehe requireManagingUser) - "canManage"
+    // heißt hier ausschließlich "ist der erstellende Haushalt".
+    private function toPublicEntry(?array $e, ?int $viewerHouseholdId): array
     {
         if ($e === null) {
             Response::error('Termin nicht gefunden.', 404);
         }
-        $canManage = $viewerRole === 'admin' || ($viewerHouseholdId !== null && $viewerHouseholdId === (int) $e['household_id']);
+        $canManage = $viewerHouseholdId !== null && $viewerHouseholdId === (int) $e['household_id'];
         return [
             'id' => (int) $e['id'],
             'type' => $e['type'],
@@ -167,6 +173,8 @@ final class CalendarController
             'canManage' => $canManage,
             'source' => 'calendar',
             'eventId' => null,
+            'creatorHouseholdName' => $e['household_name'] ?? null,
+            'creatorHouseholdAvatarKey' => $e['household_avatar_key'] ?? null,
         ];
     }
 

@@ -41,7 +41,7 @@ final class CalendarEntry
             $allowed = ['public', 'neighbors', 'private'];
         }
         $placeholders = implode(',', array_fill(0, count($allowed), '?'));
-        $ownerClause = $viewerHouseholdId !== null ? ' OR household_id = ?' : '';
+        $ownerClause = $viewerHouseholdId !== null ? ' OR ce.household_id = ?' : '';
         $params = [...$allowed];
         if ($viewerHouseholdId !== null) {
             $params[] = $viewerHouseholdId;
@@ -51,13 +51,15 @@ final class CalendarEntry
         $params[] = $to;
         $params[] = $from;
         $stmt = Database::pdo()->prepare(
-            "SELECT * FROM calendar_entries
-             WHERE (visibility IN ($placeholders)$ownerClause)
+            "SELECT ce.*, h.name AS household_name, h.avatar_key AS household_avatar_key
+             FROM calendar_entries ce
+             LEFT JOIN households h ON h.id = ce.household_id
+             WHERE (ce.visibility IN ($placeholders)$ownerClause)
                AND (
-                 (starts_at < ? AND (ends_at IS NULL OR ends_at >= ?))
-                 OR (recurrence_rule != 'none' AND starts_at <= ? AND (recurrence_until IS NULL OR recurrence_until >= ?))
+                 (ce.starts_at < ? AND (ce.ends_at IS NULL OR ce.ends_at >= ?))
+                 OR (ce.recurrence_rule != 'none' AND ce.starts_at <= ? AND (ce.recurrence_until IS NULL OR ce.recurrence_until >= ?))
                )
-             ORDER BY starts_at"
+             ORDER BY ce.starts_at"
         );
         $stmt->execute($params);
         return $stmt->fetchAll();
@@ -84,7 +86,12 @@ final class CalendarEntry
 
     public static function findById(int $id): ?array
     {
-        $stmt = Database::pdo()->prepare('SELECT * FROM calendar_entries WHERE id = ? LIMIT 1');
+        $stmt = Database::pdo()->prepare(
+            'SELECT ce.*, h.name AS household_name, h.avatar_key AS household_avatar_key
+             FROM calendar_entries ce
+             LEFT JOIN households h ON h.id = ce.household_id
+             WHERE ce.id = ? LIMIT 1'
+        );
         $stmt->execute([$id]);
         return $stmt->fetch() ?: null;
     }

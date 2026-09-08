@@ -22,7 +22,7 @@ final class TrashReminderService
         $titles = array_values(array_unique(array_map(fn(array $e) => (string) $e['title'], $entries)));
         $list = implode(', ', $titles);
 
-        $push = PushService::sendBroadcast([
+        $push = PushService::sendTrashReminder([
             'title' => '🗑️ Mülltermin morgen',
             'body' => $list,
             'url' => '/apps/neighborhood/dashboard',
@@ -64,13 +64,16 @@ final class TrashReminderService
         ];
     }
 
+    // Bewusst eigenes Opt-in statt weekly_digest_enabled mitzubenutzen (siehe
+    // Migration 042) - Mülltermine sind ein anderes Anliegen als der
+    // Wochenblick und sollen unabhängig davon ein-/ausschaltbar sein.
     private static function mailRecipients(): array
     {
         $stmt = Database::pdo()->query(
             "SELECT id, email, display_name
              FROM users
              WHERE email IS NOT NULL AND trim(email) != ''
-               AND COALESCE(weekly_digest_enabled, 1) = 1
+               AND trash_reminder_email_enabled = 1
              ORDER BY display_name"
         );
         return $stmt->fetchAll();

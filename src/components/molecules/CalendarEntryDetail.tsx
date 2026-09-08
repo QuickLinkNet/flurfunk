@@ -1,11 +1,11 @@
 import { CALENDAR_TYPE_META } from '../../utils/calendarTypeMeta';
 import { recurrenceSummary } from '../../utils/recurrenceLabels';
 import { Button } from '../atoms/Button';
+import { HouseholdAvatar } from '../atoms/HouseholdAvatar';
 import type { CalendarEntry } from '../../types/calendarEntry';
 
 interface Props {
   entry: CalendarEntry;
-  onClose: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
 }
@@ -17,9 +17,9 @@ function formatDateTime(value: string): string {
 }
 
 function visibilityLabel(value: CalendarEntry['visibility']): string {
-  if (value === 'public') return 'Öffentlich';
-  if (value === 'private') return 'Privat';
-  return 'Nachbarschaft';
+  if (value === 'public') return 'Sichtbar: öffentlich (auch für Gäste)';
+  if (value === 'private') return 'Sichtbar: nur eigener Haushalt';
+  return 'Sichtbar: ganze Nachbarschaft';
 }
 
 function dateSummary(entry: CalendarEntry): string {
@@ -29,21 +29,28 @@ function dateSummary(entry: CalendarEntry): string {
   return `${formatDateTime(entry.startsAt)}${entry.endsAt ? ` bis ${formatDateTime(entry.endsAt)}` : ''}`;
 }
 
-export function CalendarEntryDetail({ entry, onClose, onEdit, onDelete }: Props) {
+export function CalendarEntryDetail({ entry, onEdit, onDelete }: Props) {
   const meta = CALENDAR_TYPE_META[entry.type];
   const isSeries = entry.recurrenceRule !== 'none';
 
   return (
     <section className="calendar-detail">
       <div className="calendar-detail-header">
+        <span className="calendar-detail-badge" style={{ background: `${meta.color}26`, color: meta.color }} aria-hidden="true">
+          {meta.emoji}
+        </span>
         <div>
           <p style={{ color: meta.color }}>{meta.label}</p>
           <h2>{entry.title}</h2>
         </div>
-        <button type="button" onClick={onClose}>
-          Schließen
-        </button>
       </div>
+
+      {entry.creatorHouseholdName && (
+        <div className="calendar-detail-creator">
+          <HouseholdAvatar avatarKey={entry.creatorHouseholdAvatarKey} fallback={entry.creatorHouseholdName} size={32} />
+          <span>Eingetragen von <strong>{entry.creatorHouseholdName}</strong></span>
+        </div>
+      )}
 
       <div className="calendar-detail-meta">
         <span>{dateSummary(entry)}</span>
