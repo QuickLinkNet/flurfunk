@@ -1,5 +1,4 @@
 import { useState, type FormEvent } from 'react';
-import { Link } from 'react-router-dom';
 import { Button } from '../atoms/Button';
 import { Input } from '../atoms/Input';
 import { Select } from '../atoms/Select';
@@ -57,11 +56,23 @@ export function NewCalendarEntryForm({ initialDate, entry, onCreated, onCancel }
   // neuen Einträgen sind die Optionen ausgeblendet.
   const typeOptions = entry?.type === 'event' ? CALENDAR_TYPE_OPTIONS : CREATABLE_TYPE_OPTIONS;
   const showPublicOption = entry?.visibility === 'public';
+  // Ein Geburtstag ist immer genau ein Tag ohne Uhrzeit - kein Start/Ende,
+  // kein "Ganztägig"-Kästchen zum Nachdenken, einfach nur ein Datum.
+  const isSingleDay = type === 'birthday';
 
   function handleAllDayChange(checked: boolean) {
     setAllDay(checked);
     setStartsAt((value) => (checked ? dateOnly(value) : dateTimeFromDate(value)));
     setEndsAt((value) => (value ? (checked ? dateOnly(value) : dateTimeFromDate(value)) : ''));
+  }
+
+  function handleTypeChange(nextType: CalendarEntry['type']) {
+    setType(nextType);
+    if (nextType === 'birthday') {
+      setAllDay(true);
+      setStartsAt((value) => dateOnly(value || localDateTimeValue()));
+      setEndsAt('');
+    }
   }
 
   async function handleSubmit(event: FormEvent) {
@@ -111,7 +122,7 @@ export function NewCalendarEntryForm({ initialDate, entry, onCreated, onCancel }
       <div className="calendar-form-grid">
         <label className="calendar-form-field">
           <span>Kategorie</span>
-          <Select value={type} onChange={(event) => setType(event.target.value as CalendarEntry['type'])}>
+          <Select value={type} onChange={(event) => handleTypeChange(event.target.value as CalendarEntry['type'])}>
             {typeOptions.map(([value, meta]) => (
               <option key={value} value={value}>
                 {meta.label}
@@ -129,26 +140,30 @@ export function NewCalendarEntryForm({ initialDate, entry, onCreated, onCancel }
         </label>
       </div>
 
-      <p className="calendar-form-note">
-        Für Treffen mit Zu-/Absage ("dabei"/"vielleicht"/"nicht dabei") gibt es die{' '}
-        <Link to="/events">Events-Seite</Link> - die taucht hier im Kalender automatisch mit auf.
-      </p>
-
-      <div className="calendar-form-grid">
+      {isSingleDay ? (
         <label className="calendar-form-field">
-          <span>Start</span>
-          <Input type={allDay ? 'date' : 'datetime-local'} value={startsAt} onChange={(event) => setStartsAt(event.target.value)} />
+          <span>Datum</span>
+          <Input type="date" value={dateOnly(startsAt)} onChange={(event) => setStartsAt(event.target.value)} />
         </label>
-        <label className="calendar-form-field">
-          <span>Ende optional</span>
-          <Input type={allDay ? 'date' : 'datetime-local'} value={endsAt} onChange={(event) => setEndsAt(event.target.value)} />
-        </label>
-      </div>
+      ) : (
+        <>
+          <div className="calendar-form-grid">
+            <label className="calendar-form-field">
+              <span>Start</span>
+              <Input type={allDay ? 'date' : 'datetime-local'} value={startsAt} onChange={(event) => setStartsAt(event.target.value)} />
+            </label>
+            <label className="calendar-form-field">
+              <span>Ende optional</span>
+              <Input type={allDay ? 'date' : 'datetime-local'} value={endsAt} onChange={(event) => setEndsAt(event.target.value)} />
+            </label>
+          </div>
 
-      <label className="calendar-check-field">
-        <input type="checkbox" checked={allDay} onChange={(event) => handleAllDayChange(event.target.checked)} />
-        Ganztägig
-      </label>
+          <label className="calendar-check-field">
+            <input type="checkbox" checked={allDay} onChange={(event) => handleAllDayChange(event.target.checked)} />
+            Ganztägig
+          </label>
+        </>
+      )}
 
       <div className="calendar-form-grid">
         <label className="calendar-form-field">
