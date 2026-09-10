@@ -126,7 +126,10 @@ export function DashboardPage() {
 
             {dashboard && dashboard.todaysBirthdays.length > 0 && (
               <div className="dashboard-birthday-banner">
-                🎂 Heute Geburtstag: {dashboard.todaysBirthdays.map((b) => (b.householdName ? `${b.name} (${b.householdName})` : b.name)).join(', ')}
+                🎂 Heute Geburtstag: {dashboard.todaysBirthdays.map((b) => {
+                  const who = b.householdName ? `${b.name} (${b.householdName})` : b.name;
+                  return b.age ? `${who} - wird ${b.age}` : who;
+                }).join(', ')}
               </div>
             )}
 

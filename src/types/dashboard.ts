@@ -43,6 +43,7 @@ export interface DashboardNotice {
 export interface DashboardBirthday {
   name: string;
   householdName: string | null;
+  age: number | null;
 }
 
 export interface DashboardData {

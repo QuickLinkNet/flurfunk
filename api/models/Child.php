@@ -51,23 +51,33 @@ final class Child
         $stmt->execute([$childId]);
     }
 
-    // Für die Dashboard-"Heute Geburtstag"-Ansicht - nur Monat/Tag ausgewertet,
-    // Geburtsjahr bleibt privat. Respektiert die "children"-Sichtbarkeit des
-    // Haushalts wie die Nachbarn-Ansicht (siehe HouseholdController).
+    // Für die Dashboard-"Heute Geburtstag"-Ansicht. Kinder-Geburtstage sind
+    // bewusst für alle Nachbarn sichtbar (NICHT über die "children"-
+    // Sichtbarkeit gefiltert) - sonst hat das Feature keinen Mehrwert für die
+    // Nachbarschaft. Nur Name + Datum, keine Standort-Infos.
     public static function todaysBirthdays(): array
     {
         $stmt = Database::pdo()->prepare(
-            "SELECT c.name AS name, h.name AS household_name
+            "SELECT c.name AS name, c.birthdate AS birthday, h.name AS household_name
              FROM children c
              JOIN households h ON h.id = c.household_id
-             LEFT JOIN household_visibility_settings v ON v.household_id = h.id AND v.field_key = 'children'
              WHERE c.birthdate IS NOT NULL
-               AND CAST(strftime('%m', c.birthdate) AS INTEGER) = ?
-               AND CAST(strftime('%d', c.birthdate) AS INTEGER) = ?
-               AND COALESCE(v.visibility, 'neighbors') != 'private'
+               AND strftime('%m-%d', c.birthdate) = ?
              ORDER BY c.name"
         );
-        $stmt->execute([(int) date('n'), (int) date('j')]);
+        $stmt->execute([date('m-d')]);
         return $stmt->fetchAll();
+    }
+
+    // Alle Kinder mit Geburtsdatum - für die synthetischen Geburtstags-
+    // Einträge im Kalender (CalendarController::birthdayItems).
+    public static function withBirthday(): array
+    {
+        return Database::pdo()->query(
+            'SELECT c.id, c.name AS name, c.birthdate AS birthday, h.name AS household_name, h.avatar_key AS household_avatar_key
+             FROM children c
+             JOIN households h ON h.id = c.household_id
+             WHERE c.birthdate IS NOT NULL'
+        )->fetchAll();
     }
 }

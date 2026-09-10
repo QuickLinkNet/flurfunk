@@ -23,6 +23,9 @@ function visibilityLabel(value: CalendarEntry['visibility']): string {
 }
 
 function dateSummary(entry: CalendarEntry): string {
+  if (entry.source === 'birthday') {
+    return new Intl.DateTimeFormat('de-DE', { dateStyle: 'long' }).format(new Date(entry.startsAt.replace(' ', 'T')));
+  }
   if (entry.allDay) {
     return entry.endsAt ? `Ganztägig · ${entry.startsAt.slice(0, 10)} bis ${entry.endsAt.slice(0, 10)}` : `Ganztägig · ${entry.startsAt.slice(0, 10)}`;
   }
@@ -48,7 +51,9 @@ export function CalendarEntryDetail({ entry, onEdit, onDelete }: Props) {
       {entry.creatorHouseholdName && (
         <div className="calendar-detail-creator">
           <HouseholdAvatar avatarKey={entry.creatorHouseholdAvatarKey} fallback={entry.creatorHouseholdName} size={32} />
-          <span>Eingetragen von <strong>{entry.creatorHouseholdName}</strong></span>
+          <span>
+            {entry.source === 'birthday' ? 'Haushalt' : 'Eingetragen von'} <strong>{entry.creatorHouseholdName}</strong>
+          </span>
         </div>
       )}
 
@@ -60,6 +65,10 @@ export function CalendarEntryDetail({ entry, onEdit, onDelete }: Props) {
 
       {entry.source === 'event' && (
         <p className="calendar-detail-note">Dieser Termin kommt aus dem Eventbereich und wird dort verwaltet.</p>
+      )}
+
+      {entry.source === 'birthday' && (
+        <p className="calendar-detail-note">Geburtstag aus dem Profil bzw. den Kinder-Angaben - Änderungen dort vornehmen.</p>
       )}
 
       {entry.canManage && entry.source !== 'event' && (

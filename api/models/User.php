@@ -27,8 +27,7 @@ final class User
             'onboardingCompletedAt' => $user['onboarding_completed_at'] ?? null,
             'onboardingCurrentStep' => $user['onboarding_current_step'] ?? 'household',
             'weeklyDigestEnabled' => (bool) ($user['weekly_digest_enabled'] ?? true),
-            'birthdayMonth' => isset($user['birthday_month']) && $user['birthday_month'] !== null ? (int) $user['birthday_month'] : null,
-            'birthdayDay' => isset($user['birthday_day']) && $user['birthday_day'] !== null ? (int) $user['birthday_day'] : null,
+            'birthday' => $user['birthday'] ?? null,
             'trashReminderPushEnabled' => (bool) ($user['trash_reminder_push_enabled'] ?? false),
             'trashReminderEmailEnabled' => (bool) ($user['trash_reminder_email_enabled'] ?? false),
         ];
@@ -137,10 +136,10 @@ final class User
         $stmt->execute([$enabled ? 1 : 0, $id]);
     }
 
-    public static function updateBirthday(int $id, ?int $month, ?int $day): void
+    public static function updateBirthday(int $id, ?string $birthday): void
     {
-        $stmt = Database::pdo()->prepare('UPDATE users SET birthday_month = ?, birthday_day = ? WHERE id = ?');
-        $stmt->execute([$month, $day, $id]);
+        $stmt = Database::pdo()->prepare('UPDATE users SET birthday = ? WHERE id = ?');
+        $stmt->execute([$birthday, $id]);
     }
 
     public static function updateTrashReminderPreference(int $id, bool $pushEnabled, bool $emailEnabled): void
@@ -151,19 +150,31 @@ final class User
         $stmt->execute([$pushEnabled ? 1 : 0, $emailEnabled ? 1 : 0, $id]);
     }
 
-    // Für die Dashboard-"Heute Geburtstag"-Ansicht - Vorname reicht, kein
-    // Geburtsjahr im Schema (bewusst, siehe Migration 040 - kein Alter preisgeben).
+    // Für die Dashboard-"Heute Geburtstag"-Ansicht.
     public static function todaysBirthdays(): array
     {
         $stmt = Database::pdo()->prepare(
-            'SELECT u.display_name AS name, h.name AS household_name
+            "SELECT u.display_name AS name, u.birthday, h.name AS household_name
              FROM users u
              LEFT JOIN households h ON h.id = u.household_id
-             WHERE u.birthday_month = ? AND u.birthday_day = ?
-             ORDER BY u.display_name'
+             WHERE u.birthday IS NOT NULL
+               AND strftime('%m-%d', u.birthday) = ?
+             ORDER BY u.display_name"
         );
-        $stmt->execute([(int) date('n'), (int) date('j')]);
+        $stmt->execute([date('m-d')]);
         return $stmt->fetchAll();
+    }
+
+    // Alle Nutzer mit hinterlegtem Geburtstag - für die synthetischen
+    // Geburtstags-Einträge im Kalender (CalendarController::birthdayItems).
+    public static function withBirthday(): array
+    {
+        return Database::pdo()->query(
+            'SELECT u.id, u.display_name AS name, u.birthday, h.name AS household_name, h.avatar_key AS household_avatar_key
+             FROM users u
+             LEFT JOIN households h ON h.id = u.household_id
+             WHERE u.birthday IS NOT NULL'
+        )->fetchAll();
     }
 
     public static function delete(int $id): void

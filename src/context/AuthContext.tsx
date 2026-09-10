@@ -18,7 +18,7 @@ interface AuthContextValue {
   register: (input: RegisterInput) => Promise<void>;
   registerViaStreetLink: (token: string, input: StreetJoinInput) => Promise<void>;
   logout: () => Promise<void>;
-  updateProfile: (displayName: string, avatarUrl?: string | null, birthdayMonth?: number | null, birthdayDay?: number | null) => Promise<User>;
+  updateProfile: (displayName: string, avatarUrl?: string | null, birthday?: string | null) => Promise<User>;
   uploadAvatarPhoto: (file: File) => Promise<User>;
   deleteAvatarPhoto: () => Promise<User>;
   updatePassword: (currentPassword: string, newPassword: string) => Promise<User>;
@@ -64,8 +64,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }
 
-  async function updateProfile(displayName: string, avatarUrl?: string | null, birthdayMonth?: number | null, birthdayDay?: number | null) {
-    const updatedUser = await authApi.updateProfile(displayName, avatarUrl, birthdayMonth, birthdayDay);
+  async function updateProfile(displayName: string, avatarUrl?: string | null, birthday?: string | null) {
+    const updatedUser = await authApi.updateProfile(displayName, avatarUrl, birthday);
     setUser(updatedUser);
     return updatedUser;
   }

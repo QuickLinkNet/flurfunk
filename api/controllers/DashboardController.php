@@ -258,9 +258,18 @@ final class DashboardController
 
     private function todaysBirthdays(): array
     {
+        $currentYear = (int) date('Y');
+        $toEntry = function (array $r) use ($currentYear): array {
+            $age = null;
+            $birthday = substr((string) ($r['birthday'] ?? ''), 0, 10);
+            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $birthday)) {
+                $age = $currentYear - (int) substr($birthday, 0, 4);
+            }
+            return ['name' => $r['name'], 'householdName' => $r['household_name'] ?? null, 'age' => $age > 0 ? $age : null];
+        };
         $entries = array_merge(
-            array_map(fn(array $r) => ['name' => $r['name'], 'householdName' => $r['household_name']], User::todaysBirthdays()),
-            array_map(fn(array $r) => ['name' => $r['name'], 'householdName' => $r['household_name']], Child::todaysBirthdays())
+            array_map($toEntry, User::todaysBirthdays()),
+            array_map($toEntry, Child::todaysBirthdays())
         );
         usort($entries, fn(array $a, array $b) => strcmp($a['name'], $b['name']));
         return $entries;

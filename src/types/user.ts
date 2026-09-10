@@ -13,8 +13,7 @@ export interface User {
   onboardingCompletedAt: string | null;
   onboardingCurrentStep: OnboardingStep;
   weeklyDigestEnabled: boolean;
-  birthdayMonth: number | null;
-  birthdayDay: number | null;
+  birthday: string | null;
   trashReminderPushEnabled: boolean;
   trashReminderEmailEnabled: boolean;
 }

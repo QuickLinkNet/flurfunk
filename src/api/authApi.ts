@@ -28,15 +28,10 @@ export function fetchCurrentUser() {
   return apiRequest<User>('/auth/me');
 }
 
-export function updateProfile(
-  displayName: string,
-  avatarUrl?: string | null,
-  birthdayMonth?: number | null,
-  birthdayDay?: number | null
-) {
+export function updateProfile(displayName: string, avatarUrl?: string | null, birthday?: string | null) {
   return apiRequest<User>('/auth/me/profile', {
     method: 'PUT',
-    body: JSON.stringify({ displayName, avatarUrl, birthdayMonth, birthdayDay })
+    body: JSON.stringify({ displayName, avatarUrl, birthday })
   });
 }
 

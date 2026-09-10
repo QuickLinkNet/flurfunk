@@ -9,7 +9,7 @@ export interface CalendarEntry {
   recurrenceRule: 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly';
   recurrenceUntil: string | null;
   canManage: boolean;
-  source?: 'calendar' | 'event';
+  source?: 'calendar' | 'event' | 'birthday';
   eventId?: number | null;
   creatorHouseholdName?: string | null;
   creatorHouseholdAvatarKey?: string | null;

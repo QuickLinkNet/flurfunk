@@ -217,24 +217,27 @@ final class AuthController
             Response::error('Ungültiges Profilbild.', 422);
         }
 
-        [$birthdayMonth, $birthdayDay] = $this->normalizeBirthday($body['birthdayMonth'] ?? null, $body['birthdayDay'] ?? null);
+        $birthday = $this->normalizeBirthday($body['birthday'] ?? null);
 
         User::updateProfile($userId, $displayName, $avatarUrl !== '' ? $avatarUrl : null);
-        User::updateBirthday($userId, $birthdayMonth, $birthdayDay);
+        User::updateBirthday($userId, $birthday);
         Response::json($this->toPublicUser(User::findById($userId)));
     }
 
-    private function normalizeBirthday(mixed $month, mixed $day): array
+    private function normalizeBirthday(mixed $value): ?string
     {
-        $month = $month !== null && $month !== '' ? (int) $month : null;
-        $day = $day !== null && $day !== '' ? (int) $day : null;
-        if ($month === null || $day === null) {
-            return [null, null];
+        $value = trim((string) ($value ?? ''));
+        if ($value === '') {
+            return null;
         }
-        if ($month < 1 || $month > 12 || $day < 1 || $day > 31) {
+        $date = \DateTimeImmutable::createFromFormat('Y-m-d', $value);
+        if ($date === false || $date->format('Y-m-d') !== $value) {
             Response::error('Ungültiges Geburtsdatum.', 422);
         }
-        return [$month, $day];
+        if ((int) $date->format('Y') < 1900 || $date > new \DateTimeImmutable('today')) {
+            Response::error('Ungültiges Geburtsdatum.', 422);
+        }
+        return $value;
     }
 
     // Echtes Foto statt nur der festen Icon-Auswahl (AVATAR_KEYS). Getrennt

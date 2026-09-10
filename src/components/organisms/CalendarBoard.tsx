@@ -49,7 +49,7 @@ export function CalendarBoard({ entries, onChanged }: Props) {
           const meta = CALENDAR_TYPE_META[entry.type];
           return {
             id: `${entry.source ?? 'calendar'}-${entry.id}-${entry.startsAt}`,
-            title: entry.recurrenceRule !== 'none' ? `↻ ${entry.title}` : entry.title,
+            title: entry.recurrenceRule !== 'none' && entry.source !== 'birthday' ? `↻ ${entry.title}` : entry.title,
             start: entry.startsAt,
             end: entry.endsAt ?? undefined,
             allDay: entry.allDay,

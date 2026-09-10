@@ -7,6 +7,7 @@ use App\Core\RecurrenceExpander;
 use App\Core\Request;
 use App\Core\Response;
 use App\Models\CalendarEntry;
+use App\Models\Child;
 use App\Models\Event;
 use App\Models\User;
 
@@ -32,9 +33,63 @@ final class CalendarController
             }
         }
 
-        $items = array_merge($entries, $events);
+        $items = array_merge($entries, $events, $this->birthdayItems($from, $to));
         usort($items, fn(array $a, array $b) => strcmp($a['startsAt'], $b['startsAt']));
         Response::json($items);
+    }
+
+    // Geburtstage stehen nicht als eigene Kalendereinträge in der DB, sondern
+    // werden hier aus Profil- (users.birthday) und Kinder-Daten
+    // (children.birthdate) synthetisiert - wie echte Events, die auch
+    // automatisch im Kalender auftauchen. Jährlich wiederkehrend, ganztägig,
+    // im Kalender nicht editierbar (Pflege im Profil bzw. bei den Kindern).
+    // Kinder-Geburtstage sind bewusst für alle Nachbarn sichtbar.
+    private function birthdayItems(string $from, string $to): array
+    {
+        $sources = [];
+        foreach (User::withBirthday() as $r) {
+            $sources[] = ['prefix' => 'birthday-user', 'row' => $r];
+        }
+        foreach (Child::withBirthday() as $r) {
+            $sources[] = ['prefix' => 'birthday-child', 'row' => $r];
+        }
+
+        $items = [];
+        foreach ($sources as $s) {
+            $row = $s['row'];
+            $birthDate = substr((string) $row['birthday'], 0, 10);
+            if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $birthDate)) {
+                continue;
+            }
+            $birthYear = (int) substr($birthDate, 0, 4);
+            $fakeEntry = [
+                'starts_at' => $birthDate . 'T00:00:00',
+                'ends_at' => null,
+                'recurrence_rule' => 'yearly',
+                'recurrence_until' => null,
+            ];
+            foreach (RecurrenceExpander::occurrencesInRange($fakeEntry, $from, $to) as $occ) {
+                $occYear = (int) substr((string) $occ['starts_at'], 0, 4);
+                $age = $occYear - $birthYear;
+                $items[] = [
+                    'id' => $s['prefix'] . '-' . (int) $row['id'] . '-' . $occYear,
+                    'type' => 'birthday',
+                    'title' => '🎂 ' . $row['name'] . ($age > 0 ? ' (wird ' . $age . ')' : ''),
+                    'startsAt' => $occ['starts_at'],
+                    'endsAt' => null,
+                    'allDay' => true,
+                    'visibility' => 'neighbors',
+                    'recurrenceRule' => 'yearly',
+                    'recurrenceUntil' => null,
+                    'canManage' => false,
+                    'source' => 'birthday',
+                    'eventId' => null,
+                    'creatorHouseholdName' => $row['household_name'] ?? null,
+                    'creatorHouseholdAvatarKey' => $row['household_avatar_key'] ?? null,
+                ];
+            }
+        }
+        return $items;
     }
 
     public function store(): void
