@@ -2,13 +2,18 @@ import { useState, type FormEvent } from 'react';
 import { IconBadge } from '../atoms/IconBadge';
 import { Button } from '../atoms/Button';
 import { Textarea } from '../atoms/Textarea';
+import { ActionDialog } from './ActionDialog';
+import { PhotoPickerField } from './PhotoPickerField';
 import {
   addFeedComment,
   borrowFeedItem,
+  deleteFeedPhoto,
   returnFeedItem,
   toggleFeedHelper,
   toggleFeedReaction,
+  updateFeedItem,
   updateFeedStatus,
+  uploadFeedPhoto,
   voteOnFeedPoll
 } from '../../api/feedApi';
 import { FEED_TYPE_META } from '../../utils/feedTypeMeta';
@@ -75,6 +80,13 @@ export function FeedItemCard({ item, onChanged }: Props) {
   const [isHelping, setIsHelping] = useState(false);
   const [isLoanBusy, setIsLoanBusy] = useState(false);
   const [isVoting, setIsVoting] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editMessage, setEditMessage] = useState('');
+  const [editPhotoFile, setEditPhotoFile] = useState<File | null>(null);
+  const [editPhotoTouched, setEditPhotoTouched] = useState(false);
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
+  const isPoll = item.type === 'poll';
   const showStatus = supportsStatus(item.type);
   const showHelpers = supportsHelpers(item.type);
   const showLoan = supportsLoan(item.type);
@@ -180,6 +192,41 @@ export function FeedItemCard({ item, onChanged }: Props) {
     }
   }
 
+  function openEdit() {
+    setEditMessage(item.message ?? '');
+    setEditPhotoFile(null);
+    setEditPhotoTouched(false);
+    setEditError(null);
+    setIsEditOpen(true);
+  }
+
+  async function handleEditSubmit(event: FormEvent) {
+    event.preventDefault();
+    const trimmed = editMessage.trim();
+    if (isPoll && !trimmed) {
+      setEditError('Die Frage darf nicht leer sein.');
+      return;
+    }
+    setIsSavingEdit(true);
+    setEditError(null);
+    try {
+      await updateFeedItem(item.id, trimmed || null);
+      if (editPhotoTouched) {
+        if (editPhotoFile) {
+          await uploadFeedPhoto(item.id, editPhotoFile);
+        } else if (item.photoUrl) {
+          await deleteFeedPhoto(item.id);
+        }
+      }
+      setIsEditOpen(false);
+      onChanged();
+    } catch (error) {
+      setEditError(error instanceof Error ? error.message : 'Änderungen konnten nicht gespeichert werden.');
+    } finally {
+      setIsSavingEdit(false);
+    }
+  }
+
   return (
     <article className="feed-card" data-status={showStatus ? item.status : 'neutral'}>
       <div className="feed-card-main">
@@ -258,6 +305,11 @@ export function FeedItemCard({ item, onChanged }: Props) {
               : (marketplace ? (item.type === 'marketplace_sell' ? 'Als verkauft markieren' : 'Als verschenkt markieren') : 'Als erledigt markieren')}
           </button>
         )}
+        {item.canManage && (
+          <button type="button" onClick={openEdit}>
+            ✏️ Bearbeiten
+          </button>
+        )}
       </div>
 
       {showHelpers && (item.helpers?.length ?? 0) > 0 && (
@@ -301,6 +353,29 @@ export function FeedItemCard({ item, onChanged }: Props) {
       )}
 
       {message && <p className="feed-card-message">{message}</p>}
+
+      <ActionDialog open={isEditOpen} title="Meldung bearbeiten" onClose={() => setIsEditOpen(false)}>
+        <form onSubmit={handleEditSubmit} style={{ display: 'grid', gap: 'var(--md-space-3)' }}>
+          <Textarea
+            placeholder={FEED_TYPE_META[item.type].template}
+            value={editMessage}
+            rows={3}
+            maxLength={280}
+            onChange={(event) => setEditMessage(event.target.value)}
+          />
+          <PhotoPickerField
+            initialUrl={item.photoUrl}
+            onFileSelected={(file) => {
+              setEditPhotoFile(file);
+              setEditPhotoTouched(true);
+            }}
+          />
+          <Button type="submit" disabled={isSavingEdit}>
+            {isSavingEdit ? 'Speichert...' : 'Speichern'}
+          </Button>
+          {editError && <p className="feed-card-message">{editError}</p>}
+        </form>
+      </ActionDialog>
     </article>
   );
 }

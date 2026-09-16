@@ -25,6 +25,10 @@ export function voteOnFeedPoll(itemId: number, optionId: number) {
   });
 }
 
+export function updateFeedItem(id: number, message: string | null) {
+  return apiRequest<FeedItem>(`/feed/${id}`, { method: 'PUT', body: JSON.stringify({ message }) });
+}
+
 export function uploadFeedPhoto(itemId: number, file: File) {
   const formData = new FormData();
   formData.append('photo', file);

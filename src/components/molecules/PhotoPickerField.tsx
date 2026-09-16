@@ -3,13 +3,17 @@ import { useRef, useState, type ChangeEvent } from 'react';
 interface Props {
   onFileSelected: (file: File | null) => void;
   label?: string;
+  // Vorhandenes Foto (z. B. beim Bearbeiten einer bestehenden Meldung) - wird
+  // als Vorschau gezeigt, ohne dass onFileSelected initial feuert. Erst ein
+  // Klick auf "entfernen" oder ein neu ausgewähltes Foto lösen es aus.
+  initialUrl?: string | null;
 }
 
 const MAX_BYTES = 6 * 1024 * 1024;
 
-export function PhotoPickerField({ onFileSelected, label = 'Foto hinzufügen (optional)' }: Props) {
+export function PhotoPickerField({ onFileSelected, label = 'Foto hinzufügen (optional)', initialUrl = null }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(initialUrl);
   const [error, setError] = useState<string | null>(null);
 
   function handleChange(event: ChangeEvent<HTMLInputElement>) {
@@ -42,9 +46,14 @@ export function PhotoPickerField({ onFileSelected, label = 'Foto hinzufügen (op
       {previewUrl ? (
         <div className="photo-picker-preview">
           <img src={previewUrl} alt="" />
-          <button type="button" onClick={clear}>
-            Foto entfernen
-          </button>
+          <div className="photo-picker-preview-actions">
+            <button type="button" onClick={() => inputRef.current?.click()}>
+              Foto ändern
+            </button>
+            <button type="button" onClick={clear}>
+              Foto entfernen
+            </button>
+          </div>
         </div>
       ) : (
         <button type="button" className="photo-picker-trigger" onClick={() => inputRef.current?.click()}>

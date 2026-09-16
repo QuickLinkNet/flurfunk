@@ -39,10 +39,15 @@ button {
   object-fit: cover;
 }
 
-.photo-picker-preview button {
+.photo-picker-preview-actions {
   position: absolute;
   right: var(--md-space-2);
   bottom: var(--md-space-2);
+  display: flex;
+  gap: var(--md-space-2);
+}
+
+.photo-picker-preview-actions button {
   padding: 6px 12px;
   border: none;
   border-radius: 999px;

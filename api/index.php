@@ -95,6 +95,7 @@ $router->delete('/pets/{id}', [new PetController(), 'destroy']);
 
 $router->get('/feed', [new FeedController(), 'index']);
 $router->post('/feed', [new FeedController(), 'store']);
+$router->put('/feed/{id}', [new FeedController(), 'update']);
 $router->post('/feed/{id}/reaction', [new FeedController(), 'toggleReaction']);
 $router->post('/feed/{id}/comments', [new FeedController(), 'addComment']);
 $router->put('/feed/{id}/status', [new FeedController(), 'updateStatus']);

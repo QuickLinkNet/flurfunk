@@ -31,6 +31,12 @@ final class FeedItem
         $stmt->execute([$filename, $id]);
     }
 
+    public static function updateMessage(int $id, ?string $message): void
+    {
+        $stmt = Database::pdo()->prepare('UPDATE feed_items SET message = ? WHERE id = ?');
+        $stmt->execute([$message, $id]);
+    }
+
     public static function findVisible(?string $viewerRole, ?int $viewerUserId, int $limit = 30): array
     {
         $allowed = $viewerRole === 'guest' ? ['public'] : ['public', 'neighbors'];

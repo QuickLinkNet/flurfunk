@@ -294,6 +294,33 @@ final class FeedController
         Response::json(['loan' => null]);
     }
 
+    public function update(array $params): void
+    {
+        $userId = Auth::requireLogin();
+        $user = User::findById($userId);
+        if ($user === null) {
+            Response::error('Nicht angemeldet.', 401);
+        }
+
+        $itemId = (int) $params['id'];
+        $item = FeedItem::findVisibleById($itemId, $user['role'] ?? 'guest');
+        if ($item === null) {
+            Response::error('Meldung nicht gefunden.', 404);
+        }
+        if (!$this->canManage($item)) {
+            Response::error('Du kannst nur eigene Meldungen bearbeiten.', 403);
+        }
+
+        $body = Request::json();
+        $message = $this->normalizeMessage($body['message'] ?? null);
+        if ($item['type'] === 'poll' && $message === null) {
+            Response::error('Die Frage einer Umfrage darf nicht leer sein.', 422);
+        }
+
+        FeedItem::updateMessage($itemId, $message);
+        Response::json($this->toPublicItem(FeedItem::findVisibleById($itemId, $user['role'] ?? 'guest')));
+    }
+
     public function updateStatus(array $params): void
     {
         $userId = Auth::requireLogin();

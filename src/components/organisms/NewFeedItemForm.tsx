@@ -75,7 +75,7 @@ export function NewFeedItemForm({ onCreated, initialType = 'help_needed', allowe
         expiresAt: feedExpiryDate(expires),
         options: isPoll ? options.map((option) => option.trim()).filter(Boolean) : undefined
       });
-      if (photoFile && !isPoll) {
+      if (photoFile) {
         try {
           await uploadFeedPhoto(result.id, photoFile);
         } catch {
@@ -153,7 +153,7 @@ export function NewFeedItemForm({ onCreated, initialType = 'help_needed', allowe
         </Select>
         <FeedExpirySelect value={expires} onChange={setExpires} />
       </div>
-      {!isPoll && <PhotoPickerField key={pickerKey} onFileSelected={setPhotoFile} />}
+      <PhotoPickerField key={pickerKey} onFileSelected={setPhotoFile} />
       <Button type="submit" disabled={isSubmitting}>
         {isSubmitting ? 'Wird gepostet...' : isPoll ? 'Umfrage starten' : 'In der Straße teilen'}
       </Button>
