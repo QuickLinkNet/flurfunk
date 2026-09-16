@@ -2,28 +2,18 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { DashboardTemplate } from '../components/templates/DashboardTemplate';
 import { FeedList } from '../components/organisms/FeedList';
 import { NewFeedItemForm } from '../components/organisms/NewFeedItemForm';
-import { Heading } from '../components/atoms/Heading';
-import { Select } from '../components/atoms/Select';
+import { ActionDialog } from '../components/molecules/ActionDialog';
 import { fetchFeed } from '../api/feedApi';
 import { PAGE_HEADERS } from '../content/pageHeaders';
-import { FEED_CATEGORY_META, FEED_CATEGORY_OPTIONS, FEED_TYPE_OPTIONS } from '../utils/feedTypeMeta';
-import type { FeedItem, FeedItemType } from '../types/feedItem';
+import { FEED_CATEGORY_META, FEED_CATEGORY_OPTIONS } from '../utils/feedTypeMeta';
+import type { FeedItem } from '../types/feedItem';
 import type { FeedCategory } from '../utils/feedTypeMeta';
-
-type FilterValue = 'all' | FeedItemType;
-type StatusFilter = 'all' | 'open' | 'done';
-
-const STATUS_FILTERS: { id: StatusFilter; label: string }[] = [
-  { id: 'all', label: 'Alle' },
-  { id: 'open', label: 'Offen' },
-  { id: 'done', label: 'Erledigt' }
-];
 
 export function StreetFeedPage() {
   const [items, setItems] = useState<FeedItem[]>([]);
   const [category, setCategory] = useState<FeedCategory>('all');
-  const [filter, setFilter] = useState<FilterValue>('all');
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [showDone, setShowDone] = useState(true);
+  const [isCreating, setIsCreating] = useState(false);
 
   const reload = useCallback(() => {
     fetchFeed().then(setItems).catch(() => setItems([]));
@@ -31,97 +21,72 @@ export function StreetFeedPage() {
 
   useEffect(() => reload(), [reload]);
 
-  const typeOptions = useMemo(
-    () => FEED_TYPE_OPTIONS.filter(([value]) => category === 'all' || FEED_CATEGORY_META[category].types.includes(value)),
-    [category]
-  );
-
   const filteredItems = useMemo(
     () => items.filter((item) => {
       const categoryMatches = category === 'all' || FEED_CATEGORY_META[category].types.includes(item.type);
-      const typeMatches = filter === 'all' || item.type === filter;
-      const statusMatches = statusFilter === 'all' || item.status === statusFilter;
-      return categoryMatches && typeMatches && statusMatches;
+      const statusMatches = showDone || item.status !== 'done';
+      return categoryMatches && statusMatches;
     }),
-    [category, filter, items, statusFilter]
+    [category, items, showDone]
   );
 
   const counts = useMemo(
     () => ({
       total: items.length,
-      open: items.filter((item) => item.status === 'open').length,
-      comments: items.reduce((sum, item) => sum + item.comments.length, 0),
-      reactions: items.reduce((sum, item) => sum + item.reactionCount, 0)
+      open: items.filter((item) => item.status === 'open').length
     }),
     [items]
   );
 
-  function handleCategoryChange(nextCategory: FeedCategory) {
-    setCategory(nextCategory);
-    setFilter('all');
-  }
-
   return (
     <DashboardTemplate pageTitle={PAGE_HEADERS.street.title} pageSubtitle={PAGE_HEADERS.street.subtitle}>
       <section>
-        <Heading level={2}>Kurzmeldung</Heading>
-        <NewFeedItemForm onCreated={reload} />
-      </section>
-      <section>
-        <div className="md-card-header" style={{ marginBottom: 'var(--md-space-3)' }}>
-          <div>
-            <Heading level={2}>Aktuelles</Heading>
-            <div className="feed-summary" aria-label="Feed-Übersicht">
+        <div className="feed-toolbar">
+          <div className="feed-filter-panel">
+            <div className="feed-filter-summary">
               <span><strong>{counts.total}</strong> Meldungen</span>
               <span><strong>{counts.open}</strong> offen</span>
-              <span><strong>{counts.comments}</strong> Antworten</span>
-              <span><strong>{counts.reactions}</strong> Reaktionen</span>
+              <label className="feed-done-toggle">
+                <input type="checkbox" checked={showDone} onChange={(event) => setShowDone(event.target.checked)} />
+                Erledigte anzeigen
+              </label>
             </div>
-          </div>
-          <div className="feed-category-tabs" role="tablist" aria-label="Feed-Kategorien">
-            {FEED_CATEGORY_OPTIONS.map(([value, meta]) => (
-              <button
-                key={value}
-                type="button"
-                role="tab"
-                aria-selected={category === value}
-                data-active={category === value}
-                onClick={() => handleCategoryChange(value)}
-              >
-                {meta.label}
-              </button>
-            ))}
-          </div>
-          <div className="feed-filter-row">
-            <Select value={filter} onChange={(event) => setFilter(event.target.value as FilterValue)} style={{ maxWidth: 260 }}>
-              <option value="all">Alle Meldungen</option>
-              {typeOptions.map(([value, meta]) => (
-                <option key={value} value={value}>
-                  {meta.emoji} {meta.label}
-                </option>
-              ))}
-            </Select>
-            <div className="feed-status-filter" aria-label="Status filtern">
-              {STATUS_FILTERS.map((entry) => (
+            <div className="feed-category-tabs" role="tablist" aria-label="Feed-Kategorien">
+              {FEED_CATEGORY_OPTIONS.map(([value, meta]) => (
                 <button
-                  key={entry.id}
+                  key={value}
                   type="button"
-                  data-active={statusFilter === entry.id}
-                  onClick={() => setStatusFilter(entry.id)}
+                  role="tab"
+                  aria-selected={category === value}
+                  data-active={category === value}
+                  onClick={() => setCategory(value)}
                 >
-                  {entry.label}
+                  {meta.label}
                 </button>
               ))}
             </div>
           </div>
+          <button type="button" className="feed-create-button" onClick={() => setIsCreating(true)}>
+            + Meldung
+          </button>
         </div>
+
         <FeedList
           items={filteredItems}
           onChanged={reload}
           emptyTitle="Keine Meldungen in diesem Filter"
-          emptyText="Passe Kategorie, Typ oder Status an, um weitere Meldungen zu sehen."
+          emptyText="Passe die Kategorie an oder erstelle eine neue Meldung."
         />
       </section>
+
+      <ActionDialog open={isCreating} title="Neue Kurzmeldung" onClose={() => setIsCreating(false)}>
+        <NewFeedItemForm
+          onCreated={() => {
+            setIsCreating(false);
+            reload();
+          }}
+        />
+      </ActionDialog>
     </DashboardTemplate>
   );
 }
