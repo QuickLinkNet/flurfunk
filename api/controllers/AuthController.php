@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Core\Auth;
+use App\Core\BirthdayValidation;
 use App\Core\Database;
 use App\Core\ImageUpload;
 use App\Core\MailService;
@@ -217,27 +218,11 @@ final class AuthController
             Response::error('Ungültiges Profilbild.', 422);
         }
 
-        $birthday = $this->normalizeBirthday($body['birthday'] ?? null);
+        $birthday = BirthdayValidation::normalize($body['birthday'] ?? null);
 
         User::updateProfile($userId, $displayName, $avatarUrl !== '' ? $avatarUrl : null);
         User::updateBirthday($userId, $birthday);
         Response::json($this->toPublicUser(User::findById($userId)));
-    }
-
-    private function normalizeBirthday(mixed $value): ?string
-    {
-        $value = trim((string) ($value ?? ''));
-        if ($value === '') {
-            return null;
-        }
-        $date = \DateTimeImmutable::createFromFormat('Y-m-d', $value);
-        if ($date === false || $date->format('Y-m-d') !== $value) {
-            Response::error('Ungültiges Geburtsdatum.', 422);
-        }
-        if ((int) $date->format('Y') < 1900 || $date > new \DateTimeImmutable('today')) {
-            Response::error('Ungültiges Geburtsdatum.', 422);
-        }
-        return $value;
     }
 
     // Echtes Foto statt nur der festen Icon-Auswahl (AVATAR_KEYS). Getrennt

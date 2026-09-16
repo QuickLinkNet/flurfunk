@@ -45,6 +45,12 @@ final class Child
         $stmt->execute([$name, $childId]);
     }
 
+    public static function updateBirthdate(int $childId, ?string $birthdate): void
+    {
+        $stmt = Database::pdo()->prepare('UPDATE children SET birthdate = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?');
+        $stmt->execute([$birthdate, $childId]);
+    }
+
     public static function delete(int $childId): void
     {
         $stmt = Database::pdo()->prepare('DELETE FROM children WHERE id = ?');

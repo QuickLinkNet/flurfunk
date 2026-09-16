@@ -9,6 +9,8 @@ interface Option {
   label: string;
 }
 
+const TODAY_ISO = new Date().toISOString().slice(0, 10);
+
 interface Props {
   open: boolean;
   title: string;
@@ -16,9 +18,11 @@ interface Props {
   initialName: string;
   typeValue?: string;
   typeOptions?: Option[];
+  dateLabel?: string;
+  dateValue?: string | null;
   loading?: boolean;
   onClose: () => void;
-  onSave: (name: string, typeValue?: string) => Promise<void>;
+  onSave: (name: string, typeValue?: string, dateValue?: string) => Promise<void>;
 }
 
 export function EditEntityDialog({
@@ -28,24 +32,28 @@ export function EditEntityDialog({
   initialName,
   typeValue,
   typeOptions,
+  dateLabel,
+  dateValue,
   loading = false,
   onClose,
   onSave
 }: Props) {
   const [name, setName] = useState(initialName);
   const [nextType, setNextType] = useState(typeValue ?? '');
+  const [nextDate, setNextDate] = useState(dateValue ?? '');
 
   useEffect(() => {
     if (!open) return;
     setName(initialName);
     setNextType(typeValue ?? '');
-  }, [initialName, open, typeValue]);
+    setNextDate(dateValue ?? '');
+  }, [initialName, open, typeValue, dateValue]);
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     const trimmedName = name.trim();
     if (!trimmedName) return;
-    await onSave(trimmedName, nextType || undefined);
+    await onSave(trimmedName, nextType || undefined, dateLabel ? nextDate : undefined);
   }
 
   return (
@@ -60,6 +68,12 @@ export function EditEntityDialog({
               </option>
             ))}
           </Select>
+        )}
+        {dateLabel && (
+          <label className="profile-settings-field">
+            <span>{dateLabel}</span>
+            <Input type="date" value={nextDate} max={TODAY_ISO} onChange={(event) => setNextDate(event.target.value)} />
+          </label>
         )}
         <div className="md-card-actions">
           <Button type="button" variant="ghost" onClick={onClose} disabled={loading}>

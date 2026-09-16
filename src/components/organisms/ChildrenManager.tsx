@@ -4,8 +4,10 @@ import { Input } from '../atoms/Input';
 import { Button } from '../atoms/Button';
 import { ConfirmDialog } from '../molecules/ConfirmDialog';
 import { EditEntityDialog } from '../molecules/EditEntityDialog';
-import { fetchChildren, createChild, deleteChild, updateChildLocation, updateChildName } from '../../api/childrenApi';
+import { fetchChildren, createChild, deleteChild, updateChildLocation, updateChildDetails } from '../../api/childrenApi';
 import type { Child, ChildLocation } from '../../types/child';
+
+const TODAY_ISO = new Date().toISOString().slice(0, 10);
 
 interface Props {
   compact?: boolean;
@@ -14,6 +16,7 @@ interface Props {
 export function ChildrenManager({ compact = false }: Props) {
   const [children, setChildren] = useState<Child[]>([]);
   const [newName, setNewName] = useState('');
+  const [newBirthdate, setNewBirthdate] = useState('');
   const [editingChild, setEditingChild] = useState<Child | null>(null);
   const [deletingChild, setDeletingChild] = useState<Child | null>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -28,8 +31,9 @@ export function ChildrenManager({ compact = false }: Props) {
   async function handleAdd(e: FormEvent) {
     e.preventDefault();
     if (!newName.trim()) return;
-    await createChild(newName.trim());
+    await createChild(newName.trim(), newBirthdate || undefined);
     setNewName('');
+    setNewBirthdate('');
     reload();
   }
 
@@ -50,14 +54,15 @@ export function ChildrenManager({ compact = false }: Props) {
     }
   }
 
-  async function handleRename(name: string) {
-    if (!editingChild || name === editingChild.name) {
+  async function handleSaveChild(name: string, _type?: string, birthdate?: string) {
+    if (!editingChild) return;
+    if (name === editingChild.name && (birthdate ?? '') === (editingChild.birthdate ?? '')) {
       setEditingChild(null);
       return;
     }
     setIsEditing(true);
     try {
-      await updateChildName(editingChild.id, name);
+      await updateChildDetails(editingChild.id, name, birthdate || null);
       setEditingChild(null);
       reload();
     } finally {
@@ -85,6 +90,13 @@ export function ChildrenManager({ compact = false }: Props) {
       </div>
       <form onSubmit={handleAdd} className="compact-form">
         <Input placeholder="Name des Kindes" value={newName} onChange={(e) => setNewName(e.target.value)} />
+        <Input
+          type="date"
+          aria-label="Geburtstag (optional)"
+          value={newBirthdate}
+          max={TODAY_ISO}
+          onChange={(e) => setNewBirthdate(e.target.value)}
+        />
         <Button type="submit">Hinzufügen</Button>
       </form>
       <EditEntityDialog
@@ -92,9 +104,11 @@ export function ChildrenManager({ compact = false }: Props) {
         title="Kind bearbeiten"
         nameLabel="Name des Kindes"
         initialName={editingChild?.name ?? ''}
+        dateLabel="Geburtstag (optional) - taucht am Tag selbst in der Nachbarschaft und im Kalender auf"
+        dateValue={editingChild?.birthdate ?? ''}
         loading={isEditing}
         onClose={() => setEditingChild(null)}
-        onSave={handleRename}
+        onSave={handleSaveChild}
       />
       <ConfirmDialog
         open={Boolean(deletingChild)}

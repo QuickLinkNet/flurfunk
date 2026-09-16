@@ -17,6 +17,10 @@ export function updateChildName(childId: number, name: string) {
   return apiRequest<null>(`/children/${childId}`, { method: 'PUT', body: JSON.stringify({ name }) });
 }
 
+export function updateChildDetails(childId: number, name: string, birthdate: string | null) {
+  return apiRequest<null>(`/children/${childId}`, { method: 'PUT', body: JSON.stringify({ name, birthdate }) });
+}
+
 export function deleteChild(childId: number) {
   return apiRequest<null>(`/children/${childId}`, { method: 'DELETE' });
 }

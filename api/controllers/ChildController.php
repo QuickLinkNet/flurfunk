@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Core\Auth;
+use App\Core\BirthdayValidation;
 use App\Core\Request;
 use App\Core\Response;
 use App\Models\Child;
@@ -24,7 +25,8 @@ final class ChildController
         if ($name === '') {
             Response::error('Name des Kindes fehlt.', 422);
         }
-        $id = Child::create($householdId, $name, $body['birthdate'] ?? null);
+        $birthdate = BirthdayValidation::normalize($body['birthdate'] ?? null);
+        $id = Child::create($householdId, $name, $birthdate);
         Response::json(['id' => $id], 201);
     }
 
@@ -39,6 +41,9 @@ final class ChildController
         $name = trim($body['name'] ?? '');
         if ($name !== '') {
             Child::updateName($childId, $name);
+        }
+        if (array_key_exists('birthdate', $body)) {
+            Child::updateBirthdate($childId, BirthdayValidation::normalize($body['birthdate']));
         }
         $allowed = ['mama', 'papa', 'both', 'grandparents', 'friends', 'vacation', 'school', 'kindergarten', 'other'];
         $location = $body['location'] ?? null;
