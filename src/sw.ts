@@ -74,12 +74,27 @@ self.addEventListener('push', (event) => {
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
+  // Die URL aus dem Push-Payload (siehe oben) wurde hier bisher komplett
+  // ignoriert - ein Klick auf die Benachrichtigung hat nur ein schon
+  // offenes Fenster fokussiert (ohne Navigation) oder immer die Startseite
+  // geöffnet, egal welcher Link im Payload stand.
+  const targetUrl = event.notification.data?.url ?? '/apps/neighborhood/';
   event.waitUntil(
-    self.clients.matchAll({ type: 'window' }).then((clientList) => {
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(async (clientList) => {
       for (const client of clientList) {
-        if ('focus' in client) return client.focus();
+        if ('focus' in client) {
+          if ('navigate' in client) {
+            try {
+              const navigated = await (client as WindowClient).navigate(targetUrl);
+              return (navigated ?? client).focus();
+            } catch {
+              return client.focus();
+            }
+          }
+          return client.focus();
+        }
       }
-      return self.clients.openWindow('/apps/neighborhood/');
+      return self.clients.openWindow(targetUrl);
     })
   );
 });
