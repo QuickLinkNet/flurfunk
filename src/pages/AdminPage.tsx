@@ -4,6 +4,7 @@ import { AdminSearchBar } from '../components/molecules/AdminSearchBar';
 import { AdminSection } from '../components/molecules/AdminSection';
 import { AdminTabs } from '../components/molecules/AdminTabs';
 import { AdminCalendarList } from '../components/organisms/AdminCalendarList';
+import { AdminAnnouncementPanel } from '../components/organisms/AdminAnnouncementPanel';
 import { AdminCreateHouseholdForm } from '../components/organisms/AdminCreateHouseholdForm';
 import { AdminDigestPanel } from '../components/organisms/AdminDigestPanel';
 import { AdminTrashReminderPanel } from '../components/organisms/AdminTrashReminderPanel';
@@ -124,6 +125,12 @@ export function AdminPage() {
 
       {activeTab === 'content' && (
         <>
+          <AdminSection
+            title="Feature ankündigen"
+            description="Push-Nachricht an alle Nachbarn mit aktivierten Push-Benachrichtigungen, mit direkter Verlinkung."
+          >
+            <AdminAnnouncementPanel />
+          </AdminSection>
           <AdminSection title={`Dashboard-Hinweise (${notices.length})`}>
             <AdminNoticePanel notices={notices} onCreated={reload} onDelete={handleDeleteNotice} />
           </AdminSection>

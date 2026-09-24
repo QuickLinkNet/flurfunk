@@ -182,6 +182,7 @@ $router->get('/admin/users', [new AdminController(), 'users']);
 $router->put('/admin/users/{id}/role', [new AdminController(), 'updateUserRole']);
 $router->delete('/admin/users/{id}', [new AdminController(), 'deleteUser']);
 $router->post('/admin/users/{id}/push-test', [new AdminPushController(), 'sendUserPushTest']);
+$router->post('/admin/push/broadcast', [new AdminPushController(), 'sendBroadcast']);
 $router->get('/admin/feed', [new AdminController(), 'feed']);
 $router->delete('/admin/feed/{id}', [new AdminController(), 'deleteFeedItem']);
 $router->get('/admin/events', [new AdminController(), 'events']);

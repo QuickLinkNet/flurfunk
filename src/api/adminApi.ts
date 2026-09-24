@@ -85,6 +85,13 @@ export function sendAdminUserPushTest(id: number) {
   return apiRequest<AdminPushTestResult>(`/admin/users/${id}/push-test`, { method: 'POST' });
 }
 
+export function sendAdminBroadcastPush(title: string, body: string, path: string) {
+  return apiRequest<PushSendResult>('/admin/push/broadcast', {
+    method: 'POST',
+    body: JSON.stringify({ title, body, path })
+  });
+}
+
 export function fetchAdminFeed() {
   return apiRequest<AdminFeedItem[]>('/admin/feed');
 }
