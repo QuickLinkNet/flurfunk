@@ -1,4 +1,4 @@
-export type FeatureKey = 'feed' | 'events' | 'calendar' | 'children' | 'pets';
+export type FeatureKey = 'feed' | 'events' | 'calendar' | 'children' | 'pets' | 'recipes';
 
 export type FeatureFlags = Record<FeatureKey, boolean>;
 
@@ -7,5 +7,6 @@ export const FEATURE_LABELS: Record<FeatureKey, string> = {
   events: 'Events & RSVP',
   calendar: 'Kalender',
   children: 'Kinderverwaltung',
-  pets: 'Haustiere'
+  pets: 'Haustiere',
+  recipes: 'Rezepte'
 };

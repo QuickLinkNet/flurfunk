@@ -12,6 +12,8 @@ api/uploads/feed/*
 !api/uploads/feed/.gitkeep
 api/uploads/events/*
 !api/uploads/events/.gitkeep
+api/uploads/recipes/*
+!api/uploads/recipes/.gitkeep
 *.log
 .DS_Store
 .claude/settings.local.json

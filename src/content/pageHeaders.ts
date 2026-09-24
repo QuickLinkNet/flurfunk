@@ -41,6 +41,14 @@ export const PAGE_HEADERS = {
     title: 'Nachrichten',
     subtitle: 'Private Unterhaltungen mit einzelnen Nachbarn.'
   },
+  recipes: {
+    title: 'Rezepte',
+    subtitle: 'Entdeckt und teilt Lieblingsrezepte mit der Nachbarschaft.'
+  },
+  shoppingList: {
+    title: 'Einkaufsliste',
+    subtitle: 'Eure private Haushalts-Checkliste - nur für euch sichtbar.'
+  },
   onboarding: {
     title: 'Willkommen bei Flurfunk',
     subtitle: 'Richtet euren Haushalt kurz ein. Ihr könnt alles später ändern.'

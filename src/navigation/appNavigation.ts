@@ -2,7 +2,8 @@ import type { FeatureKey } from '../types/featureFlags';
 
 export type AppNavIcon =
   | 'users' | 'calendar' | 'bell' | 'shield' | 'mail' | 'lock'
-  | 'ticket' | 'eye' | 'home' | 'street' | 'settings' | 'briefcase' | 'trash' | 'help' | 'feedback' | 'chat' | 'map' | 'shop';
+  | 'ticket' | 'eye' | 'home' | 'street' | 'settings' | 'briefcase' | 'trash' | 'help' | 'feedback' | 'chat' | 'map' | 'shop'
+  | 'book' | 'list';
 
 export interface AppNavItem {
   to: string;
@@ -23,6 +24,8 @@ export const appNavItems: AppNavItem[] = [
   { to: '/strasse', label: 'Straße', icon: 'street', mobileIcon: '💬', feature: 'feed', mobilePrimary: true },
   { to: '/hilfe', label: 'Hilfe', icon: 'help', mobileIcon: '🙋', feature: 'feed' },
   { to: '/markt', label: 'Markt', icon: 'shop', mobileIcon: '🛍️', feature: 'feed' },
+  { to: '/rezepte', label: 'Rezepte', icon: 'book', mobileIcon: '📖', feature: 'recipes' },
+  { to: '/einkaufsliste', label: 'Einkaufsliste', icon: 'list', mobileIcon: '🛒', feature: 'recipes' },
   { to: '/nachbarn', label: 'Nachbarn', icon: 'users', mobileIcon: '👥' },
   { to: '/karte', label: 'Karte', icon: 'map', mobileIcon: '🗺️' },
   { to: '/nachrichten', label: 'Nachrichten', icon: 'chat', mobileIcon: '✉️' },

@@ -8,6 +8,9 @@ import { DashboardPage } from '../pages/DashboardPage';
 import { StreetFeedPage } from '../pages/StreetFeedPage';
 import { HelpBoardPage } from '../pages/HelpBoardPage';
 import { MarketplacePage } from '../pages/MarketplacePage';
+import { RecipesPage } from '../pages/RecipesPage';
+import { RecipeDetailPage } from '../pages/RecipeDetailPage';
+import { ShoppingListPage } from '../pages/ShoppingListPage';
 import { CalendarPage } from '../pages/CalendarPage';
 import { EventsPage } from '../pages/EventsPage';
 import { EventDetailPage } from '../pages/EventDetailPage';
@@ -116,6 +119,36 @@ export function AppRoutes() {
           <RequireAuth>
             <RequireFeature feature="feed">
               <MarketplacePage />
+            </RequireFeature>
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/rezepte"
+        element={
+          <RequireAuth>
+            <RequireFeature feature="recipes">
+              <RecipesPage />
+            </RequireFeature>
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/rezepte/:id"
+        element={
+          <RequireAuth>
+            <RequireFeature feature="recipes">
+              <RecipeDetailPage />
+            </RequireFeature>
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/einkaufsliste"
+        element={
+          <RequireAuth>
+            <RequireFeature feature="recipes">
+              <ShoppingListPage />
             </RequireFeature>
           </RequireAuth>
         }

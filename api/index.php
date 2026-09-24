@@ -46,6 +46,8 @@ use App\Controllers\AdminStreetInviteController;
 use App\Controllers\FeatureFlagController;
 use App\Controllers\FeedbackController;
 use App\Controllers\PushController;
+use App\Controllers\RecipeController;
+use App\Controllers\ShoppingListController;
 use App\Controllers\StreetJoinController;
 
 error_reporting(E_ALL);
@@ -92,6 +94,22 @@ $router->get('/pets', [new PetController(), 'index']);
 $router->post('/pets', [new PetController(), 'store']);
 $router->put('/pets/{id}', [new PetController(), 'update']);
 $router->delete('/pets/{id}', [new PetController(), 'destroy']);
+
+$router->get('/recipes', [new RecipeController(), 'index']);
+$router->post('/recipes', [new RecipeController(), 'store']);
+$router->get('/recipes/{id}', [new RecipeController(), 'show']);
+$router->put('/recipes/{id}', [new RecipeController(), 'update']);
+$router->delete('/recipes/{id}', [new RecipeController(), 'destroy']);
+$router->post('/recipes/{id}/photo', [new RecipeController(), 'uploadPhoto']);
+$router->delete('/recipes/{id}/photo', [new RecipeController(), 'deletePhoto']);
+$router->post('/recipes/{id}/reaction', [new RecipeController(), 'toggleReaction']);
+$router->post('/recipes/{id}/comments', [new RecipeController(), 'addComment']);
+
+$router->post('/shopping-list/clear-done', [new ShoppingListController(), 'clearDone']);
+$router->get('/shopping-list', [new ShoppingListController(), 'index']);
+$router->post('/shopping-list', [new ShoppingListController(), 'store']);
+$router->put('/shopping-list/{id}', [new ShoppingListController(), 'update']);
+$router->delete('/shopping-list/{id}', [new ShoppingListController(), 'destroy']);
 
 $router->get('/feed', [new FeedController(), 'index']);
 $router->post('/feed', [new FeedController(), 'store']);

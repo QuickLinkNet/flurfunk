@@ -7,7 +7,7 @@ use App\Core\Database;
 // Admin kann einzelne Funktionsbereiche für die ganze Straße ein-/ausschalten.
 final class FeatureFlag
 {
-    public const FEATURES = ['feed', 'events', 'calendar', 'children', 'pets'];
+    public const FEATURES = ['feed', 'events', 'calendar', 'children', 'pets', 'recipes'];
 
     public static function findForStreet(int $streetId): array
     {
